@@ -2,6 +2,14 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-03 (M8 entitlements)
+
+- **One source of truth:** `EntitlementStore` (Entitlements module) — every screen reads `isPremium` from it (Survival Kit, Calendar, paywall; Settings will in M9). Status is derived from purchase transactions: **Lifetime** (never expires, always wins), else **Yearly** active until its expiry instant, else **Yearly expired**, else **Free**. Both paid plans unlock the same `retrograde.premium` features. Product IDs: `com.nkreative.retrograde.premium.lifetime` / `.yearly` (placeholders until App Store Connect).
+- **Persistence:** the device keeps its own record (read at launch); the App Store account is the source for Restore. In M8 the account is simulated (debug only); M9 swaps in StoreKit with no change to screens or rules.
+- **Downgrade keeps progress:** task completion lives separately per cycle; Premium-only ticks are hidden while locked but stay counted and reappear on upgrade.
+- **Production builds:** no purchase account (always Free until M9); the simulator view, its storage and all `simulate…` functions are compiled out (verified by searching the Release binary).
+- **Debug tools:** gear button opens the Premium simulator (until Settings in M9); launch arguments `-entitlement free|yearly|lifetime|expiredYearly` (throwaway state), `-simulatorScript "buyYearly@5,expireYearly@10"` (timed actions on the persistent simulated account), `-openSimulator YES`.
+
 ## 2026-11-03 (M7 day access)
 
 - **One access rule per day** (`DayDetailContent`): an unlocked day (free window or Premium) shows every detail section — summary, events, habit and other planets in retrograde; a locked day shows none of them, only the single locked panel with "Unlock every day". Date, level and calendar markers are always visible. No separate per-section Premium checks or teasers.

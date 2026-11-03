@@ -1,4 +1,5 @@
 import DesignSystem
+import Entitlements
 import Persistence
 import SwiftData
 import SwiftUI
@@ -6,7 +7,7 @@ import SwiftUI
 @main
 struct RetrogradeApp: App {
     @State private var completions: CompletionStore
-    @State private var premium = PremiumAccess()
+    @State private var entitlements = AppEntitlements.make()
 
     init() {
         RetroFonts.register()
@@ -31,7 +32,7 @@ struct RetrogradeApp: App {
         WindowGroup {
             RootView()
                 .environment(completions)
-                .environment(premium)
+                .environment(entitlements)
                 .preferredColorScheme(.dark)
         }
     }

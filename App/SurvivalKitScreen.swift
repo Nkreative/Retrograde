@@ -1,5 +1,6 @@
 import DesignSystem
 import Editorial
+import Entitlements
 import Persistence
 import RetroCore
 import SurvivalKit
@@ -39,7 +40,7 @@ struct SurvivalKitTab: View {
 struct SurvivalKitScreen: View {
     let now: Date
     @Environment(CompletionStore.self) private var completions
-    @Environment(PremiumAccess.self) private var premium
+    @Environment(EntitlementStore.self) private var premium
     @Environment(PaywallPresenter.self) private var paywall
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Sections the person has expanded; all start collapsed.

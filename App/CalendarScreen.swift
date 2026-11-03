@@ -1,5 +1,6 @@
 import DesignSystem
 import Editorial
+import Entitlements
 import RetroCore
 import SwiftUI
 
@@ -8,7 +9,7 @@ import SwiftUI
 /// Free: details for today plus the next three days; every day keeps its markers and level.
 struct CalendarScreen: View {
     let now: Date
-    @Environment(PremiumAccess.self) private var premium
+    @Environment(EntitlementStore.self) private var premium
     @Environment(PaywallPresenter.self) private var paywall
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 

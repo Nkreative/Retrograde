@@ -1,4 +1,5 @@
 import DesignSystem
+import Entitlements
 import Observation
 import SwiftUI
 
@@ -17,6 +18,7 @@ struct PaywallView: View {
     enum Plan { case lifetime, yearly }
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(EntitlementStore.self) private var entitlements
     @State private var plan: Plan = .lifetime
 
     var body: some View {
@@ -53,10 +55,20 @@ struct PaywallView: View {
                     }
 
                     VStack(spacing: 6) {
-                        PrimaryButton(plan == .lifetime ? "Get lifetime access" : "Start Premium") {}
-                            .disabled(true)
-                            .opacity(0.55)
-                        Text("Preview — purchases connect in the next milestone.")
+                        // Debug builds buy from the simulated account (M8); release builds can't buy until StoreKit (M9).
+                        PrimaryButton(plan == .lifetime ? "Get lifetime access" : "Start Premium") {
+                            entitlements.purchase(plan == .lifetime ? .lifetime : .yearly)
+                            if entitlements.isPremium { dismiss() }
+                        }
+                        .disabled(!entitlements.canPurchase)
+                        .opacity(entitlements.canPurchase ? 1 : 0.55)
+                        Group {
+                            #if DEBUG
+                            Text("Simulated purchase (debug build). Real purchases connect in M9.")
+                            #else
+                            Text("Preview — purchases connect in the next milestone.")
+                            #endif
+                        }
                             .retroText(.finePrint)
                             .foregroundStyle(RetroColor.textMuted)
                     }
@@ -66,7 +78,15 @@ struct PaywallView: View {
                         .frame(maxWidth: .infinity, minHeight: 44)
 
                     VStack(spacing: 8) {
-                        Text("RESTORE PURCHASES  ·  TERMS  ·  PRIVACY").retroText(.monoSmall)
+                        HStack(spacing: 6) {
+                            Button("RESTORE PURCHASES") {
+                                entitlements.restorePurchases()
+                                if entitlements.isPremium { dismiss() }
+                            }
+                            .disabled(!entitlements.canPurchase)
+                            Text("·  TERMS  ·  PRIVACY")
+                        }
+                        .retroText(.monoSmall)
                         Text("Yearly access auto-renews until cancelled. Lifetime access is a one-time purchase. Cancel Yearly anytime in Settings › Apple Account › Subscriptions.")
                             .retroText(.finePrint)
                             .multilineTextAlignment(.center)

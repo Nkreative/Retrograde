@@ -11,6 +11,7 @@ let package = Package(
         .library(name: "Editorial", targets: ["Editorial"]),
         .library(name: "SurvivalKit", targets: ["SurvivalKit"]),
         .library(name: "Persistence", targets: ["Persistence"]),
+        .library(name: "Entitlements", targets: ["Entitlements"]),
     ],
     targets: [
         // Planet cycles, sky events and the cycle/day calculations. No UI, no I/O.
@@ -27,6 +28,8 @@ let package = Package(
         .target(name: "SurvivalKit", dependencies: ["RetroCore"]),
         // On-device storage (SwiftData): task completion per retrograde cycle.
         .target(name: "Persistence"),
+        // Premium status: one source of truth, from purchases (simulated in M8, StoreKit in M9).
+        .target(name: "Entitlements"),
         // Colours, fonts, icons and shared SwiftUI components from the Figma design.
         .target(
             name: "DesignSystem",
@@ -38,5 +41,6 @@ let package = Package(
         .testTarget(name: "EditorialTests", dependencies: ["Editorial", "RetroCore", "AstroData"]),
         .testTarget(name: "SurvivalKitTests", dependencies: ["SurvivalKit", "RetroCore", "AstroData"]),
         .testTarget(name: "PersistenceTests", dependencies: ["Persistence"]),
+        .testTarget(name: "EntitlementsTests", dependencies: ["Entitlements", "SurvivalKit", "Persistence", "Editorial", "RetroCore", "AstroData"]),
     ]
 )
