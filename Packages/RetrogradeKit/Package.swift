@@ -7,6 +7,7 @@ let package = Package(
     products: [
         .library(name: "RetroCore", targets: ["RetroCore"]),
         .library(name: "AstroData", targets: ["AstroData"]),
+        .library(name: "DesignSystem", targets: ["DesignSystem"]),
     ],
     targets: [
         // Planet cycles, sky events and the cycle/day calculations. No UI, no I/O.
@@ -17,7 +18,13 @@ let package = Package(
             dependencies: ["RetroCore"],
             resources: [.copy("Resources/ephemeris.json")]
         ),
+        // Colours, fonts, icons and shared SwiftUI components from the Figma design.
+        .target(
+            name: "DesignSystem",
+            resources: [.copy("Resources/Fonts")]
+        ),
         .testTarget(name: "RetroCoreTests", dependencies: ["RetroCore"]),
         .testTarget(name: "AstroDataTests", dependencies: ["AstroData", "RetroCore"]),
+        .testTarget(name: "DesignSystemTests", dependencies: ["DesignSystem"]),
     ]
 )

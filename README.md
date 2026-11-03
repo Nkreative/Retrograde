@@ -15,6 +15,7 @@ A playful iOS companion for Mercury retrograde: countdown, daily calendar and a 
 | `Packages/RetrogradeKit/` | Swift package with the app's logic, testable without the simulator. |
 | `  RetroCore` | Planets, retrograde periods, calendar days, cycle status and day markers. |
 | `  AstroData` | Loads the bundled, verified `ephemeris.json`. |
+| `  DesignSystem` | Figma colours, type ramp (Archivo Black, Space Mono, Inter — bundled, SIL OFL), icons, header, buttons, cards, tab bar. Debug builds show a review catalog when launched with `-catalog 1` (2, 3); `-tab survivalKit` opens a tab. |
 | `tools/ephemeris/` | Script that builds `ephemeris.json` from NASA JPL + USNO, and its checks. |
 
 ## Commands

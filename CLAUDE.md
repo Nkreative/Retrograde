@@ -11,6 +11,8 @@
 - Never hard-code astronomical dates. All sky events come from `ephemeris.json` (see `docs/DATA_SOURCES.md`); test fixtures may copy real values from it.
 - Instants are UT `Date`s; anything shown per day goes through `CalendarDay` with the person's `Calendar`.
 - Swift 6 language mode, Swift Testing (`import Testing`) for tests.
+- UI uses `DesignSystem` only: `RetroColor`, `.retroText(_:)`, `RetroMetrics`, shared components. No raw hex or font names in screens.
+- Icons: SF Symbols (`RetroSymbol`) for standard interface icons; Figma vectors (`RetroGlyph`, `BrandMark`) for identity icons and the tab bar. No Font Awesome unless SF Symbols and existing vectors can't do the job — ask first.
 
 ## Commands
 
