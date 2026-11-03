@@ -6,6 +6,7 @@ import SwiftUI
 public enum RetroFonts {
     public static let postScriptNames = [
         "ArchivoBlack-Regular", "SpaceMono-Regular", "SpaceMono-Bold", "Inter-Regular", "Inter-SemiBold", "Inter-Bold",
+        "Inter-ExtraBold",
     ]
 
     public static func register() { _ = registration }
@@ -41,6 +42,8 @@ public enum RetroTextStyle: CaseIterable, Sendable {
     case bodyLarge
     /// Inter Regular 12 — body copy.
     case body
+    /// Inter ExtraBold 12 — emphasised word inside body copy ("Mercury").
+    case bodyHeavy
     /// Space Mono 11 — countdown label, step numbers.
     case monoLarge
     /// Space Mono 10 — tab labels, eyebrows.
@@ -56,6 +59,7 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .button: "Inter-Bold"
         case .bodyStrong: "Inter-SemiBold"
         case .bodyLarge, .body: "Inter-Regular"
+        case .bodyHeavy: "Inter-ExtraBold"
         case .monoLarge, .mono, .monoSmall: "SpaceMono-Regular"
         case .monoBold: "SpaceMono-Bold"
         }
@@ -70,7 +74,7 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .cardTitle: 16
         case .button: 14
         case .bodyStrong, .bodyLarge: 13
-        case .body: 12
+        case .body, .bodyHeavy: 12
         case .monoLarge: 11
         case .mono, .monoBold: 10
         case .monoSmall: 9
@@ -87,7 +91,7 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .cardTitle: .headline
         case .button: .body
         case .bodyStrong, .bodyLarge: .subheadline
-        case .body, .monoLarge: .footnote
+        case .body, .bodyHeavy, .monoLarge: .footnote
         case .mono, .monoBold: .caption
         case .monoSmall: .caption2
         }
@@ -96,7 +100,7 @@ public enum RetroTextStyle: CaseIterable, Sendable {
     /// Extra space between lines where Figma sets a taller line height (body copy is 135 %).
     var lineSpacing: CGFloat {
         switch self {
-        case .body: 2
+        case .body, .bodyHeavy: 2
         case .bodyLarge: 3
         default: 0
         }

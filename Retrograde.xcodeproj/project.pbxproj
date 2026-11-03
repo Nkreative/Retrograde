@@ -10,6 +10,7 @@
 		A10000000000000000000031 /* RetroCore in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000041 /* RetroCore */; };
 		A10000000000000000000032 /* AstroData in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000042 /* AstroData */; };
 		A10000000000000000000033 /* DesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000043 /* DesignSystem */; };
+		A10000000000000000000034 /* Editorial in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000044 /* Editorial */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +33,7 @@
 				A10000000000000000000031 /* RetroCore in Frameworks */,
 				A10000000000000000000032 /* AstroData in Frameworks */,
 				A10000000000000000000033 /* DesignSystem in Frameworks */,
+				A10000000000000000000034 /* Editorial in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,6 +79,7 @@
 				A10000000000000000000041 /* RetroCore */,
 				A10000000000000000000042 /* AstroData */,
 				A10000000000000000000043 /* DesignSystem */,
+				A10000000000000000000044 /* Editorial */,
 			);
 			productName = Retrograde;
 			productReference = A10000000000000000000011 /* Retrograde.app */;
@@ -294,6 +297,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A10000000000000000000045 /* XCLocalSwiftPackageReference "Packages/RetrogradeKit" */;
 			productName = DesignSystem;
+		};
+		A10000000000000000000044 /* Editorial */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000045 /* XCLocalSwiftPackageReference "Packages/RetrogradeKit" */;
+			productName = Editorial;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

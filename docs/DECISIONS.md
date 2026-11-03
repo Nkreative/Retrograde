@@ -2,6 +2,14 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-03 (M4)
+
+- **Overview stages:** pre-shadow → retrograde → post-shadow → direct, each with its own countdown and bar:
+  pre-shadow counts to the retrograde ("days till the slowdown", PRE-SHADOW → RETROGRADE); retrograde counts to direct ("days to exhale", RETROGRADE → DIRECT); post-shadow counts to the shadow's end ("days till the dust settles", POST-SHADOW → ALL CLEAR); direct counts to the next retrograde ("days till the next plot twist", DIRECT → NEXT RX). On the target day the number becomes "TODAY".
+- **Shadow-stage screens** reuse the approved Overview layout (per the Figma note); their copy is new and lives in `Packages/RetrogradeKit/Sources/Editorial/OverviewCopy.swift` for review.
+- **Narrow phones:** if the countdown and day label don't fit on one line, the day label moves underneath.
+- **Not yet wired:** "Add to Home Screen" (M12) and the header buttons (Share M13, Notifications M11, Settings M9).
+
 ## 2026-11-03 (M3)
 
 - **Typography:** Figma fonts bundled — Archivo Black, Space Mono (Regular, Bold), Inter 4.1 (Regular, SemiBold, Bold); SIL Open Font License, licence files in `DesignSystem/Resources/Fonts`, to be credited in Settings. Sizes scale with Dynamic Type.

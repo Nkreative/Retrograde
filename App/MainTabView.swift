@@ -17,9 +17,12 @@ enum AppTab: String, CaseIterable {
 /// Every tab stays alive when hidden so scroll position and state survive switching.
 struct MainTabView: View {
     @State private var selection: AppTab
+    /// Debug-only clock override for reviewing other cycle stages.
+    private let now: Date?
 
-    init(initialTab: AppTab = .overview) {
+    init(initialTab: AppTab = .overview, now: Date? = nil) {
         _selection = State(initialValue: initialTab)
+        self.now = now
     }
 
     var body: some View {
@@ -44,7 +47,7 @@ struct MainTabView: View {
     @ViewBuilder
     private func screen(for tab: AppTab) -> some View {
         switch tab {
-        case .overview: OverviewPlaceholder()
+        case .overview: OverviewScreen(now: now, onOpenSurvivalKit: { selection = .survivalKit })
         case .survivalKit:
             PlaceholderScreen(title: "SMALL MOVES. YOU’LL GET IT DONE.", detail: "Main things you can control. The cosmos can wait.", milestone: "Survival Kit arrives in M5–M6.")
         case .calendar:

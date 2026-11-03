@@ -21,10 +21,23 @@ import RetroCore
         london.timeZone = TimeZone(identifier: "Europe/London")!
         let now = try #require(BundledEphemeris.parseMinute("2026-11-03T12:00Z"))
         let status = try #require(CycleCalculator(ephemeris: ephemeris, calendar: london).status(of: .mercury, at: now))
-        #expect(status.phase == .retrograde)
+        #expect(status.stage == .retrograde)
         #expect(status.day == 11)
         #expect(status.totalDays == 21)
-        #expect(CalendarDay(status.end, in: london) == CalendarDay(year: 2026, month: 11, day: 13))
+        #expect(status.daysUntilTarget == 10)
+        #expect(CalendarDay(status.countdownTarget, in: london) == CalendarDay(year: 2026, month: 11, day: 13))
+    }
+
+    @Test func everyStageOccursAroundMercurysAutumn2026Retrograde() throws {
+        let calc = CycleCalculator(ephemeris: ephemeris, calendar: Self.utc)
+        let expected: [(String, CycleStatus.Stage)] = [
+            ("2026-09-20T12:00Z", .direct), ("2026-10-10T12:00Z", .preShadow),
+            ("2026-11-03T12:00Z", .retrograde), ("2026-11-20T12:00Z", .postShadow), ("2026-12-20T12:00Z", .direct),
+        ]
+        for (time, stage) in expected {
+            let instant = try #require(BundledEphemeris.parseMinute(time))
+            #expect(calc.status(of: .mercury, at: instant)?.stage == stage, "\(time)")
+        }
     }
 
     /// Independent values: Skyfield + JPL DE440s, matching published ephemerides (see tools/ephemeris/known_dates.json).

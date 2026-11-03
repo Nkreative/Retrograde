@@ -31,66 +31,87 @@ private func calendar(_ zone: String) -> Calendar {
 }
 
 @Suite struct CycleStatusTests {
+    private func calc(_ zone: String = "UTC") -> CycleCalculator {
+        CycleCalculator(ephemeris: ephemeris, calendar: calendar(zone))
+    }
+
     @Test func midRetrogradeInLondonCountsDaysAcrossTheClockChange() throws {
         // Clocks go back on Oct 25 in London; day counting must not drift.
-        let status = try #require(CycleCalculator(ephemeris: ephemeris, calendar: calendar("Europe/London"))
-            .status(of: .mercury, at: utc("2026-11-03T12:00")))
-        #expect(status.phase == .retrograde)
-        #expect(status.shadow == .none)
+        let status = try #require(calc("Europe/London").status(of: .mercury, at: utc("2026-11-03T12:00")))
+        #expect(status.stage == .retrograde)
         #expect(status.day == 11)
         #expect(status.totalDays == 21)
-        #expect(status.daysRemaining == 10)
-        #expect(status.end == autumn2026.stationDirect)
+        #expect(status.daysUntilTarget == 10)
+        #expect(status.countdownTarget == autumn2026.stationDirect)
+        #expect(status.period == autumn2026)
     }
 
     @Test func stationsLandOnTheLocalCalendarDay() throws {
         // 07:13 UT on Oct 24 is still Oct 23 in Honolulu and already the evening of Oct 24 in Auckland;
         // 15:54 UT on Nov 13 is Nov 14 in Auckland.
         let instant = utc("2026-11-03T12:00")
-        let honolulu = try #require(CycleCalculator(ephemeris: ephemeris, calendar: calendar("Pacific/Honolulu")).status(of: .mercury, at: instant))
+        let honolulu = try #require(calc("Pacific/Honolulu").status(of: .mercury, at: instant))
         #expect(honolulu.totalDays == 22)
         #expect(honolulu.day == 12)
-        let auckland = try #require(CycleCalculator(ephemeris: ephemeris, calendar: calendar("Pacific/Auckland")).status(of: .mercury, at: instant))
+        let auckland = try #require(calc("Pacific/Auckland").status(of: .mercury, at: instant))
         #expect(auckland.totalDays == 22)
         #expect(auckland.day == 12) // already Nov 4 there
     }
 
-    @Test func lastDayHasZeroDaysRemaining() throws {
-        let status = try #require(CycleCalculator(ephemeris: ephemeris, calendar: calendar("UTC"))
-            .status(of: .mercury, at: utc("2026-11-13T09:00")))
-        #expect(status.phase == .retrograde)
-        #expect(status.daysRemaining == 0)
+    @Test func lastRetrogradeDayCountsDownToZero() throws {
+        let status = try #require(calc().status(of: .mercury, at: utc("2026-11-13T09:00")))
+        #expect(status.stage == .retrograde)
+        #expect(status.daysUntilTarget == 0)
     }
 
-    @Test func turnsDirectAtTheStationInstant() throws {
-        let status = try #require(CycleCalculator(ephemeris: ephemeris, calendar: calendar("UTC"))
-            .status(of: .mercury, at: utc("2026-11-13T16:00")))
-        #expect(status.phase == .direct)
-        #expect(status.shadow == .post)
+    @Test func postShadowStartsAtTheDirectStation() throws {
+        let status = try #require(calc().status(of: .mercury, at: utc("2026-11-13T16:00")))
+        #expect(status.stage == .postShadow)
         #expect(status.day == 1)
-        #expect(status.start == autumn2026.stationDirect)
-        #expect(status.end == winter2027.stationRetrograde)
+        #expect(status.windowStart == autumn2026.stationDirect)
+        #expect(status.countdownTarget == autumn2026.postShadowEnd)
+        #expect(status.daysUntilTarget == 17)
     }
 
-    @Test func directPhaseReportsShadows() {
-        let calc = CycleCalculator(ephemeris: ephemeris, calendar: calendar("UTC"))
-        #expect(calc.status(of: .mercury, at: utc("2026-11-20T00:00"))?.shadow == .post)
-        #expect(calc.status(of: .mercury, at: utc("2026-12-20T00:00"))?.shadow == CycleStatus.Shadow.none)
-        #expect(calc.status(of: .mercury, at: utc("2027-02-01T00:00"))?.shadow == .pre)
+    @Test func directCountsDownToTheNextRetrograde() throws {
+        let status = try #require(calc().status(of: .mercury, at: utc("2026-12-20T00:00")))
+        #expect(status.stage == .direct)
+        #expect(status.period == winter2027)
+        #expect(status.windowStart == autumn2026.postShadowEnd)
+        #expect(status.countdownTarget == winter2027.stationRetrograde)
+        #expect(status.day == 21) // Nov 30 is day 1
+        #expect(status.daysUntilTarget == 51)
+    }
+
+    @Test func preShadowCountsDownToTheRetrograde() throws {
+        let status = try #require(calc().status(of: .mercury, at: utc("2027-02-01T00:00")))
+        #expect(status.stage == .preShadow)
+        #expect(status.period == winter2027)
+        #expect(status.windowStart == winter2027.preShadowStart)
+        #expect(status.day == 8)
+        #expect(status.daysUntilTarget == 8)
+    }
+
+    @Test func stagesChangeExactlyAtEachEvent() {
+        let c = calc()
+        let second: TimeInterval = 1
+        #expect(c.status(of: .mercury, at: winter2027.preShadowStart.addingTimeInterval(-second))?.stage == .direct)
+        #expect(c.status(of: .mercury, at: winter2027.preShadowStart)?.stage == .preShadow)
+        #expect(c.status(of: .mercury, at: winter2027.stationRetrograde)?.stage == .retrograde)
+        #expect(c.status(of: .mercury, at: winter2027.stationDirect)?.stage == .postShadow)
+        #expect(c.status(of: .mercury, at: autumn2026.postShadowEnd)?.stage == .direct)
     }
 
     @Test func progressIsTimeBasedAndClamped() throws {
-        let calc = CycleCalculator(ephemeris: ephemeris, calendar: calendar("UTC"))
         let mid = autumn2026.stationRetrograde.addingTimeInterval(autumn2026.stationDirect.timeIntervalSince(autumn2026.stationRetrograde) / 2)
-        let status = try #require(calc.status(of: .mercury, at: mid))
+        let status = try #require(calc().status(of: .mercury, at: mid))
         #expect(abs(status.progress - 0.5) < 0.0001)
     }
 
     @Test func returnsNilBeyondTheData() {
-        let calc = CycleCalculator(ephemeris: ephemeris, calendar: calendar("UTC"))
-        #expect(calc.status(of: .mercury, at: utc("2026-01-01T00:00")) == nil)
-        #expect(calc.status(of: .mercury, at: utc("2027-06-01T00:00")) == nil)
-        #expect(calc.status(of: .venus, at: utc("2026-11-03T00:00")) == nil)
+        #expect(calc().status(of: .mercury, at: utc("2026-01-01T00:00")) == nil)
+        #expect(calc().status(of: .mercury, at: utc("2027-06-01T00:00")) == nil)
+        #expect(calc().status(of: .venus, at: utc("2026-11-03T00:00")) == nil)
     }
 }
 

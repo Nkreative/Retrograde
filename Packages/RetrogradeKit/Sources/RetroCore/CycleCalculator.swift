@@ -1,26 +1,41 @@
 import Foundation
 
 /// Where a planet is in its cycle at a given instant: what the Overview and widget show.
+///
+/// A cycle runs pre-shadow → retrograde → post-shadow → direct → (next pre-shadow).
+/// Each stage has its own window, which the progress bar and "Day X of Y" describe,
+/// and a countdown target:
+///
+/// | Stage | Window | Countdown to |
+/// |---|---|---|
+/// | preShadow | pre-shadow start → station retrograde | station retrograde |
+/// | retrograde | station retrograde → station direct | station direct |
+/// | postShadow | station direct → post-shadow end | post-shadow end |
+/// | direct | previous post-shadow end → next station retrograde | next station retrograde |
+///
+/// The direct window deliberately runs to the next retrograde (not to the next shadow) so its
+/// countdown is "days till the next plot twist"; once the pre-shadow begins, the stage switches.
 public struct CycleStatus: Equatable, Sendable {
-    public enum Phase: Sendable { case retrograde, direct }
-    public enum Shadow: Sendable { case none, pre, post }
+    public enum Stage: CaseIterable, Sendable {
+        case preShadow, retrograde, postShadow, direct
+    }
 
     public let planet: Planet
-    public let phase: Phase
-    /// Only set while `phase == .direct`: the planet is retracing (post) or about to retrace (pre) the retrograde zone.
-    public let shadow: Shadow
-    /// The station that began this phase.
-    public let start: Date
-    /// The station that ends this phase; the countdown target.
-    public let end: Date
-    /// 1-based calendar day within the phase ("Day 12 of 22").
+    public let stage: Stage
+    /// The retrograde this stage belongs to: the upcoming one before it starts, otherwise the current or just-ended one.
+    public let period: RetrogradePeriod
+    public let windowStart: Date
+    public let windowEnd: Date
+    public let countdownTarget: Date
+    /// 1-based calendar day within the window ("Day 12 of 22").
     public let day: Int
     public let totalDays: Int
-    /// Fraction of the phase elapsed, by exact time (0...1).
+    /// Calendar days from today to the countdown target; 0 on the day itself.
+    public let daysUntilTarget: Int
+    /// Fraction of the window elapsed, by exact time (0...1).
     public let progress: Double
 
-    /// Calendar days until the phase ends ("10 days to exhale"); 0 on the last day.
-    public var daysRemaining: Int { totalDays - day }
+    public var isRetrograde: Bool { stage == .retrograde }
 }
 
 /// How a calendar day is marked for a planet (Rx, Sh, D in the Calendar).
@@ -39,18 +54,21 @@ public struct CycleCalculator: Sendable {
         self.calendar = calendar
     }
 
-    /// Status at `instant`, or nil when the data doesn't reach the stations on both sides.
+    /// Status at `instant`, or nil when the data doesn't reach the neighbouring events.
     public func status(of planet: Planet, at instant: Date) -> CycleStatus? {
         let list = periods[planet] ?? []
-        if let current = list.first(where: { $0.stationRetrograde <= instant && instant < $0.stationDirect }) {
-            return makeStatus(planet, .retrograde, .none, from: current.stationRetrograde, to: current.stationDirect, at: instant)
+        if let p = list.first(where: { $0.stationRetrograde <= instant && instant < $0.stationDirect }) {
+            return make(planet, .retrograde, p, from: p.stationRetrograde, to: p.stationDirect, target: p.stationDirect, at: instant)
         }
-        guard let previous = list.last(where: { $0.stationDirect <= instant }),
-              let next = list.first(where: { $0.stationRetrograde > instant })
-        else { return nil }
-        let shadow: CycleStatus.Shadow =
-            instant < previous.postShadowEnd ? .post : instant >= next.preShadowStart ? .pre : .none
-        return makeStatus(planet, .direct, shadow, from: previous.stationDirect, to: next.stationRetrograde, at: instant)
+        if let p = list.first(where: { $0.stationDirect <= instant && instant < $0.postShadowEnd }) {
+            return make(planet, .postShadow, p, from: p.stationDirect, to: p.postShadowEnd, target: p.postShadowEnd, at: instant)
+        }
+        guard let next = list.first(where: { $0.stationRetrograde > instant }) else { return nil }
+        if instant >= next.preShadowStart {
+            return make(planet, .preShadow, next, from: next.preShadowStart, to: next.stationRetrograde, target: next.stationRetrograde, at: instant)
+        }
+        guard let previous = list.last(where: { $0.postShadowEnd <= instant }) else { return nil }
+        return make(planet, .direct, next, from: previous.postShadowEnd, to: next.stationRetrograde, target: next.stationRetrograde, at: instant)
     }
 
     /// Marker for a calendar day. A station day counts as retrograde; shadow days
@@ -66,17 +84,19 @@ public struct CycleCalculator: Sendable {
         return .direct
     }
 
-    private func makeStatus(
-        _ planet: Planet, _ phase: CycleStatus.Phase, _ shadow: CycleStatus.Shadow,
-        from start: Date, to end: Date, at instant: Date
+    private func make(
+        _ planet: Planet, _ stage: CycleStatus.Stage, _ period: RetrogradePeriod,
+        from start: Date, to end: Date, target: Date, at instant: Date
     ) -> CycleStatus {
         let firstDay = CalendarDay(start, in: calendar)
-        let total = firstDay.days(to: CalendarDay(end, in: calendar)) + 1
-        let day = firstDay.days(to: CalendarDay(instant, in: calendar)) + 1
+        let today = CalendarDay(instant, in: calendar)
         let progress = instant.timeIntervalSince(start) / end.timeIntervalSince(start)
         return CycleStatus(
-            planet: planet, phase: phase, shadow: shadow, start: start, end: end,
-            day: day, totalDays: total, progress: min(max(progress, 0), 1)
+            planet: planet, stage: stage, period: period, windowStart: start, windowEnd: end, countdownTarget: target,
+            day: firstDay.days(to: today) + 1,
+            totalDays: firstDay.days(to: CalendarDay(end, in: calendar)) + 1,
+            daysUntilTarget: max(today.days(to: CalendarDay(target, in: calendar)), 0),
+            progress: min(max(progress, 0), 1)
         )
     }
 }
