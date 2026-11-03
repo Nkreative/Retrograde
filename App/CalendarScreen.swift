@@ -35,11 +35,8 @@ struct CalendarScreen: View {
         ScrollViewReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("MERCURY").retroText(.cardTitle).foregroundStyle(RetroColor.text).accessibilityAddTraits(.isHeader)
-                    Text("Same orbit. Different days. Tap a date to explore what adds to the noise—and what helps soften it.")
-                        .retroText(.body).foregroundStyle(RetroColor.textMuted)
-                }
+                Text("Same orbit. Different days. Tap a date to explore what adds to the noise—and what helps soften it.")
+                    .retroText(.body).foregroundStyle(RetroColor.textMuted)
                 if let coverage, !coverage.contains(today) {
                     OutOfRangeNote(coverage: coverage)
                 }
