@@ -5,8 +5,8 @@ import Testing
 /// Mercury's Oct–Nov 2026 retrograde and the one after it (Horizons-derived values).
 private let autumn2026 = RetrogradePeriod(
     planet: .mercury,
-    preShadowStart: utc("2026-10-04T09:09"), stationRetrograde: utc("2026-10-24T07:10"),
-    stationDirect: utc("2026-11-13T15:56"), postShadowEnd: utc("2026-11-30T06:16"),
+    preShadowStart: utc("2026-10-04T09:09"), stationRetrograde: utc("2026-10-24T07:13"),
+    stationDirect: utc("2026-11-13T15:54"), postShadowEnd: utc("2026-11-30T06:16"),
     stationRetrogradeLongitude: 230.979, stationDirectLongitude: 215.0335
 )
 private let winter2027 = RetrogradePeriod(
@@ -44,8 +44,8 @@ private func calendar(_ zone: String) -> Calendar {
     }
 
     @Test func stationsLandOnTheLocalCalendarDay() throws {
-        // 07:10 UT on Oct 24 is still Oct 23 in Honolulu and already the evening of Oct 24 in Auckland;
-        // 15:56 UT on Nov 13 is Nov 14 in Auckland.
+        // 07:13 UT on Oct 24 is still Oct 23 in Honolulu and already the evening of Oct 24 in Auckland;
+        // 15:54 UT on Nov 13 is Nov 14 in Auckland.
         let instant = utc("2026-11-03T12:00")
         let honolulu = try #require(CycleCalculator(ephemeris: ephemeris, calendar: calendar("Pacific/Honolulu")).status(of: .mercury, at: instant))
         #expect(honolulu.totalDays == 22)

@@ -1,5 +1,5 @@
 {
- "note": "Independent cross-check list: station dates (UT calendar date) as printed in widely published almanac/retrograde tables. The generated file must agree within one day. Add rows when spot-checking new years.",
+ "note": "Independent cross-checks. 'stations' are UT calendar dates and must match exactly. 'exactTimes' are UT instants computed independently with Skyfield 1.49 + JPL DE440s (bisection on the longitude rate, not the generator's method) and agree with published astrology ephemerides (Mercury Oct 2026: 07:12-07:13 / 15:53-15:54 UT); the generated file must agree within 2 minutes.",
  "stations": [
   {"planet": "mercury", "stationRetrograde": "2025-03-15", "stationDirect": "2025-04-07"},
   {"planet": "mercury", "stationRetrograde": "2025-07-18", "stationDirect": "2025-08-11"},
@@ -7,9 +7,13 @@
   {"planet": "mercury", "stationRetrograde": "2026-02-26", "stationDirect": "2026-03-20"},
   {"planet": "mercury", "stationRetrograde": "2026-06-29", "stationDirect": "2026-07-23"},
   {"planet": "mercury", "stationRetrograde": "2026-10-24", "stationDirect": "2026-11-13"},
-  {"planet": "venus", "stationRetrograde": "2025-03-01", "stationDirect": "2025-04-12"},
+  {"planet": "venus", "stationRetrograde": "2025-03-02", "stationDirect": "2025-04-13"},
   {"planet": "venus", "stationRetrograde": "2026-10-03", "stationDirect": "2026-11-14"},
-  {"planet": "mars", "stationRetrograde": "2024-12-06", "stationDirect": "2025-02-23"}
+  {"planet": "mars", "stationRetrograde": "2024-12-06", "stationDirect": "2025-02-24"}
+ ],
+ "exactTimes": [
+  {"planet": "mercury", "preShadowStart": "2026-10-04T09:09Z", "stationRetrograde": "2026-10-24T07:13Z", "stationDirect": "2026-11-13T15:54Z", "postShadowEnd": "2026-11-30T06:16Z"},
+  {"planet": "venus", "stationRetrograde": "2025-03-02T00:36Z", "stationDirect": "2025-04-13T01:02Z"}
  ],
  "moonPhases": [
   {"phase": "full", "date": "2026-01-03"},

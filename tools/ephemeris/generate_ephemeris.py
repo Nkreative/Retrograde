@@ -39,9 +39,9 @@ FETCH_END = dt.date(2032, 7, 1)
 
 PLANETS = [
     # (id used in app, Horizons body id, half-width in hours of the station fit window)
-    ("mercury", "199", 12),
-    ("venus", "299", 24),
-    ("mars", "499", 24),
+    ("mercury", "199", 3),
+    ("venus", "299", 6),
+    ("mars", "499", 6),
     ("jupiter", "599", 72),
     ("saturn", "699", 72),
     ("uranus", "799", 96),

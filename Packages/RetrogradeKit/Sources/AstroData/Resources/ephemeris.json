@@ -1,6 +1,6 @@
 {
  "schemaVersion": 1,
- "generatedAt": "2026-11-03T18:45Z",
+ "generatedAt": "2026-11-03T19:04Z",
  "coverage": {
   "start": "2025-01-01",
   "end": "2030-12-31"
@@ -48,8 +48,8 @@
   {
    "planet": "mercury",
    "preShadowStart": "2024-07-17T03:51Z",
-   "stationRetrograde": "2024-08-05T04:55Z",
-   "stationDirect": "2024-08-28T21:13Z",
+   "stationRetrograde": "2024-08-05T04:56Z",
+   "stationDirect": "2024-08-28T21:14Z",
    "postShadowEnd": "2024-09-11T23:52Z",
    "stationRetrogradeLongitude": 154.1046,
    "stationDirectLongitude": 141.4088
@@ -75,8 +75,8 @@
   {
    "planet": "mercury",
    "preShadowStart": "2024-11-07T12:32Z",
-   "stationRetrograde": "2024-11-26T02:40Z",
-   "stationDirect": "2024-12-15T20:59Z",
+   "stationRetrograde": "2024-11-26T02:42Z",
+   "stationDirect": "2024-12-15T20:57Z",
    "postShadowEnd": "2025-01-03T03:15Z",
    "stationRetrogradeLongitude": 262.6717,
    "stationDirectLongitude": 246.396
@@ -84,8 +84,8 @@
   {
    "planet": "mars",
    "preShadowStart": "2024-10-05T04:40Z",
-   "stationRetrograde": "2024-12-06T23:32Z",
-   "stationDirect": "2025-02-24T02:02Z",
+   "stationRetrograde": "2024-12-06T23:33Z",
+   "stationDirect": "2025-02-24T02:00Z",
    "postShadowEnd": "2025-05-02T06:07Z",
    "stationRetrogradeLongitude": 126.1711,
    "stationDirectLongitude": 107.0152
@@ -93,8 +93,8 @@
   {
    "planet": "venus",
    "preShadowStart": "2025-01-28T13:23Z",
-   "stationRetrograde": "2025-03-02T00:34Z",
-   "stationDirect": "2025-04-13T01:05Z",
+   "stationRetrograde": "2025-03-02T00:36Z",
+   "stationDirect": "2025-04-13T01:02Z",
    "postShadowEnd": "2025-05-16T06:04Z",
    "stationRetrogradeLongitude": 10.8357,
    "stationDirectLongitude": 354.6249
@@ -102,8 +102,8 @@
   {
    "planet": "mercury",
    "preShadowStart": "2025-03-01T07:59Z",
-   "stationRetrograde": "2025-03-15T06:47Z",
-   "stationDirect": "2025-04-07T11:09Z",
+   "stationRetrograde": "2025-03-15T06:46Z",
+   "stationDirect": "2025-04-07T11:08Z",
    "postShadowEnd": "2025-04-26T08:28Z",
    "stationRetrogradeLongitude": 9.5889,
    "stationDirectLongitude": 356.8263
@@ -139,7 +139,7 @@
    "planet": "mercury",
    "preShadowStart": "2025-06-30T05:54Z",
    "stationRetrograde": "2025-07-18T04:45Z",
-   "stationDirect": "2025-08-11T07:29Z",
+   "stationDirect": "2025-08-11T07:30Z",
    "postShadowEnd": "2025-08-25T08:36Z",
    "stationRetrogradeLongitude": 135.5752,
    "stationDirectLongitude": 124.2494
@@ -156,8 +156,8 @@
   {
    "planet": "mercury",
    "preShadowStart": "2025-10-21T11:10Z",
-   "stationRetrograde": "2025-11-09T18:59Z",
-   "stationDirect": "2025-11-29T17:41Z",
+   "stationRetrograde": "2025-11-09T19:01Z",
+   "stationDirect": "2025-11-29T17:39Z",
    "postShadowEnd": "2025-12-17T03:56Z",
    "stationRetrogradeLongitude": 246.8619,
    "stationDirectLongitude": 230.7069
@@ -174,8 +174,8 @@
   {
    "planet": "mercury",
    "preShadowStart": "2026-02-11T22:12Z",
-   "stationRetrograde": "2026-02-26T06:49Z",
-   "stationDirect": "2026-03-20T19:34Z",
+   "stationRetrograde": "2026-02-26T06:48Z",
+   "stationDirect": "2026-03-20T19:33Z",
    "postShadowEnd": "2026-04-09T11:42Z",
    "stationRetrogradeLongitude": 352.5653,
    "stationDirectLongitude": 338.4907
@@ -193,7 +193,7 @@
    "planet": "mercury",
    "preShadowStart": "2026-06-13T00:53Z",
    "stationRetrograde": "2026-06-29T17:36Z",
-   "stationDirect": "2026-07-23T22:57Z",
+   "stationDirect": "2026-07-23T22:58Z",
    "postShadowEnd": "2026-08-07T03:37Z",
    "stationRetrogradeLongitude": 116.2573,
    "stationDirectLongitude": 106.3165
@@ -228,8 +228,8 @@
   {
    "planet": "venus",
    "preShadowStart": "2026-08-31T14:46Z",
-   "stationRetrograde": "2026-10-03T07:14Z",
-   "stationDirect": "2026-11-14T00:29Z",
+   "stationRetrograde": "2026-10-03T07:16Z",
+   "stationDirect": "2026-11-14T00:28Z",
    "postShadowEnd": "2026-12-15T18:44Z",
    "stationRetrogradeLongitude": 218.4911,
    "stationDirectLongitude": 202.8636
@@ -237,8 +237,8 @@
   {
    "planet": "mercury",
    "preShadowStart": "2026-10-04T09:09Z",
-   "stationRetrograde": "2026-10-24T07:10Z",
-   "stationDirect": "2026-11-13T15:56Z",
+   "stationRetrograde": "2026-10-24T07:13Z",
+   "stationDirect": "2026-11-13T15:54Z",
    "postShadowEnd": "2026-11-30T06:16Z",
    "stationRetrogradeLongitude": 230.979,
    "stationDirectLongitude": 215.0335
@@ -255,8 +255,8 @@
   {
    "planet": "mars",
    "preShadowStart": "2026-11-05T15:34Z",
-   "stationRetrograde": "2027-01-10T12:58Z",
-   "stationDirect": "2027-04-01T14:10Z",
+   "stationRetrograde": "2027-01-10T12:59Z",
+   "stationDirect": "2027-04-01T14:08Z",
    "postShadowEnd": "2027-06-08T01:58Z",
    "stationRetrogradeLongitude": 160.429,
    "stationDirectLongitude": 140.9266
@@ -265,7 +265,7 @@
    "planet": "mercury",
    "preShadowStart": "2027-01-25T18:58Z",
    "stationRetrograde": "2027-02-09T17:36Z",
-   "stationDirect": "2027-03-03T12:34Z",
+   "stationDirect": "2027-03-03T12:32Z",
    "postShadowEnd": "2027-03-23T14:58Z",
    "stationRetrogradeLongitude": 335.9812,
    "stationDirectLongitude": 320.9231
@@ -282,8 +282,8 @@
   {
    "planet": "mercury",
    "preShadowStart": "2027-05-26T06:04Z",
-   "stationRetrograde": "2027-06-10T18:16Z",
-   "stationDirect": "2027-07-04T19:38Z",
+   "stationRetrograde": "2027-06-10T18:15Z",
+   "stationDirect": "2027-07-04T19:39Z",
    "postShadowEnd": "2027-07-19T08:43Z",
    "stationRetrogradeLongitude": 96.3611,
    "stationDirectLongitude": 87.4692
@@ -318,8 +318,8 @@
   {
    "planet": "mercury",
    "preShadowStart": "2027-09-17T07:29Z",
-   "stationRetrograde": "2027-10-07T14:35Z",
-   "stationDirect": "2027-10-28T14:12Z",
+   "stationRetrograde": "2027-10-07T14:37Z",
+   "stationDirect": "2027-10-28T14:11Z",
    "postShadowEnd": "2027-11-13T09:55Z",
    "stationRetrogradeLongitude": 214.9278,
    "stationDirectLongitude": 199.3121
@@ -336,8 +336,8 @@
   {
    "planet": "mercury",
    "preShadowStart": "2028-01-08T19:23Z",
-   "stationRetrograde": "2028-01-24T11:01Z",
-   "stationDirect": "2028-02-14T12:40Z",
+   "stationRetrograde": "2028-01-24T11:02Z",
+   "stationDirect": "2028-02-14T12:38Z",
    "postShadowEnd": "2028-03-05T16:43Z",
    "stationRetrogradeLongitude": 319.6984,
    "stationDirectLongitude": 303.9854
@@ -354,8 +354,8 @@
   {
    "planet": "venus",
    "preShadowStart": "2028-04-07T13:47Z",
-   "stationRetrograde": "2028-05-10T23:01Z",
-   "stationDirect": "2028-06-22T22:15Z",
+   "stationRetrograde": "2028-05-10T23:03Z",
+   "stationDirect": "2028-06-22T22:13Z",
    "postShadowEnd": "2028-07-26T21:10Z",
    "stationRetrogradeLongitude": 79.6868,
    "stationDirectLongitude": 63.1797
@@ -363,8 +363,8 @@
   {
    "planet": "mercury",
    "preShadowStart": "2028-05-06T18:40Z",
-   "stationRetrograde": "2028-05-21T08:44Z",
-   "stationDirect": "2028-06-14T06:05Z",
+   "stationRetrograde": "2028-05-21T08:43Z",
+   "stationDirect": "2028-06-14T06:06Z",
    "postShadowEnd": "2028-06-29T08:58Z",
    "stationRetrogradeLongitude": 76.3146,
    "stationDirectLongitude": 67.7568
@@ -399,7 +399,7 @@
   {
    "planet": "mercury",
    "preShadowStart": "2028-08-30T07:17Z",
-   "stationRetrograde": "2028-09-19T16:32Z",
+   "stationRetrograde": "2028-09-19T16:34Z",
    "stationDirect": "2028-10-11T10:28Z",
    "postShadowEnd": "2028-10-26T13:50Z",
    "stationRetrogradeLongitude": 198.5941,
@@ -408,8 +408,8 @@
   {
    "planet": "mercury",
    "preShadowStart": "2028-12-21T21:24Z",
-   "stationRetrograde": "2029-01-07T07:55Z",
-   "stationDirect": "2029-01-27T18:43Z",
+   "stationRetrograde": "2029-01-07T07:56Z",
+   "stationDirect": "2029-01-27T18:40Z",
    "postShadowEnd": "2029-02-16T16:52Z",
    "stationRetrogradeLongitude": 303.6339,
    "stationDirectLongitude": 287.5413
@@ -426,8 +426,8 @@
   {
    "planet": "mars",
    "preShadowStart": "2028-12-10T02:31Z",
-   "stationRetrograde": "2029-02-14T08:15Z",
-   "stationDirect": "2029-05-05T19:01Z",
+   "stationRetrograde": "2029-02-14T08:16Z",
+   "stationDirect": "2029-05-05T19:00Z",
    "postShadowEnd": "2029-07-09T04:02Z",
    "stationRetrogradeLongitude": 193.9226,
    "stationDirectLongitude": 174.929
@@ -435,8 +435,8 @@
   {
    "planet": "mercury",
    "preShadowStart": "2029-04-17T22:45Z",
-   "stationRetrograde": "2029-05-01T23:07Z",
-   "stationDirect": "2029-05-25T19:20Z",
+   "stationRetrograde": "2029-05-01T23:06Z",
+   "stationDirect": "2029-05-25T19:21Z",
    "postShadowEnd": "2029-06-10T19:56Z",
    "stationRetrogradeLongitude": 56.6723,
    "stationDirectLongitude": 47.5609
@@ -462,7 +462,7 @@
   {
    "planet": "mercury",
    "preShadowStart": "2029-08-13T09:10Z",
-   "stationRetrograde": "2029-09-02T12:17Z",
+   "stationRetrograde": "2029-09-02T12:18Z",
    "stationDirect": "2029-09-25T02:02Z",
    "postShadowEnd": "2029-10-09T16:21Z",
    "stationRetrogradeLongitude": 181.8309,
@@ -489,8 +489,8 @@
   {
    "planet": "venus",
    "preShadowStart": "2029-11-15T09:28Z",
-   "stationRetrograde": "2029-12-16T23:46Z",
-   "stationDirect": "2030-01-26T21:35Z",
+   "stationRetrograde": "2029-12-16T23:47Z",
+   "stationDirect": "2030-01-26T21:33Z",
    "postShadowEnd": "2030-02-27T14:22Z",
    "stationRetrogradeLongitude": 294.0284,
    "stationDirectLongitude": 278.6282
@@ -498,8 +498,8 @@
   {
    "planet": "mercury",
    "preShadowStart": "2029-12-04T23:17Z",
-   "stationRetrograde": "2029-12-22T05:48Z",
-   "stationDirect": "2030-01-11T05:48Z",
+   "stationRetrograde": "2029-12-22T05:50Z",
+   "stationDirect": "2030-01-11T05:46Z",
    "postShadowEnd": "2030-01-30T15:54Z",
    "stationRetrogradeLongitude": 287.7078,
    "stationDirectLongitude": 271.4371
@@ -516,7 +516,7 @@
   {
    "planet": "mercury",
    "preShadowStart": "2030-03-30T07:49Z",
-   "stationRetrograde": "2030-04-13T02:35Z",
+   "stationRetrograde": "2030-04-13T02:34Z",
    "stationDirect": "2030-05-06T20:15Z",
    "postShadowEnd": "2030-05-24T00:39Z",
    "stationRetrogradeLongitude": 37.7993,
@@ -543,8 +543,8 @@
   {
    "planet": "mercury",
    "preShadowStart": "2030-07-27T12:48Z",
-   "stationRetrograde": "2030-08-16T01:19Z",
-   "stationDirect": "2030-09-08T09:27Z",
+   "stationRetrograde": "2030-08-16T01:20Z",
+   "stationDirect": "2030-09-08T09:28Z",
    "postShadowEnd": "2030-09-22T14:58Z",
    "stationRetrogradeLongitude": 164.4957,
    "stationDirectLongitude": 151.1078
@@ -570,8 +570,8 @@
   {
    "planet": "mercury",
    "preShadowStart": "2030-11-17T23:57Z",
-   "stationRetrograde": "2030-12-06T02:45Z",
-   "stationDirect": "2030-12-25T21:17Z",
+   "stationRetrograde": "2030-12-06T02:47Z",
+   "stationDirect": "2030-12-25T21:15Z",
    "postShadowEnd": "2031-01-13T14:46Z",
    "stationRetrogradeLongitude": 271.8645,
    "stationDirectLongitude": 255.5573
@@ -579,7 +579,7 @@
   {
    "planet": "mercury",
    "preShadowStart": "2031-03-12T04:56Z",
-   "stationRetrograde": "2031-03-26T00:45Z",
+   "stationRetrograde": "2031-03-26T00:44Z",
    "stationDirect": "2031-04-18T11:16Z",
    "postShadowEnd": "2031-05-06T19:07Z",
    "stationRetrogradeLongitude": 19.7426,
@@ -588,7 +588,7 @@
   {
    "planet": "mars",
    "preShadowStart": "2031-01-25T09:57Z",
-   "stationRetrograde": "2031-03-29T00:33Z",
+   "stationRetrograde": "2031-03-29T00:35Z",
    "stationDirect": "2031-06-13T11:57Z",
    "postShadowEnd": "2031-08-10T00:49Z",
    "stationRetrogradeLongitude": 231.6361,
@@ -624,8 +624,8 @@
   {
    "planet": "venus",
    "preShadowStart": "2031-06-16T22:44Z",
-   "stationRetrograde": "2031-07-20T17:06Z",
-   "stationDirect": "2031-09-01T17:59Z",
+   "stationRetrograde": "2031-07-20T17:08Z",
+   "stationDirect": "2031-09-01T17:57Z",
    "postShadowEnd": "2031-10-05T02:24Z",
    "stationRetrogradeLongitude": 146.4269,
    "stationDirectLongitude": 130.0197

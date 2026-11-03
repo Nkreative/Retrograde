@@ -37,7 +37,16 @@ class EphemerisTests(unittest.TestCase):
                          and abs(parse(p["stationRetrograde"]) - day(row["stationRetrograde"])) < dt.timedelta(days=2)]
                 self.assertEqual(len(match), 1, "no retrograde near published date")
                 for key in ("stationRetrograde", "stationDirect"):
-                    self.assertLessEqual(abs(parse(match[0][key]).date() - day(row[key]).date()), dt.timedelta(days=1))
+                    self.assertEqual(parse(match[0][key]).date(), day(row[key]).date(), key)
+
+    def test_matches_independent_exact_times(self):
+        for row in self.known["exactTimes"]:
+            with self.subTest(row=row):
+                period = next(p for p in self.doc["retrogrades"] if p["planet"] == row["planet"]
+                              and abs(parse(p["stationRetrograde"]) - parse(row["stationRetrograde"])) < dt.timedelta(days=2))
+                for key, expected in row.items():
+                    if key != "planet":
+                        self.assertLessEqual(abs(parse(period[key]) - parse(expected)), dt.timedelta(minutes=2), key)
 
     def test_matches_published_moon_phases(self):
         for row in self.known["moonPhases"]:

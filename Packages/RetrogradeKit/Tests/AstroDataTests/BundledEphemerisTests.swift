@@ -27,6 +27,29 @@ import RetroCore
         #expect(CalendarDay(status.end, in: london) == CalendarDay(year: 2026, month: 11, day: 13))
     }
 
+    /// Independent values: Skyfield + JPL DE440s, matching published ephemerides (see tools/ephemeris/known_dates.json).
+    @Test func mercuryAutumn2026MatchesIndependentCalculation() throws {
+        let period = try #require(ephemeris.retrogrades(of: .mercury).first {
+            CalendarDay($0.stationRetrograde, in: Self.utc) == CalendarDay(year: 2026, month: 10, day: 24)
+        })
+        let expected = [
+            (period.preShadowStart, "2026-10-04T09:09Z"), (period.stationRetrograde, "2026-10-24T07:13Z"),
+            (period.stationDirect, "2026-11-13T15:54Z"), (period.postShadowEnd, "2026-11-30T06:16Z"),
+        ]
+        for (actual, reference) in expected {
+            let date = try #require(BundledEphemeris.parseMinute(reference))
+            #expect(abs(actual.timeIntervalSince(date)) <= 120, "\(actual) vs \(reference)")
+        }
+        #expect(period.stationRetrogradeSign == .scorpio)
+        #expect(period.stationDirectSign == .scorpio)
+    }
+
+    private static let utc: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "UTC")!
+        return c
+    }()
+
     @Test func statusIsAvailableAcrossTheWholeCoverage() {
         var utc = Calendar(identifier: .gregorian)
         utc.timeZone = TimeZone(identifier: "UTC")!
