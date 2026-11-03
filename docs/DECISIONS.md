@@ -2,6 +2,11 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-03 (M7 methodology)
+
+- **Daily intensity v1 provisionally approved:** points and four levels as in [INTENSITY_METHODOLOGY.md](INTENSITY_METHODOLOGY.md). Mercury shadow days stay +1. Eclipses deferred. Tropical zodiac for sign changes; days assigned in the person's local time zone. Versioned (`methodologyVersion = 1`), deterministic, framed as a reflection score, not a prediction.
+- **Editorial copy** drafted in `docs/editorial/DAILY_INSIGHTS_DRAFT.md`, awaiting review before the Calendar UI.
+
 ## 2026-11-03 (Overview artwork)
 
 - **Approved "cosmic chaos" artwork** replaces the Overview hero (asset `OverviewHero`, 1774 × 887 JPEG). Shown whole at 2:1 so the girl, tangled orbits and all floating icons stay in frame; the stage headline stays live text in a dark band above it that blends into the artwork's night sky. The paywall keeps its own separate artwork.
@@ -66,6 +71,6 @@ Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 - **Task completion** resets when each new Mercury retrograde begins.
 - **Notifications:** when Mercury turns retrograde / direct; "before" alerts 2 weeks and 3 days ahead of each; unfinished-task reminders every other day.
 - **Data:** NASA JPL Horizons + USNO, 2025–2030; shadow periods in scope (needed for future planets).
-- **Intensity:** in-house, documented rule-based rating; editorial copy written in the app's voice.
+- **Intensity:** in-house, documented rule-based rating; editorial copy written in the app's voice (see M7 methodology above).
 - **Apple Developer account:** individual.
 - **Process:** any screen not in the approved Figma must be drawn on the Figma review page and approved before it is built.
