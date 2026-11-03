@@ -26,6 +26,8 @@ struct OverviewScreen: View {
     }
 
     private func content(_ status: CycleStatus, _ copy: OverviewCopy) -> some View {
+        // Progress group, then the headline + artwork group close beneath it (tightened ~50 pt
+        // after review so the hero reads as part of the same story).
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 12) {
                 CountdownRow(status: status, copy: copy)
@@ -34,9 +36,9 @@ struct OverviewScreen: View {
                     Spacer()
                     PillButton("ADD TO HOME SCREEN", systemImage: RetroSymbol.add, action: onAddToHomeScreen)
                 }
+                .padding(.top, -6) // sits just under the bar labels
             }
             .padding(.top, 6)
-            .padding(.bottom, 20)
 
             VStack(alignment: .leading, spacing: RetroMetrics.sectionSpacing) {
                 HeroCard(headline: copy.heroHeadline)
@@ -55,7 +57,6 @@ struct OverviewScreen: View {
                 }
                 PrimaryButton(copy.callToAction, systemImage: RetroSymbol.firstAid, layout: .leading, showsArrow: true, action: onOpenSurvivalKit)
             }
-            .padding(.top, 4)
             .padding(.bottom, 18)
         }
         .padding(.horizontal, RetroMetrics.screenPadding)
@@ -134,7 +135,6 @@ private struct HeroCard: View {
                 .retroText(.hero)
                 .foregroundStyle(RetroColor.text)
                 .shadow(color: .black.opacity(0.5), radius: 8)
-                .padding(.top, 8)
                 .accessibilityAddTraits(.isHeader)
         }
     }
