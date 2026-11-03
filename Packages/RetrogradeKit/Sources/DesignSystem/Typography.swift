@@ -46,6 +46,16 @@ public enum RetroTextStyle: CaseIterable, Sendable {
     case bodyHeavy
     /// Inter Regular 10 — fine print (the "reflection prompt, not a prediction" note).
     case finePrint
+    /// Inter Regular 15 — journal prompts ("Today I’m feeling ___.").
+    case prompt
+    /// Space Mono 36 — short countdowns ("00:10").
+    case timer
+    /// Space Mono 27 — the breathing ring's countdown ("01:00").
+    case timerCompact
+    /// Archivo Black 21 — breath lengths ("4 seconds").
+    case breathCount
+    /// Space Mono 8 — captions under timers and examples ("FOR EXAMPLE").
+    case monoTiny
     /// Space Mono 11 — countdown label, step numbers.
     case monoLarge
     /// Space Mono 10 — tab labels, eyebrows.
@@ -57,36 +67,44 @@ public enum RetroTextStyle: CaseIterable, Sendable {
 
     var postScriptName: String {
         switch self {
-        case .display, .hero, .title, .section, .cardTitle: "ArchivoBlack-Regular"
+        case .display, .hero, .title, .section, .cardTitle, .breathCount: "ArchivoBlack-Regular"
         case .button: "Inter-Bold"
         case .bodyStrong: "Inter-SemiBold"
-        case .bodyLarge, .body, .finePrint: "Inter-Regular"
+        case .bodyLarge, .body, .finePrint, .prompt: "Inter-Regular"
         case .bodyHeavy: "Inter-ExtraBold"
-        case .monoLarge, .mono, .monoSmall: "SpaceMono-Regular"
+        case .monoLarge, .mono, .monoSmall, .timer, .timerCompact, .monoTiny: "SpaceMono-Regular"
         case .monoBold: "SpaceMono-Bold"
         }
     }
 
     public var size: CGFloat {
         switch self {
+        case .timer: 36
         case .display: 32
         case .hero: 30
+        case .timerCompact: 27
+        case .breathCount: 21
         case .title: 20
         case .section: 19
         case .cardTitle: 16
         case .button: 14
+        case .prompt: 15
         case .bodyStrong, .bodyLarge: 13
         case .body, .bodyHeavy: 12
         case .monoLarge: 11
         case .mono, .monoBold, .finePrint: 10
         case .monoSmall: 9
+        case .monoTiny: 8
         }
     }
 
     /// The system style it scales alongside when the person changes text size.
     var scalesLike: Font.TextStyle {
         switch self {
-        case .display: .largeTitle
+        case .display, .timer: .largeTitle
+        case .timerCompact, .breathCount: .title2
+        case .prompt: .body
+        case .monoTiny: .caption2
         case .hero: .title
         case .title: .title2
         case .section: .title3
@@ -105,6 +123,7 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         switch self {
         case .body, .bodyHeavy: 2
         case .bodyLarge: 3
+        case .prompt: 4
         default: 0
         }
     }

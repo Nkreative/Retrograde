@@ -232,8 +232,7 @@ extension KitSection.Topic {
         case .communication: RetroSymbol.communication
         case .techBackup: RetroSymbol.techBackup
         case .planning: RetroSymbol.planning
-        // Figma uses the speech bubble here too (flagged for review).
-        case .journal: RetroSymbol.communication
+        case .journal: RetroSymbol.journal
         }
     }
 }

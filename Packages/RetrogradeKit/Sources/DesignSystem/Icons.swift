@@ -27,7 +27,7 @@ public enum RetroSymbol {
     public static let communication = "message"
     public static let techBackup = "laptopcomputer"
     public static let planning = "calendar"
-    public static let journal = "pencil.line"
+    public static let journal = "book.closed"
     public static let firstAid = "cross.case"
     public static let moon = "moon.fill"
     public static let heart = "heart.fill"

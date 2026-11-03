@@ -21,6 +21,8 @@ public struct AppHeader: View {
             row(buttonSize: RetroMetrics.headerButtonSize, spacing: 13)
             row(buttonSize: 36, spacing: 8)
         }
+        // The header is chrome, like a navigation bar: it stops growing at the largest text sizes.
+        .dynamicTypeSize(...DynamicTypeSize.xLarge)
         .padding(.horizontal, RetroMetrics.screenPadding)
         .frame(minHeight: RetroMetrics.headerHeight)
     }
@@ -144,16 +146,32 @@ public struct SecondaryButton: View {
 
     public var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
-                if let systemImage { Image(systemName: systemImage).font(.system(size: 13, weight: .semibold)) }
-                Text(title).font(.custom("Inter-Bold", size: 13, relativeTo: .subheadline))
-            }
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .foregroundStyle(RetroColor.text)
-            .overlay(RoundedRectangle(cornerRadius: RetroMetrics.Radius.button).strokeBorder(RetroColor.text, lineWidth: 1))
-            .contentShape(Rectangle())
+            SecondaryButtonLabel(title, systemImage: systemImage)
         }
         .buttonStyle(PressFeedbackStyle())
+    }
+}
+
+/// The outlined look on its own, for controls that aren't plain buttons (e.g. a `ShareLink`).
+public struct SecondaryButtonLabel: View {
+    let title: String
+    let systemImage: String?
+
+    public init(_ title: String, systemImage: String? = nil) {
+        self.title = title
+        self.systemImage = systemImage
+    }
+
+    public var body: some View {
+        HStack(spacing: 8) {
+            if let systemImage { Image(systemName: systemImage).font(.system(size: 13, weight: .semibold)) }
+            Text(title).retroText(.button)
+        }
+        .padding(.horizontal, 8)
+        .frame(maxWidth: .infinity, minHeight: 44)
+        .foregroundStyle(RetroColor.text)
+        .overlay(RoundedRectangle(cornerRadius: RetroMetrics.Radius.button).strokeBorder(RetroColor.text, lineWidth: 1))
+        .contentShape(Rectangle())
     }
 }
 

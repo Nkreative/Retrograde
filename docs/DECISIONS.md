@@ -2,6 +2,16 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-03 (M6)
+
+- **Task screens:** all 27 tasks use their Figma content via seven reusable experiences — breathing timer (1), pause timer (1), numbered steps (10), tick-off checklist (5), copyable message (3, including Ask for clarity's highlighted box), journal prompt (7). Content lives in `SurvivalKit/MercuryTaskGuides.swift`.
+- **Timers:** Start → Pause/Restart → Resume/Restart → Restart when finished; a soft haptic plays once at zero. "Mark as done" works at any time. Breathing highlights the current breath with a live count; its disc grows/shrinks with the breath unless Reduce Motion is on.
+- **Copy:** "Copy message" added to the two example-message tasks too (Figma had it only on Ask for clarity) for consistency. A brief "Copied" confirmation shows and is announced to VoiceOver.
+- **Journal:** Copy prompt + Open in… (iOS share sheet). Nothing typed is stored; the app never sees it.
+- **Checklist ticks** are for the moment only (not saved); "Mark as done" is what's recorded.
+- **Large text:** content scales fully; the header and tab bar stop growing at the xLarge size (like system bars), and tab labels support press-and-hold to enlarge.
+- **Journal icon:** notebook (`book.closed`) replaces the duplicate speech bubble.
+
 ## 2026-11-03 (M5)
 
 - **Overview refinements (approved):** "YOU ARE HERE" follows the progress marker and, at either end of the bar, replaces that end's label. The direct stage shows no day count, just the countdown to the next retrograde. Pre/post-shadow copy and the direct countdown target are approved.

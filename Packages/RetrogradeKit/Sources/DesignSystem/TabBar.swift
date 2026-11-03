@@ -30,6 +30,9 @@ public struct RetroTabBar<ID: Hashable>: View {
                 tab(item)
             }
         }
+        // Like system tab bars, labels stop growing at the largest text sizes; people using them
+        // can press and hold a tab to see its label enlarged.
+        .dynamicTypeSize(...DynamicTypeSize.xLarge)
         .padding(.horizontal, RetroMetrics.screenPadding)
         .padding(.top, 18)
         // Figma leaves ~43 pt between the labels and the home indicator; the safe area supplies ~21 of it.
@@ -55,6 +58,10 @@ public struct RetroTabBar<ID: Hashable>: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityShowsLargeContentViewer {
+            RetroGlyphView(item.glyph)
+            Text(item.title)
+        }
         .accessibilityLabel(item.title)
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
     }
