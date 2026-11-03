@@ -20,10 +20,19 @@ struct PaywallView: View {
     @State private var plan: Plan = .lifetime
 
     var body: some View {
+        // Sized so the plans and the purchase button fit on the first screen: the artwork window
+        // and spacing tighten as screens get shorter (e.g. iPhone 17e); the rest scrolls.
+        GeometryReader { screen in
+            let roomy = screen.size.height + screen.safeAreaInsets.top + screen.safeAreaInsets.bottom >= 920
+            content(heroRatio: roomy ? 0.86 : 0.78, headlineOverlap: roomy ? 56 : 44, spacing: roomy ? 16 : 13, benefitSpacing: roomy ? 11 : 9)
+        }
+    }
+
+    private func content(heroRatio: CGFloat, headlineOverlap: CGFloat, spacing: CGFloat, benefitSpacing: CGFloat) -> some View {
         ScrollView {
             VStack(spacing: 0) {
-                PaywallHero()
-                VStack(alignment: .leading, spacing: 18) {
+                PaywallHero(windowRatio: heroRatio)
+                VStack(alignment: .leading, spacing: spacing) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("RETROGRADE PREMIUM").retroText(.mono).foregroundStyle(RetroColor.pink)
                         Text("FULL BACKUP,\nEVERY CYCLE.").retroText(.hero).foregroundStyle(RetroColor.text).accessibilityAddTraits(.isHeader)
@@ -31,7 +40,7 @@ struct PaywallView: View {
                     Text("The whole Survival Kit and every day of the calendar. Same cosmos, a lot more backup.")
                         .retroText(.bodyLarge).foregroundStyle(RetroColor.textMuted)
 
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: benefitSpacing) {
                         benefit(RetroSymbol.firstAid, "All 27 Survival Kit tasks", "Not just the first one in each section.")
                         benefit(RetroSymbol.planning, "Every calendar day, in detail", "Plan past the next four days — weeks ahead.")
                         benefit(RetroSymbol.moon, "The full sky behind each day", "Retrogrades, shadows and moon phases, explained.")
@@ -42,7 +51,6 @@ struct PaywallView: View {
                         planCard(.lifetime, "Lifetime access", "One-time purchase. No renewal.", price: "$—.—", badge: "BEST VALUE")
                         planCard(.yearly, "Yearly", "[Intro offer] then billed yearly", price: "$—.— / yr", badge: nil)
                     }
-                    .padding(.top, 4)
 
                     VStack(spacing: 6) {
                         PrimaryButton(plan == .lifetime ? "Get lifetime access" : "Start Premium") {}
@@ -67,7 +75,7 @@ struct PaywallView: View {
                     .frame(maxWidth: .infinity)
                 }
                 .padding(.horizontal, RetroMetrics.screenPadding)
-                .padding(.top, -64) // the headline sits on the artwork's faded edge
+                .padding(.top, -headlineOverlap) // the headline sits on the artwork's faded edge
                 .padding(.bottom, 24)
             }
         }
@@ -140,13 +148,14 @@ private struct PaywallHero: View {
     /// The artwork starts this far down (as a fraction of its height), clearing the status bar;
     /// the gap above is the same deep purple as the artwork's sky.
     private static let topInset: CGFloat = 0.05
-    /// Visible height as a fraction of width (the artwork down to where the grid begins to fade).
-    private static let windowRatio: CGFloat = 0.90
+    /// Visible height as a fraction of width. Even the shorter window (0.78) keeps the moon,
+    /// the girl and all three icons clear of the fade; the taller one shows more of the grid.
+    let windowRatio: CGFloat
 
     var body: some View {
         Color.clear
             .frame(maxWidth: .infinity)
-            .aspectRatio(1 / Self.windowRatio, contentMode: .fit)
+            .aspectRatio(1 / windowRatio, contentMode: .fit)
             .overlay(alignment: .top) {
                 GeometryReader { geo in
                     let height = geo.size.width * Self.aspect

@@ -4,7 +4,7 @@ Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
 ## 2026-11-03 (paywall artwork)
 
-- **Approved Premium artwork** (girl silhouetted against the moon) is the paywall hero — now in the preview and for the final StoreKit paywall in M9. Asset `PaywallHero` (1199 × 1312, JPEG). Shown edge to edge, scaled to screen width (never stretched), positioned so the whole moon, the girl and the icons sit below the status bar; the empty foreground is cropped and both edges fade into the background. The close button is pinned top-right with a dark backing so it's always reachable.
+- **Approved Premium artwork** (girl silhouetted against the moon) is the paywall hero — now in the preview and for the final StoreKit paywall in M9. Asset `PaywallHero` (1199 × 1312, JPEG). Shown edge to edge, scaled to screen width (never stretched), positioned so the whole moon, the girl and the icons sit below the status bar; the empty foreground is cropped and both edges fade into the background. The close button is pinned top-right with a dark backing so it's always reachable. The layout adapts to screen height (artwork window 0.86 × width on tall phones, 0.78 on shorter ones, tighter spacing) so both plans and the purchase button are visible without scrolling on iPhone 18 Pro Max and 17e; Continue free and the legal text may need a short scroll.
 
 ## 2026-11-03 (M6 refinements)
 
