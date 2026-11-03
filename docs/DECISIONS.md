@@ -2,11 +2,16 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-03 (M7 day access)
+
+- **One access rule per day** (`DayDetailContent`): an unlocked day (free window or Premium) shows every detail section — summary, events, habit and other planets in retrograde; a locked day shows none of them, only the single locked panel with "Unlock every day". Date, level and calendar markers are always visible. No separate per-section Premium checks or teasers.
+- **Header count label** reads "5 Retrogrades" (singular "1 Retrograde"), Mercury included, for the selected date; it drops to its own line if the month row is too narrow, never shrinking.
+
 ## 2026-11-03 (M7 Calendar simplification)
 
 - **Calendar card simplified:** removed "DAILY INTENSITY · CALMER → MORE CHALLENGING" and the "also retrograde this month" chips. Day cells keep their four intensity bars; the full scale stays in Selected Day.
-- **"X Rx" badge** beside the month/year: planets (Mercury included) retrograde on the selected date, from verified data and local days; updates with the selection.
-- **Other planets in retrograde** moved into Selected Day, under the insights and habit: planets other than Mercury retrograde *on that date*, with their retrograde dates. Premium only; free users see a compact teaser ("4 more planets are retrograde today") that opens Premium. The header count stays visible to everyone.
+- **Retrograde count badge** beside the month/year (label refined in "M7 day access").
+- **Other planets in retrograde** moved into Selected Day, under the insights and habit: planets other than Mercury retrograde *on that date*, with their retrograde dates (access refined in "M7 day access"). The header count stays visible to everyone.
 - **Collapsed strip starts today:** seven days from today (weekday letters follow those days), stepping forward in blocks of seven; it can't go back before today, so there are no gaps. The expanded month view keeps full history and past-day selection; collapsing with a past day selected returns to today's strip and keeps the selection. Free/Premium access unchanged.
 
 ## 2026-11-03 (M7 Calendar)

@@ -35,7 +35,7 @@ let package = Package(
         .testTarget(name: "RetroCoreTests", dependencies: ["RetroCore"]),
         .testTarget(name: "AstroDataTests", dependencies: ["AstroData", "RetroCore"]),
         .testTarget(name: "DesignSystemTests", dependencies: ["DesignSystem"]),
-        .testTarget(name: "EditorialTests", dependencies: ["Editorial", "RetroCore"]),
+        .testTarget(name: "EditorialTests", dependencies: ["Editorial", "RetroCore", "AstroData"]),
         .testTarget(name: "SurvivalKitTests", dependencies: ["SurvivalKit", "RetroCore", "AstroData"]),
         .testTarget(name: "PersistenceTests", dependencies: ["Persistence"]),
     ]
