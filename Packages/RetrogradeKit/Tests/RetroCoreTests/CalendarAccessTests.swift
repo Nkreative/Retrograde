@@ -48,3 +48,20 @@ import Testing
         #expect(MonthGrid.ID(year: 2025, month: 1).adding(months: -1) == MonthGrid.ID(year: 2024, month: 12))
     }
 }
+
+@Suite struct RollingWeekTests {
+    let today = CalendarDay(year: 2026, month: 11, day: 3)
+
+    @Test func startsTodayWithNoPastDays() {
+        #expect(RollingWeek.days(from: today, block: 0).first == today)
+        #expect(RollingWeek.days(from: today, block: 0).last == CalendarDay(year: 2026, month: 11, day: 9))
+        #expect(RollingWeek.days(from: today, block: 1).first == CalendarDay(year: 2026, month: 11, day: 10))
+    }
+
+    @Test func findsTheBlockForADay() {
+        #expect(RollingWeek.block(containing: today, from: today) == 0)
+        #expect(RollingWeek.block(containing: CalendarDay(year: 2026, month: 11, day: 9), from: today) == 0)
+        #expect(RollingWeek.block(containing: CalendarDay(year: 2026, month: 11, day: 10), from: today) == 1)
+        #expect(RollingWeek.block(containing: CalendarDay(year: 2026, month: 10, day: 1), from: today) == 0)
+    }
+}

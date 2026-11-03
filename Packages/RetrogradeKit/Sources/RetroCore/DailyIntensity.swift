@@ -101,6 +101,23 @@ public struct IntensityCalculator: Sendable {
         mercuryIngresses = Dictionary(grouping: ephemeris.ingresses.filter { $0.planet == .mercury }, by: { local($0.time) })
     }
 
+    /// A planet retrograde on a given local day, with its retrograde's first and last local days.
+    public struct RetrogradeOnDay: Equatable, Sendable {
+        public let planet: Planet
+        public let from: CalendarDay
+        public let to: CalendarDay
+    }
+
+    /// Every planet retrograde on a local day (station days included), in planet order.
+    /// Same local-day rule as the score; empty outside coverage.
+    public func retrogrades(on day: CalendarDay) -> [RetrogradeOnDay] {
+        guard coverage.contains(day) else { return [] }
+        return periods
+            .filter { ($0.rx...$0.direct).contains(day) }
+            .map { RetrogradeOnDay(planet: $0.planet, from: $0.rx, to: $0.direct) }
+            .sorted { Planet.allCases.firstIndex(of: $0.planet)! < Planet.allCases.firstIndex(of: $1.planet)! }
+    }
+
     /// The primary moon phase on a local day, if any (for calendar markers).
     public func moonPhase(on day: CalendarDay) -> MoonPhase? { moons[day]?.first }
 

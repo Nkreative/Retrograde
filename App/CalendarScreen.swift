@@ -23,9 +23,11 @@ struct CalendarScreen: View {
         let calendar = Calendar.autoupdatingCurrent
         let today = CalendarDay(now, in: calendar)
         let coverage = SkyData.ephemeris?.coverage
-        let selectedDay = selected ?? clamp(today, to: coverage)
+        let stripStart = clamp(today, to: coverage)
+        let selectedDay = selected ?? stripStart
         let anchorDay = anchor ?? selectedDay
-        let model = CalendarModel(today: today, anchor: anchorDay, expanded: expanded, firstWeekday: calendar.firstWeekday)
+        let model = CalendarModel(today: today, stripStart: stripStart, anchor: anchorDay, expanded: expanded, firstWeekday: calendar.firstWeekday)
+        let retrogradeCount = SkyData.intensity().map { coverage?.contains(selectedDay) == true ? $0.retrogrades(on: selectedDay).count : nil } ?? nil
 
         ScrollViewReader { proxy in
         ScrollView {
@@ -39,8 +41,8 @@ struct CalendarScreen: View {
                     OutOfRangeNote(coverage: coverage)
                 }
                 CalendarCard(
-                    model: model, selected: selectedDay, isPremium: premium.isPremium, policy: policy,
-                    canGoBack: coverage.map { model.step(-1).lastShownDay >= $0.lowerBound } ?? false,
+                    model: model, selected: selectedDay, retrogradeCount: retrogradeCount, isPremium: premium.isPremium, policy: policy,
+                    canGoBack: model.canStepBack && (coverage.map { model.step(-1).lastShownDay >= $0.lowerBound } ?? false),
                     canGoForward: coverage.map { model.step(1).firstShownDay <= $0.upperBound } ?? false,
                     onSelect: { day in
                         selected = day
@@ -50,7 +52,8 @@ struct CalendarScreen: View {
                     onToggleExpanded: {
                         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) {
                             expanded.toggle()
-                            anchor = selectedDay
+                            // The strip never shows past days, so a past selection collapses to today's week.
+                            anchor = expanded || selectedDay >= stripStart ? selectedDay : stripStart
                         }
                     }
                 )
@@ -99,28 +102,42 @@ struct CalendarScreen: View {
     }
 }
 
-/// What the grid shows: one week, or the whole month, around an anchor day.
+/// What the grid shows. Collapsed: seven days from today (no past days), in forward blocks of
+/// seven. Expanded: the anchor's whole month, past months included.
 private struct CalendarModel {
     let today: CalendarDay
+    /// First day of the collapsed strip: today, kept inside the data's range.
+    let stripStart: CalendarDay
     let anchor: CalendarDay
     let expanded: Bool
     let firstWeekday: Int
 
     var grid: MonthGrid { MonthGrid(year: anchor.year, month: anchor.month, firstWeekday: firstWeekday) }
-    var weeks: [[CalendarDay]] { expanded ? grid.weeks : [grid.week(containing: anchor)!] }
+    var block: Int { RollingWeek.block(containing: anchor, from: stripStart) }
+    var weeks: [[CalendarDay]] { expanded ? grid.weeks : [RollingWeek.days(from: stripStart, block: block)] }
     var firstShownDay: CalendarDay { weeks.first!.first! }
     var lastShownDay: CalendarDay { weeks.last!.last! }
+    /// The strip can't go back before today; the month view can.
+    var canStepBack: Bool { expanded || block > 0 }
 
-    /// The next or previous week (collapsed) or month (expanded).
+    /// Month in the header: the anchor's when expanded; in the strip, the selected day's if it's
+    /// shown, else the strip's first day.
+    func titleDay(selected: CalendarDay) -> CalendarDay {
+        if expanded { return anchor }
+        let strip = weeks[0]
+        return strip.contains(selected) ? selected : strip[0]
+    }
+
+    /// The next or previous block of seven (collapsed) or month (expanded).
     func step(_ delta: Int) -> CalendarModel {
         let next: CalendarDay
         if expanded {
             let id = MonthGrid.ID(anchor).adding(months: delta)
             next = CalendarDay(year: id.year, month: id.month, day: 1)
         } else {
-            next = anchor.adding(days: 7 * delta)
+            next = stripStart.adding(days: 7 * max(block + delta, 0))
         }
-        return CalendarModel(today: today, anchor: next, expanded: expanded, firstWeekday: firstWeekday)
+        return CalendarModel(today: today, stripStart: stripStart, anchor: next, expanded: expanded, firstWeekday: firstWeekday)
     }
 }
 
@@ -129,6 +146,8 @@ private struct CalendarModel {
 private struct CalendarCard: View {
     let model: CalendarModel
     let selected: CalendarDay
+    /// Planets retrograde on the selected day (nil outside the data).
+    let retrogradeCount: Int?
     let isPremium: Bool
     let policy: CalendarAccessPolicy
     let canGoBack: Bool
@@ -159,12 +178,18 @@ private struct CalendarCard: View {
     }
 
     private var header: some View {
+        let titleDay = model.titleDay(selected: selected)
         let monthTitle = VStack(alignment: .leading, spacing: 5) {
-            (Text(model.anchor.monthName + " ").font(RetroTextStyle.section.font).foregroundColor(RetroColor.text)
-                + Text(String(model.anchor.year)).font(RetroTextStyle.monoLarge.font).foregroundColor(RetroColor.textMuted))
-                .lineLimit(1)
-                .accessibilityAddTraits(.isHeader)
-            Text(MercuryContext.label(for: MonthGrid.ID(model.anchor)))
+            HStack(alignment: .center, spacing: 8) {
+                (Text(titleDay.monthName + " ").font(RetroTextStyle.section.font).foregroundColor(RetroColor.text)
+                    + Text(String(titleDay.year)).font(RetroTextStyle.monoLarge.font).foregroundColor(RetroColor.textMuted))
+                    .lineLimit(1)
+                    .accessibilityAddTraits(.isHeader)
+                if let retrogradeCount {
+                    RetrogradeCountBadge(count: retrogradeCount, day: selected)
+                }
+            }
+            Text(MercuryContext.label(for: MonthGrid.ID(titleDay)))
                 .retroText(.monoSmall)
                 .foregroundStyle(RetroColor.pink)
         }
@@ -200,7 +225,10 @@ private struct CalendarCard: View {
 
     private var weekdayLabels: some View {
         let symbols = Calendar.autoupdatingCurrent.veryShortStandaloneWeekdaySymbols
-        let ordered = (0..<7).map { symbols[(model.firstWeekday - 1 + $0) % 7] }
+        // The strip starts today, so its labels follow its days; the month uses the locale's week.
+        let ordered = model.expanded
+            ? (0..<7).map { symbols[(model.firstWeekday - 1 + $0) % 7] }
+            : model.weeks[0].map { symbols[$0.weekday - 1] }
         return HStack(spacing: 4) {
             ForEach(Array(ordered.enumerated()), id: \.offset) { _, symbol in
                 Text(symbol).retroText(.mono).foregroundStyle(RetroColor.textMuted).frame(maxWidth: .infinity)
@@ -405,7 +433,6 @@ private struct CalendarKey: View {
             .minimumScaleFactor(0.8)
 
             RetroColor.line.frame(height: 1)
-            Text("DAILY INTENSITY · CALMER → MORE CHALLENGING").retroText(.mono).foregroundStyle(RetroColor.textMuted)
             HStack(spacing: 16) {
                 Text("Rx Retrograde").foregroundStyle(RetroColor.pinkSoft)
                 Text("Sh Shadow").foregroundStyle(RetroColor.mauve)
@@ -426,60 +453,7 @@ private struct CalendarKey: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             }
-            let others = OtherRetrogrades.chips(for: MonthGrid.ID(model.anchor))
-            if !others.isEmpty {
-                RetroColor.line.frame(height: 1)
-                Text("ALSO RETROGRADE THIS MONTH").retroText(.mono).foregroundStyle(RetroColor.textMuted)
-                FlowRow(spacing: 8) {
-                    ForEach(others, id: \.name) { chip in
-                        HStack(spacing: 6) {
-                            Text("\(chip.name) Rx").retroText(.bodyStrong).foregroundStyle(RetroColor.text)
-                            Text(chip.span).retroText(.monoSmall).foregroundStyle(RetroColor.textMuted)
-                        }
-                        .padding(.vertical, 6)
-                        .padding(.horizontal, 10)
-                        .overlay(Capsule().strokeBorder(RetroColor.line, lineWidth: 1))
-                        .accessibilityElement(children: .combine)
-                    }
-                }
-            }
         }
-    }
-}
-
-/// Wraps chips onto new lines when they don't fit.
-private struct FlowRow: Layout {
-    var spacing: CGFloat
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let rows = arrange(width: proposal.width ?? .infinity, subviews: subviews)
-        return CGSize(width: proposal.width ?? rows.map(\.width).max() ?? 0, height: rows.reduce(0) { $0 + $1.height } + spacing * CGFloat(max(rows.count - 1, 0)))
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        var y = bounds.minY
-        for row in arrange(width: bounds.width, subviews: subviews) {
-            var x = bounds.minX
-            for index in row.indices {
-                let size = subviews[index].sizeThatFits(.unspecified)
-                subviews[index].place(at: CGPoint(x: x, y: y), proposal: .unspecified)
-                x += size.width + spacing
-            }
-            y += row.height + spacing
-        }
-    }
-
-    private func arrange(width: CGFloat, subviews: Subviews) -> [(indices: [Int], width: CGFloat, height: CGFloat)] {
-        var rows: [(indices: [Int], width: CGFloat, height: CGFloat)] = []
-        for (index, subview) in subviews.enumerated() {
-            let size = subview.sizeThatFits(.unspecified)
-            if let last = rows.last, last.width + spacing + size.width <= width {
-                rows[rows.count - 1] = (last.indices + [index], last.width + spacing + size.width, max(last.height, size.height))
-            } else {
-                rows.append(([index], size.width, size.height))
-            }
-        }
-        return rows
     }
 }
 
@@ -523,6 +497,10 @@ private struct DayDetail: View {
                 } else {
                     LockedInsight(day: day, today: today, policy: policy, preview: insight.rows.first, onUnlock: onUnlock)
                 }
+                OtherPlanets(
+                    retrogrades: (SkyData.intensity()?.retrogrades(on: day) ?? []).filter { $0.planet != .mercury },
+                    day: day, today: today, isPremium: isPremium, onUnlock: onUnlock
+                )
             } else {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("WE’RE STILL MAPPING THIS STRETCH OF SKY.").retroText(.cardTitle).foregroundStyle(RetroColor.text)
@@ -534,6 +512,81 @@ private struct DayDetail: View {
         .padding(16)
         .background(RetroColor.surfaceRaised, in: RoundedRectangle(cornerRadius: RetroMetrics.Radius.panel))
         .overlay(RoundedRectangle(cornerRadius: RetroMetrics.Radius.panel).strokeBorder(RetroColor.line, lineWidth: 1))
+    }
+}
+
+/// "5 Rx" beside the month: planets retrograde on the selected day, Mercury included.
+private struct RetrogradeCountBadge: View {
+    let count: Int
+    let day: CalendarDay
+
+    var body: some View {
+        Text("\(count) Rx")
+            .retroText(.monoSmall)
+            .foregroundStyle(count > 0 ? RetroColor.pinkSoft : RetroColor.textMuted)
+            .padding(.vertical, 3)
+            .padding(.horizontal, 7)
+            .background(RetroColor.wine.opacity(count > 0 ? 1 : 0), in: Capsule())
+            .overlay(Capsule().strokeBorder(RetroColor.line, lineWidth: 1))
+            .fixedSize()
+            .accessibilityLabel("\(count) \(count == 1 ? "planet" : "planets") retrograde on \(day.shortTitle)")
+    }
+}
+
+/// Planets other than Mercury retrograde on the selected day. Premium shows the list; free users
+/// get a compact teaser that opens Premium.
+private struct OtherPlanets: View {
+    let retrogrades: [IntensityCalculator.RetrogradeOnDay]
+    let day: CalendarDay
+    let today: CalendarDay
+    let isPremium: Bool
+    let onUnlock: () -> Void
+
+    var body: some View {
+        let when = day == today ? "today" : "on \(day.shortTitle)"
+        VStack(alignment: .leading, spacing: 0) {
+            Text("OTHER PLANETS IN RETROGRADE").retroText(.mono).foregroundStyle(RetroColor.text).padding(.bottom, 6)
+            if retrogrades.isEmpty {
+                Text("No other planets are retrograde \(when).")
+                    .font(.custom("Inter-Regular", size: 11, relativeTo: .caption)).foregroundStyle(RetroColor.textMuted)
+                    .padding(.vertical, 10)
+            } else if isPremium {
+                ForEach(retrogrades, id: \.planet) { r in
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("\(r.planet.name) Rx").font(.custom("Inter-SemiBold", size: 12, relativeTo: .footnote)).foregroundStyle(RetroColor.text)
+                        Spacer(minLength: 8)
+                        Text("\(r.from.shortTitle) – \(r.to.shortTitle)\(r.to.year != r.from.year ? ", \(r.to.year)" : "")")
+                            .retroText(.monoSmall).foregroundStyle(RetroColor.textMuted)
+                    }
+                    .padding(.vertical, 11)
+                    .overlay(alignment: .top) { RetroColor.line.frame(height: 1) }
+                    .accessibilityElement(children: .combine)
+                }
+            } else {
+                Button(action: onUnlock) {
+                    HStack(spacing: 12) {
+                        Image(systemName: RetroSymbol.lock)
+                            .font(.system(size: 12))
+                            .foregroundStyle(RetroColor.pink)
+                            .frame(width: 30, height: 30)
+                            .background(RetroColor.wine, in: RoundedRectangle(cornerRadius: RetroMetrics.Radius.chip))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(retrogrades.count) more \(retrogrades.count == 1 ? "planet is" : "planets are") retrograde \(when)")
+                                .retroText(.bodyStrong).foregroundStyle(RetroColor.text)
+                            Text("See which ones, and for how long, with Premium.")
+                                .retroText(.body).foregroundStyle(RetroColor.textMuted)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: RetroSymbol.chevronRight).font(.system(size: 11, weight: .semibold)).foregroundStyle(RetroColor.pink)
+                    }
+                    .padding(.vertical, 10)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .overlay(alignment: .top) { RetroColor.line.frame(height: 1) }
+                .accessibilityHint("Shows Premium")
+            }
+        }
     }
 }
 
@@ -709,30 +762,6 @@ private enum MercuryContext {
             return "NEXT MERCURY RX · \(local(next.stationRetrograde).shortTitle.uppercased())"
         }
         return "MERCURY"
-    }
-}
-
-private enum OtherRetrogrades {
-    struct Chip { let name: String; let span: String }
-
-    static func chips(for month: MonthGrid.ID) -> [Chip] {
-        guard let ephemeris = SkyData.ephemeris else { return [] }
-        let calendar = Calendar.autoupdatingCurrent
-        func local(_ date: Date) -> CalendarDay { CalendarDay(date, in: calendar) }
-        let first = CalendarDay(year: month.year, month: month.month, day: 1)
-        let next = month.adding(months: 1)
-        let last = CalendarDay(year: next.year, month: next.month, day: 1).adding(days: -1)
-        return ephemeris.retrogrades.filter { $0.planet != .mercury }.compactMap { p in
-            let rx = local(p.stationRetrograde), direct = local(p.stationDirect)
-            guard rx <= last, direct >= first else { return nil }
-            let span: String = switch (rx < first, direct > last) {
-            case (true, true): "all month"
-            case (true, false): "until \(direct.shortTitle)"
-            case (false, true): "from \(rx.shortTitle)"
-            case (false, false): "\(rx.shortTitle) – \(direct.shortTitle)"
-            }
-            return Chip(name: p.planet.name, span: span)
-        }
     }
 }
 

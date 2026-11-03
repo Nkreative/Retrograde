@@ -82,6 +82,18 @@ import RetroCore
         }
     }
 
+    @Test func planetsRetrogradeOnADay() {
+        let calc = calculator("UTC")
+        let nov3 = calc.retrogrades(on: day("2026-11-03")).map(\.planet)
+        #expect(nov3 == [.mercury, .venus, .saturn, .uranus, .neptune])
+        let mercury = calc.retrogrades(on: day("2026-11-03")).first!
+        #expect(mercury.from == day("2026-10-24") && mercury.to == day("2026-11-13"))
+        // Venus stations direct at 00:28 UT on 14 Nov: retrograde that day in UTC, not in New York.
+        #expect(calc.retrogrades(on: day("2026-11-14")).map(\.planet).contains(.venus))
+        #expect(!calculator("America/New_York").retrogrades(on: day("2026-11-14")).map(\.planet).contains(.venus))
+        #expect(calc.retrogrades(on: day("2031-06-01")).isEmpty)
+    }
+
     @Test func outsideCoverageHasNoReading() {
         #expect(calculator("UTC").intensity(on: day("2031-06-01")) == nil)
     }

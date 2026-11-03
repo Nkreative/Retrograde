@@ -27,6 +27,19 @@ public struct CalendarAccessPolicy: Sendable {
     }
 }
 
+/// The collapsed calendar strip: seven consecutive days starting today (no past days), stepping
+/// forward in blocks of seven, so the week containing today never has gaps.
+public enum RollingWeek {
+    public static func days(from start: CalendarDay, block: Int) -> [CalendarDay] {
+        (0..<7).map { start.adding(days: block * 7 + $0) }
+    }
+
+    /// The block (0 = starting today) containing `day`; days before `start` belong to block 0.
+    public static func block(containing day: CalendarDay, from start: CalendarDay) -> Int {
+        max(start.days(to: day), 0) / 7
+    }
+}
+
 /// The weeks shown for a month: full weeks from the person's first weekday, including the
 /// neighbouring months' days that complete the first and last rows.
 public struct MonthGrid: Sendable {

@@ -2,10 +2,17 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-03 (M7 Calendar simplification)
+
+- **Calendar card simplified:** removed "DAILY INTENSITY · CALMER → MORE CHALLENGING" and the "also retrograde this month" chips. Day cells keep their four intensity bars; the full scale stays in Selected Day.
+- **"X Rx" badge** beside the month/year: planets (Mercury included) retrograde on the selected date, from verified data and local days; updates with the selection.
+- **Other planets in retrograde** moved into Selected Day, under the insights and habit: planets other than Mercury retrograde *on that date*, with their retrograde dates. Premium only; free users see a compact teaser ("4 more planets are retrograde today") that opens Premium. The header count stays visible to everyone.
+- **Collapsed strip starts today:** seven days from today (weekday letters follow those days), stepping forward in blocks of seven; it can't go back before today, so there are no gaps. The expanded month view keeps full history and past-day selection; collapsing with a past day selected returns to today's strip and keeps the selection. Free/Premium access unchanged.
+
 ## 2026-11-03 (M7 Calendar)
 
 - **Editorial approved with changes:** tags renamed (RETROGRADE, TURNING POINT, NEAR STATION, SHADOW, MOON PHASE, SIGN CHANGE); gentle tone on Intense days; 8 habits per level across communication, technology, planning and reflection; predictive phrasing removed (e.g. turning direct: "Mercury's apparent backward motion ends today. A good moment to revisit what you've been putting off."). Rules and tone in [editorial/DAILY_INSIGHTS.md](editorial/DAILY_INSIGHTS.md); enforced by tests.
-- **Calendar:** week strip by default, Expand/Collapse to the full month; arrows (and swipe) move by week or month within 2025–2030. Weeks start on the person's locale first weekday (Figma showed Sunday). Each day: Rx/Sh/D, four intensity bars, moon icon on primary phases, today dot, lock when details are Premium. Context line shows the month's Mercury retrograde or the next one; chips list other planets retrograde that month.
+- **Calendar:** week strip by default, Expand/Collapse to the full month; arrows (and swipe) move by week or month within 2025–2030. Weeks start on the person's locale first weekday (Figma showed Sunday). Each day: Rx/Sh/D, four intensity bars, moon icon on primary phases, today dot, lock when details are Premium. Context line shows the month's Mercury retrograde or the next one. (Simplified after review — see above.)
 - **Day detail:** level and four-step scale for every day; summary, events and habit for unlocked days. Free: today + next 3 days (local, rolling). Locked future days say when they become free ("Come back Nov 10"); past days point to Premium; "Unlock every day" opens the paywall.
 - **Outside 2025–2030:** days show no markers or level, the detail says the sky isn't mapped yet, and if today is past 2030 a note asks to update the app.
 
