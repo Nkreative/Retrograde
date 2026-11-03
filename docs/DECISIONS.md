@@ -2,6 +2,10 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-03 (paywall artwork)
+
+- **Approved Premium artwork** (girl silhouetted against the moon) is the paywall hero — now in the preview and for the final StoreKit paywall in M9. Asset `PaywallHero` (1199 × 1312, JPEG). Shown edge to edge, scaled to screen width (never stretched), positioned so the whole moon, the girl and the icons sit below the status bar; the empty foreground is cropped and both edges fade into the background. The close button is pinned top-right with a dark backing so it's always reachable.
+
 ## 2026-11-03 (M6 refinements)
 
 - **Locked tasks open Premium** (replaces the earlier "locked rows do nothing"): tapping any locked or blurred task, or the "23 more tasks in Premium" card, opens the paywall. Until M9 it's a preview built from the approved paywall (Lifetime default, BEST VALUE, Yearly alternative); the buy button is inactive. Access rules unchanged.
