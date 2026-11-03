@@ -175,6 +175,39 @@ public struct SecondaryButtonLabel: View {
     }
 }
 
+/// The Figma calendar's Expand / Collapse capsule, also used by Survival Kit sections.
+/// `hiddenCount` adds "· 5 more" while collapsed.
+public struct ExpandCollapseButton: View {
+    let isExpanded: Bool
+    let hiddenCount: Int?
+    let action: () -> Void
+
+    public init(isExpanded: Bool, hiddenCount: Int? = nil, action: @escaping () -> Void) {
+        self.isExpanded = isExpanded
+        self.hiddenCount = hiddenCount
+        self.action = action
+    }
+
+    public var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Text(isExpanded ? "Collapse" : hiddenCount.map { "Expand · \($0) more" } ?? "Expand")
+                    .retroText(.monoSmall)
+                Image(systemName: isExpanded ? RetroSymbol.chevronUp : RetroSymbol.chevronDown)
+                    .font(.system(size: 8, weight: .semibold))
+            }
+            .foregroundStyle(RetroColor.text)
+            .padding(.vertical, 7)
+            .padding(.horizontal, 12)
+            .overlay(Capsule().strokeBorder(RetroColor.textMuted, lineWidth: 1))
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressFeedbackStyle())
+        .accessibilityLabel(isExpanded ? "Show fewer" : hiddenCount.map { "Show \($0) more" } ?? "Expand")
+    }
+}
+
 /// Small outlined capsule ("+ ADD TO HOME SCREEN").
 public struct PillButton: View {
     let title: String

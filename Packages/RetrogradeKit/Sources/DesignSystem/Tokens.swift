@@ -22,6 +22,8 @@ public enum RetroColor {
     public static let mauve = Color(hex: 0xC997C6)
     /// Countdown number, "today", progress marker, badges.
     public static let yellow = Color(hex: 0xFFD23D)
+    /// Survival Kit completion ("2 of 27 done"). Mint: 11.6:1 contrast on `background`, 10.8:1 on `surface`.
+    public static let green = Color(hex: 0x52E3A4)
     /// Selected cards and highlighted panels.
     public static let wine = Color(hex: 0x461736)
     /// Empty intensity segments.

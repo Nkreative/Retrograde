@@ -40,6 +40,10 @@ struct SurvivalKitScreen: View {
     let now: Date
     @Environment(CompletionStore.self) private var completions
     @Environment(PremiumAccess.self) private var premium
+    @Environment(PaywallPresenter.self) private var paywall
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Sections the person has expanded; all start collapsed.
+    @State private var expanded: Set<String> = Self.initiallyExpanded
 
     private let kit = SurvivalKit.for(.mercury)!
     private let policy = TaskAccessPolicy.launch
@@ -62,10 +66,15 @@ struct SurvivalKitScreen: View {
                     VStack(alignment: .leading, spacing: 16) {
                         KitProgress(status: SkyData.calculator?.status(of: .mercury, at: now), done: done.count, total: kit.tasks.count)
                         ForEach(kit.sections) { section in
-                            SectionCard(section: section, done: done, isPremium: premium.isPremium, policy: policy)
+                            SectionCard(
+                                section: section, done: done, isPremium: premium.isPremium, policy: policy,
+                                isExpanded: expanded.contains(section.id),
+                                onToggle: { toggle(section.id) },
+                                onLocked: paywall.present
+                            )
                         }
                         if !premium.isPremium {
-                            PremiumNudge(lockedCount: policy.lockedCount(in: kit, isPremium: false))
+                            PremiumNudge(lockedCount: policy.lockedCount(in: kit, isPremium: false), action: paywall.present)
                         }
                     }
                 }
@@ -87,6 +96,22 @@ struct SurvivalKitScreen: View {
     }
 
     private static let contentID = "kit-content"
+
+    private func toggle(_ id: String) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) {
+            if expanded.contains(id) { expanded.remove(id) } else { expanded.insert(id) }
+        }
+    }
+
+    private static var initiallyExpanded: Set<String> {
+        #if DEBUG
+        // `-expandSections communication,journal` (or `all`) for review screenshots.
+        if let list = UserDefaults.standard.string(forKey: "expandSections") {
+            return list == "all" ? Set(SurvivalKit.for(.mercury)!.sections.map(\.id)) : Set(list.split(separator: ",").map(String.init))
+        }
+        #endif
+        return []
+    }
 }
 
 /// Which cycle's kit is current: the latest Mercury retrograde to have begun.
@@ -96,7 +121,7 @@ enum KitCycle {
     }
 }
 
-/// Cycle progress (pink) and kit progress (yellow).
+/// Cycle progress (pink) and kit progress (green).
 private struct KitProgress: View {
     let status: CycleStatus?
     let done: Int
@@ -110,7 +135,7 @@ private struct KitProgress: View {
         }()
         let kitProgress = total == 0 ? 0 : Double(done) / Double(total)
         // Two separate groups, each bar with its labels underneath, coloured to match:
-        // pink for where Mercury is, yellow for how much of the kit is done.
+        // pink for where Mercury is, green for how much of the kit is done.
         VStack(spacing: 18) {
             if let status, let copy {
                 VStack(spacing: 7) {
@@ -119,8 +144,8 @@ private struct KitProgress: View {
                 }
             }
             VStack(spacing: 7) {
-                CycleProgressBar(progress: kitProgress, fill: RetroColor.yellow, markerSize: 9)
-                MarkerLabels(progress: kitProgress, start: "CONFUSED", current: "\(done) of \(total) done", end: "SAFE", currentColor: RetroColor.yellow, followsMarker: false)
+                CycleProgressBar(progress: kitProgress, fill: RetroColor.green, marker: RetroColor.green, markerSize: 9)
+                MarkerLabels(progress: kitProgress, start: "CONFUSED", current: "\(done) of \(total) done", end: "SAFE", currentColor: RetroColor.green, followsMarker: false)
             }
         }
         .accessibilityElement(children: .ignore)
@@ -128,13 +153,21 @@ private struct KitProgress: View {
     }
 }
 
+/// A section card. Collapsed, it shows the first three tasks; expanded, all of them.
 private struct SectionCard: View {
+    static let collapsedCount = 3
+
     let section: KitSection
     let done: Set<String>
     let isPremium: Bool
     let policy: TaskAccessPolicy
+    let isExpanded: Bool
+    let onToggle: () -> Void
+    let onLocked: () -> Void
 
     var body: some View {
+        let shown = isExpanded ? section.tasks.count : min(Self.collapsedCount, section.tasks.count)
+        let hiddenCount = section.tasks.count - shown
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
                 IconChip(systemImage: section.topic.symbol)
@@ -146,8 +179,15 @@ private struct SectionCard: View {
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
             Text(section.guidance).retroText(.body).foregroundStyle(RetroColor.textMuted)
-            ForEach(Array(section.tasks.enumerated()), id: \.element.id) { index, task in
-                TaskRow(task: task, visibility: policy.visibility(ofTaskAt: index, isPremium: isPremium), isDone: done.contains(task.id))
+            ForEach(Array(section.tasks.prefix(shown).enumerated()), id: \.element.id) { index, task in
+                TaskRow(task: task, visibility: policy.visibility(ofTaskAt: index, isPremium: isPremium), isDone: done.contains(task.id), onLocked: onLocked)
+                    .transition(.opacity)
+            }
+            if section.tasks.count > Self.collapsedCount {
+                ExpandCollapseButton(isExpanded: isExpanded, hiddenCount: hiddenCount, action: onToggle)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, -4)
+                    .padding(.bottom, -10)
             }
         }
         .retroCard()
@@ -158,6 +198,7 @@ private struct TaskRow: View {
     let task: KitTask
     let visibility: TaskVisibility
     let isDone: Bool
+    let onLocked: () -> Void
 
     var body: some View {
         switch visibility {
@@ -169,13 +210,22 @@ private struct TaskRow: View {
             .accessibilityValue(isDone ? "Done" : "Not done")
             .accessibilityHint("Opens the task")
         case .preview:
-            row(checkbox: .locked, textColor: RetroColor.text, textOpacity: 0.4)
-                .accessibilityLabel("\(task.title) Premium task, locked")
+            Button(action: onLocked) {
+                row(checkbox: .locked, textColor: RetroColor.text, textOpacity: 0.4)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(task.title) Premium task, locked")
+            .accessibilityHint("Shows Premium")
         case .hidden:
-            row(checkbox: .locked, textColor: RetroColor.text, textOpacity: 0.4)
-                .blur(radius: 3)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Premium task, locked")
+            Button(action: onLocked) {
+                row(checkbox: .locked, textColor: RetroColor.text, textOpacity: 0.4)
+                    .blur(radius: 3)
+            }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Premium task, locked")
+            .accessibilityHint("Shows Premium")
+            .accessibilityAddTraits(.isButton)
         }
     }
 
@@ -200,14 +250,13 @@ private struct TaskRow: View {
     }
 }
 
-/// "23 more tasks in Premium" card under the sections (free users only). Opens the paywall in M9.
+/// "23 more tasks in Premium" card under the sections (free users only). Opens the paywall.
 private struct PremiumNudge: View {
     let lockedCount: Int
+    let action: () -> Void
 
     var body: some View {
-        Button {
-            // Paywall arrives in M9.
-        } label: {
+        Button(action: action) {
             HStack(spacing: 12) {
                 IconChip(systemImage: RetroSymbol.unlock)
                 VStack(alignment: .leading, spacing: 3) {

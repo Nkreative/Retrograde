@@ -17,12 +17,19 @@ enum AppTab: String, CaseIterable {
 /// Every tab stays alive when hidden so scroll position and state survive switching.
 struct MainTabView: View {
     @State private var selection: AppTab
+    @State private var paywall: PaywallPresenter
     /// Debug-only clock override for reviewing other cycle stages.
     private let now: Date?
 
     init(initialTab: AppTab = .overview, now: Date? = nil) {
         _selection = State(initialValue: initialTab)
         self.now = now
+        let paywall = PaywallPresenter()
+        #if DEBUG
+        // `-showPaywall YES` opens the paywall on launch, for review.
+        paywall.isPresented = UserDefaults.standard.bool(forKey: "showPaywall")
+        #endif
+        _paywall = State(initialValue: paywall)
     }
 
     var body: some View {
@@ -41,6 +48,8 @@ struct MainTabView: View {
             RetroTabBar(items: AppTab.allCases.map(\.item), selection: $selection)
         }
         .retroScreenBackground()
+        .environment(paywall)
+        .fullScreenCover(isPresented: $paywall.isPresented) { PaywallView() }
     }
 
     @ViewBuilder

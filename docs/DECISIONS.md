@@ -2,6 +2,12 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-03 (M6 refinements)
+
+- **Locked tasks open Premium** (replaces the earlier "locked rows do nothing"): tapping any locked or blurred task, or the "23 more tasks in Premium" card, opens the paywall. Until M9 it's a preview built from the approved paywall (Lifetime default, BEST VALUE, Yearly alternative); the buy button is inactive. Access rules unchanged.
+- **Collapsible sections:** every section starts collapsed showing its first three tasks, with an "Expand · N more" / "Collapse" pill (the calendar's pill style) at the bottom of the card. Sections toggle independently; expanded shows all tasks including locked/blurred ones. Same for Premium. Reduce Motion turns the animation off.
+- **Kit progress is green:** bar, marker and "X of 27 done" use mint `#52E3A4` (11.6:1 on the background). Mercury's cycle bar stays pink.
+
 ## 2026-11-03 (M6)
 
 - **Task screens:** all 27 tasks use their Figma content via seven reusable experiences — breathing timer (1), pause timer (1), numbered steps (10), tick-off checklist (5), copyable message (3, including Ask for clarity's highlighted box), journal prompt (7). Content lives in `SurvivalKit/MercuryTaskGuides.swift`.
@@ -15,7 +21,7 @@ Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 ## 2026-11-03 (M5)
 
 - **Overview refinements (approved):** "YOU ARE HERE" follows the progress marker and, at either end of the bar, replaces that end's label. The direct stage shows no day count, just the countdown to the next retrograde. Pre/post-shadow copy and the direct countdown target are approved.
-- **Survival Kit visibility:** free = first task per section unlocked, next two shown locked (40 % opacity + lock), the rest also blurred; locked rows do nothing when tapped. Premium = all unlocked, no nudge card. Rule values live in `TaskAccessPolicy.launch`.
+- **Survival Kit visibility:** free = first task per section unlocked, next two shown locked (40 % opacity + lock), the rest also blurred; (superseded: locked rows now open Premium, see M6 refinements). Premium = all unlocked, no nudge card. Rule values live in `TaskAccessPolicy.launch`.
 - **Completion per cycle:** each "Mark as done" is stored on the device against the retrograde it belongs to (`mercury-2026-10-24`). The kit switches to a fresh, empty cycle the moment the next retrograde begins; earlier cycles' history is kept. "X of 27 done" counts the current cycle.
 - **Kit progress bars** (refined after review): two separate groups 18 pt apart, each bar with its labels underneath — pink cycle bar with a pink "Day 11 of 21", yellow kit bar with a yellow "2 of 27 done"; smaller 9 pt markers. Labels stay centred because they are counts, not positions.
 - **Task row icons:** checkbox and lock share a 16 pt slot, drawn at the same visible size (13 pt), centred on the first line of text; unlocked rows are tappable edge to edge.

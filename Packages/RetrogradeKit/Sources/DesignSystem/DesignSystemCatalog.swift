@@ -37,7 +37,7 @@ private struct ColoursAndType: View {
         ("cell", RetroColor.cell, "2B1E3C"), ("line", RetroColor.line, "49305F"),
         ("text", RetroColor.text, "F5F0FF"), ("textMuted", RetroColor.textMuted, "B8A9CD"),
         ("pink", RetroColor.pink, "FF2D87"), ("pinkSoft", RetroColor.pinkSoft, "EC82B1"),
-        ("mauve", RetroColor.mauve, "C997C6"), ("yellow", RetroColor.yellow, "FFD23D"),
+        ("mauve", RetroColor.mauve, "C997C6"), ("yellow", RetroColor.yellow, "FFD23D"), ("green", RetroColor.green, "52E3A4"),
         ("wine", RetroColor.wine, "461736"), ("dim", RetroColor.dim, "49334F"), ("calm", RetroColor.calm, "A89CBE"),
     ]
     let samples: [(RetroTextStyle, String, String)] = [
