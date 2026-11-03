@@ -79,25 +79,31 @@ private struct CountdownRow: View {
                 .retroText(.monoLarge)
                 .foregroundStyle(RetroColor.text)
         }
-        let day = Text(dayLabel)
-            .retroText(.mono)
-            .foregroundStyle(RetroColor.textMuted)
-        // Figma's single row where it fits; on narrow phones or large text the day label drops below.
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .firstTextBaseline) {
-                countdown
-                Spacer(minLength: 12)
-                day
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                countdown
-                day
+        Group {
+            if let dayLabel {
+                let day = Text(dayLabel)
+                    .retroText(.mono)
+                    .foregroundStyle(RetroColor.textMuted)
+                // Figma's single row where it fits; on narrow phones or large text the day label drops below.
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .firstTextBaseline) {
+                        countdown
+                        Spacer(minLength: 12)
+                        day
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        countdown
+                        day
+                    }
+                }
+            } else {
+                countdown.frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .lineLimit(1)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(days == 0 ? "Today, \(unit)" : "\(days) \(unit)")
-        .accessibilityValue(dayLabel.capitalized)
+        .accessibilityValue(dayLabel?.capitalized ?? "")
     }
 }
 

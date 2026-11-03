@@ -84,17 +84,21 @@ public struct HeaderIconButton: View {
 /// ("Go to my survival kit"); `.center` centres icon and label ("Mark as done").
 public struct PrimaryButton: View {
     public enum Layout { case leading, center }
+    /// `.completed` is the wine "Done for this cycle" state from Figma.
+    public enum Style { case filled, completed }
 
     let title: String
     let systemImage: String?
     let layout: Layout
+    let style: Style
     let showsArrow: Bool
     let action: () -> Void
 
-    public init(_ title: String, systemImage: String? = nil, layout: Layout = .center, showsArrow: Bool = false, action: @escaping () -> Void) {
+    public init(_ title: String, systemImage: String? = nil, layout: Layout = .center, style: Style = .filled, showsArrow: Bool = false, action: @escaping () -> Void) {
         self.title = title
         self.systemImage = systemImage
         self.layout = layout
+        self.style = style
         self.showsArrow = showsArrow
         self.action = action
     }
@@ -115,7 +119,12 @@ public struct PrimaryButton: View {
             .padding(.horizontal, 20)
             .frame(maxWidth: .infinity, minHeight: RetroMetrics.buttonHeight)
             .foregroundStyle(RetroColor.text)
-            .background(RetroColor.pink, in: RoundedRectangle(cornerRadius: RetroMetrics.Radius.button))
+            .background(style == .filled ? RetroColor.pink : RetroColor.wine, in: RoundedRectangle(cornerRadius: RetroMetrics.Radius.button))
+            .overlay {
+                if style == .completed {
+                    RoundedRectangle(cornerRadius: RetroMetrics.Radius.button).strokeBorder(RetroColor.pink, lineWidth: 1.5)
+                }
+            }
         }
         .buttonStyle(PressFeedbackStyle())
     }
@@ -293,16 +302,82 @@ public struct LabeledProgress: View {
     public var body: some View {
         VStack(spacing: 7) {
             CycleProgressBar(progress: progress, fill: fill)
+            MarkerLabels(progress: progress, start: start, current: current, end: end, currentColor: currentColor)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(current), between \(start.lowercased()) and \(end.lowercased())")
+        .accessibilityValue("\(Int((min(max(progress, 0), 1) * 100).rounded())) percent")
+    }
+}
+
+/// Start and end labels at the bar's ends, with a current label between them.
+/// With `followsMarker` (a position like "YOU ARE HERE") the current label sits under the marker;
+/// near either end it stays inside the bar and takes the place of that end's label. Without it
+/// (a count like "2 of 27 done") the current label is centred, as in Figma.
+public struct MarkerLabels: View {
+    let progress: Double
+    let start: String
+    let current: String
+    let end: String
+    let currentColor: Color
+    let followsMarker: Bool
+    @State private var widths: [Int: CGFloat] = [:]
+
+    public init(progress: Double, start: String, current: String, end: String, currentColor: Color, followsMarker: Bool = true) {
+        self.progress = progress
+        self.start = start
+        self.current = current
+        self.end = end
+        self.currentColor = currentColor
+        self.followsMarker = followsMarker
+    }
+
+    public var body: some View {
+        if followsMarker {
+            following
+        } else {
             HStack {
                 Text(start).foregroundStyle(RetroColor.textMuted)
-                Spacer()
+                Spacer(minLength: 8)
                 Text(current).foregroundStyle(currentColor)
-                Spacer()
+                Spacer(minLength: 8)
                 Text(end).foregroundStyle(RetroColor.textMuted)
             }
             .retroText(.monoSmall)
+            .lineLimit(1)
         }
-        .accessibilityElement(children: .combine)
+    }
+
+    private var following: some View {
+        Text(start) // sets the row height for the current text size
+            .hidden()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .overlay {
+                GeometryReader { geo in
+                    let width = geo.size.width
+                    let currentWidth = widths[1] ?? 0
+                    let x = min(max(width * min(max(progress, 0), 1) - currentWidth / 2, 0), width - currentWidth)
+                    let gap: CGFloat = 8
+                    let startHidden = x < (widths[0] ?? 0) + gap
+                    let endHidden = x + currentWidth > width - (widths[2] ?? 0) - gap
+                    ZStack(alignment: .topLeading) {
+                        label(start, 0, RetroColor.textMuted).opacity(startHidden ? 0 : 1)
+                        label(end, 2, RetroColor.textMuted)
+                            .frame(width: width, alignment: .trailing)
+                            .opacity(endHidden ? 0 : 1)
+                        label(current, 1, currentColor).offset(x: x)
+                    }
+                }
+            }
+            .retroText(.monoSmall)
+            .lineLimit(1)
+    }
+
+    private func label(_ text: String, _ index: Int, _ color: Color) -> some View {
+        Text(text)
+            .foregroundStyle(color)
+            .fixedSize()
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { widths[index] = $0 }
     }
 }
 

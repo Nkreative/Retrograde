@@ -71,6 +71,12 @@ public struct CycleCalculator: Sendable {
         return make(planet, .direct, next, from: previous.postShadowEnd, to: next.stationRetrograde, target: next.stationRetrograde, at: instant)
     }
 
+    /// The retrograde whose Survival Kit is current: the latest one that has begun by `instant`.
+    /// Kits (and their completion) roll over the moment the next retrograde starts.
+    public func currentCycle(of planet: Planet, at instant: Date) -> RetrogradePeriod? {
+        (periods[planet] ?? []).last { $0.stationRetrograde <= instant }
+    }
+
     /// Marker for a calendar day. A station day counts as retrograde; shadow days
     /// are those between a shadow boundary and its station.
     public func marker(for planet: Planet, on day: CalendarDay) -> DayMarker {

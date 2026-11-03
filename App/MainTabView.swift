@@ -48,8 +48,7 @@ struct MainTabView: View {
     private func screen(for tab: AppTab) -> some View {
         switch tab {
         case .overview: OverviewScreen(now: now, onOpenSurvivalKit: { selection = .survivalKit })
-        case .survivalKit:
-            PlaceholderScreen(title: "SMALL MOVES. YOU’LL GET IT DONE.", detail: "Main things you can control. The cosmos can wait.", milestone: "Survival Kit arrives in M5–M6.")
+        case .survivalKit: SurvivalKitTab(now: now)
         case .calendar:
             PlaceholderScreen(title: "MERCURY", detail: "Same orbit. Different days. Tap a date to explore what adds to the noise—and what helps soften it.", milestone: "Calendar arrives in M7.")
         }

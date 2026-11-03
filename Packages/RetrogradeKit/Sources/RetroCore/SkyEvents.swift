@@ -35,6 +35,14 @@ public struct RetrogradePeriod: Equatable, Sendable {
         self.stationDirectLongitude = stationDirectLongitude
     }
 
+    /// Stable identifier, e.g. "mercury-2026-10-24" (UT date the retrograde began).
+    /// Survival Kit completion is stored against it, so it must never change for a given period.
+    public var id: String {
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = TimeZone(identifier: "UTC")!
+        return "\(planet.rawValue)-\(CalendarDay(stationRetrograde, in: utc))"
+    }
+
     public var stationRetrogradeSign: ZodiacSign { .containing(longitude: stationRetrogradeLongitude) }
     public var stationDirectSign: ZodiacSign { .containing(longitude: stationDirectLongitude) }
 }

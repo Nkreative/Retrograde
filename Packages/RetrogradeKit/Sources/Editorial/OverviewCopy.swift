@@ -20,8 +20,8 @@ public struct OverviewCopy: Equatable, Sendable {
     public let countdownUnitSingular: String
     /// Shown after a large "TODAY" on the target day ("Mercury turns direct").
     public let countdownToday: String
-    /// Right-hand label above the bar; "%d" is the day and total ("DAY 12 / 22").
-    public let dayLabel: String
+    /// Right-hand label above the bar ("DAY {day} / {total}"); nil where a day count would confuse (direct).
+    public let dayLabel: String?
     public let barStart: String
     public let barEnd: String
     public let heroHeadline: String
@@ -35,8 +35,8 @@ public struct OverviewCopy: Equatable, Sendable {
         days == 1 ? countdownUnitSingular : countdownUnit
     }
 
-    public func dayLabel(day: Int, of total: Int) -> String {
-        dayLabel.replacingOccurrences(of: "{day}", with: "\(day)").replacingOccurrences(of: "{total}", with: "\(total)")
+    public func dayLabel(day: Int, of total: Int) -> String? {
+        dayLabel?.replacingOccurrences(of: "{day}", with: "\(day)").replacingOccurrences(of: "{total}", with: "\(total)")
     }
 
     /// Copy for a planet's stage; nil for planets without launch copy.
@@ -90,7 +90,9 @@ public struct OverviewCopy: Equatable, Sendable {
         countdownUnit: "days till the next plot twist",
         countdownUnitSingular: "day till the next plot twist",
         countdownToday: "Mercury turns retrograde",
-        dayLabel: "DIRECT · DAY {day}",
+        // The direct window starts when the last shadow ends, so a day count reads as if it
+        // belonged to the previous cycle; the countdown alone is clearer.
+        dayLabel: nil,
         barStart: "DIRECT",
         barEnd: "NEXT RX",
         heroHeadline: "ALL CLEAR.\nFOR NOW.",

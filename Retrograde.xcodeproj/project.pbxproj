@@ -11,6 +11,8 @@
 		A10000000000000000000032 /* AstroData in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000042 /* AstroData */; };
 		A10000000000000000000033 /* DesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000043 /* DesignSystem */; };
 		A10000000000000000000034 /* Editorial in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000044 /* Editorial */; };
+		A10000000000000000000036 /* Persistence in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000046 /* Persistence */; };
+		A10000000000000000000037 /* SurvivalKit in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000047 /* SurvivalKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +36,8 @@
 				A10000000000000000000032 /* AstroData in Frameworks */,
 				A10000000000000000000033 /* DesignSystem in Frameworks */,
 				A10000000000000000000034 /* Editorial in Frameworks */,
+				A10000000000000000000037 /* SurvivalKit in Frameworks */,
+				A10000000000000000000036 /* Persistence in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,6 +84,8 @@
 				A10000000000000000000042 /* AstroData */,
 				A10000000000000000000043 /* DesignSystem */,
 				A10000000000000000000044 /* Editorial */,
+				A10000000000000000000047 /* SurvivalKit */,
+				A10000000000000000000046 /* Persistence */,
 			);
 			productName = Retrograde;
 			productReference = A10000000000000000000011 /* Retrograde.app */;
@@ -302,6 +308,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A10000000000000000000045 /* XCLocalSwiftPackageReference "Packages/RetrogradeKit" */;
 			productName = Editorial;
+		};
+		A10000000000000000000046 /* Persistence */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000045 /* XCLocalSwiftPackageReference "Packages/RetrogradeKit" */;
+			productName = Persistence;
+		};
+		A10000000000000000000047 /* SurvivalKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000045 /* XCLocalSwiftPackageReference "Packages/RetrogradeKit" */;
+			productName = SurvivalKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

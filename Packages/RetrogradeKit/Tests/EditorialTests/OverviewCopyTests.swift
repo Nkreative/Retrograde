@@ -21,7 +21,7 @@ import Testing
         #expect(rx.countdownUnit(for: 10) == "days to exhale")
         #expect(rx.dayLabel(day: 12, of: 22) == "DAY 12 / 22")
         let direct = try #require(OverviewCopy.for(.mercury, .direct))
-        #expect(direct.dayLabel(day: 17, of: 70) == "DIRECT · DAY 17")
+        #expect(direct.dayLabel(day: 17, of: 70) == nil)
     }
 
     @Test func otherPlanetsHaveNoLaunchCopy() {

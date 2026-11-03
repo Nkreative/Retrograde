@@ -2,6 +2,15 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-03 (M5)
+
+- **Overview refinements (approved):** "YOU ARE HERE" follows the progress marker and, at either end of the bar, replaces that end's label. The direct stage shows no day count, just the countdown to the next retrograde. Pre/post-shadow copy and the direct countdown target are approved.
+- **Survival Kit visibility:** free = first task per section unlocked, next two shown locked (40 % opacity + lock), the rest also blurred; locked rows do nothing when tapped. Premium = all unlocked, no nudge card. Rule values live in `TaskAccessPolicy.launch`.
+- **Completion per cycle:** each "Mark as done" is stored on the device against the retrograde it belongs to (`mercury-2026-10-24`). The kit switches to a fresh, empty cycle the moment the next retrograde begins; earlier cycles' history is kept. "X of 27 done" counts the current cycle.
+- **Kit progress bars** keep Figma's fixed labels ("Day 11 of 21", "2 of 27 done" centred) because they are counts, not positions.
+- **Journal icon** matches Figma (same speech bubble as Communication) — flagged in case it was a placeholder.
+- **Until M9:** Premium is off except in debug builds launched with `-premium YES`; the "23 more tasks in Premium" card doesn't open anything yet. Task screens show a placeholder body until M6.
+
 ## 2026-11-03 (M4)
 
 - **Overview stages:** pre-shadow → retrograde → post-shadow → direct, each with its own countdown and bar:

@@ -44,6 +44,8 @@ public enum RetroTextStyle: CaseIterable, Sendable {
     case body
     /// Inter ExtraBold 12 — emphasised word inside body copy ("Mercury").
     case bodyHeavy
+    /// Inter Regular 10 — fine print (the "reflection prompt, not a prediction" note).
+    case finePrint
     /// Space Mono 11 — countdown label, step numbers.
     case monoLarge
     /// Space Mono 10 — tab labels, eyebrows.
@@ -58,7 +60,7 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .display, .hero, .title, .section, .cardTitle: "ArchivoBlack-Regular"
         case .button: "Inter-Bold"
         case .bodyStrong: "Inter-SemiBold"
-        case .bodyLarge, .body: "Inter-Regular"
+        case .bodyLarge, .body, .finePrint: "Inter-Regular"
         case .bodyHeavy: "Inter-ExtraBold"
         case .monoLarge, .mono, .monoSmall: "SpaceMono-Regular"
         case .monoBold: "SpaceMono-Bold"
@@ -76,7 +78,7 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .bodyStrong, .bodyLarge: 13
         case .body, .bodyHeavy: 12
         case .monoLarge: 11
-        case .mono, .monoBold: 10
+        case .mono, .monoBold, .finePrint: 10
         case .monoSmall: 9
         }
     }
@@ -93,6 +95,7 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .bodyStrong, .bodyLarge: .subheadline
         case .body, .bodyHeavy, .monoLarge: .footnote
         case .mono, .monoBold: .caption
+        case .finePrint: .caption2
         case .monoSmall: .caption2
         }
     }
