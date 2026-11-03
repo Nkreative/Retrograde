@@ -2,10 +2,17 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-03 (M7 Calendar)
+
+- **Editorial approved with changes:** tags renamed (RETROGRADE, TURNING POINT, NEAR STATION, SHADOW, MOON PHASE, SIGN CHANGE); gentle tone on Intense days; 8 habits per level across communication, technology, planning and reflection; predictive phrasing removed (e.g. turning direct: "Mercury's apparent backward motion ends today. A good moment to revisit what you've been putting off."). Rules and tone in [editorial/DAILY_INSIGHTS.md](editorial/DAILY_INSIGHTS.md); enforced by tests.
+- **Calendar:** week strip by default, Expand/Collapse to the full month; arrows (and swipe) move by week or month within 2025–2030. Weeks start on the person's locale first weekday (Figma showed Sunday). Each day: Rx/Sh/D, four intensity bars, moon icon on primary phases, today dot, lock when details are Premium. Context line shows the month's Mercury retrograde or the next one; chips list other planets retrograde that month.
+- **Day detail:** level and four-step scale for every day; summary, events and habit for unlocked days. Free: today + next 3 days (local, rolling). Locked future days say when they become free ("Come back Nov 10"); past days point to Premium; "Unlock every day" opens the paywall.
+- **Outside 2025–2030:** days show no markers or level, the detail says the sky isn't mapped yet, and if today is past 2030 a note asks to update the app.
+
 ## 2026-11-03 (M7 methodology)
 
 - **Daily intensity v1 provisionally approved:** points and four levels as in [INTENSITY_METHODOLOGY.md](INTENSITY_METHODOLOGY.md). Mercury shadow days stay +1. Eclipses deferred. Tropical zodiac for sign changes; days assigned in the person's local time zone. Versioned (`methodologyVersion = 1`), deterministic, framed as a reflection score, not a prediction.
-- **Editorial copy** drafted in `docs/editorial/DAILY_INSIGHTS_DRAFT.md`, awaiting review before the Calendar UI.
+- **Editorial copy** reviewed and approved with changes (see M7 Calendar).
 
 ## 2026-11-03 (Overview artwork)
 

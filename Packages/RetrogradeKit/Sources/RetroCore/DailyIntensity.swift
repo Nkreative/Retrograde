@@ -40,6 +40,11 @@ public struct Influence: Hashable, Sendable {
 
     public let kind: Kind
     public let points: Int
+
+    public init(kind: Kind, points: Int) {
+        self.kind = kind
+        self.points = points
+    }
 }
 
 public struct DailyIntensity: Sendable {
@@ -49,6 +54,12 @@ public struct DailyIntensity: Sendable {
     public var score: Int { influences.reduce(0) { $0 + $1.points } }
     public var level: IntensityLevel { IntensityLevel(score: score) }
     public let methodologyVersion: Int
+
+    public init(day: CalendarDay, influences: [Influence], methodologyVersion: Int) {
+        self.day = day
+        self.influences = influences
+        self.methodologyVersion = methodologyVersion
+    }
 }
 
 /// Scores calendar days in the person's calendar and time zone. Deterministic: the same data,
@@ -68,27 +79,43 @@ public struct IntensityCalculator: Sendable {
         public static let mercuryIngress = 1
     }
 
-    private let ephemeris: Ephemeris
-    private let calendar: Calendar
+    private struct LocalPeriod: Sendable {
+        let planet: Planet
+        let rx: CalendarDay, direct: CalendarDay, preShadow: CalendarDay, postShadow: CalendarDay
+    }
+
+    private let coverage: ClosedRange<CalendarDay>
+    // Every event's local day, worked out once for this time zone.
+    private let periods: [LocalPeriod]
+    private let moons: [CalendarDay: [MoonPhase]]
+    private let mercuryIngresses: [CalendarDay: [SignIngress]]
 
     public init(ephemeris: Ephemeris, calendar: Calendar = .current) {
-        self.ephemeris = ephemeris
-        self.calendar = calendar
+        func local(_ date: Date) -> CalendarDay { CalendarDay(date, in: calendar) }
+        coverage = ephemeris.coverage
+        periods = ephemeris.retrogrades.map {
+            LocalPeriod(planet: $0.planet, rx: local($0.stationRetrograde), direct: local($0.stationDirect),
+                        preShadow: local($0.preShadowStart), postShadow: local($0.postShadowEnd))
+        }
+        moons = Dictionary(grouping: ephemeris.moonPhases, by: { local($0.time) }).mapValues { $0.map(\.phase) }
+        mercuryIngresses = Dictionary(grouping: ephemeris.ingresses.filter { $0.planet == .mercury }, by: { local($0.time) })
     }
+
+    /// The primary moon phase on a local day, if any (for calendar markers).
+    public func moonPhase(on day: CalendarDay) -> MoonPhase? { moons[day]?.first }
 
     /// Nil outside the data's coverage.
     public func intensity(on day: CalendarDay) -> DailyIntensity? {
-        guard ephemeris.coverage.contains(day) else { return nil }
+        guard coverage.contains(day) else { return nil }
         var found: [Influence] = []
-        func local(_ date: Date) -> CalendarDay { CalendarDay(date, in: calendar) }
 
-        for p in ephemeris.retrogrades {
-            let rx = local(p.stationRetrograde), direct = local(p.stationDirect)
+        for p in periods {
+            let rx = p.rx, direct = p.direct
             switch p.planet {
             case .mercury:
                 if (rx...direct).contains(day) {
                     found.append(Influence(kind: .mercuryRetrograde(day: rx.days(to: day) + 1, totalDays: rx.days(to: direct) + 1), points: Points.mercuryRetrograde))
-                } else if (local(p.preShadowStart)...local(p.postShadowEnd)).contains(day) {
+                } else if (p.preShadow...p.postShadow).contains(day) {
                     found.append(Influence(kind: .mercuryShadow(beforeRetrograde: day < rx), points: Points.mercuryShadow))
                 }
                 if day == rx || day == direct {
@@ -109,14 +136,14 @@ public struct IntensityCalculator: Sendable {
                 }
             }
         }
-        for moon in ephemeris.moonPhases where local(moon.time) == day {
-            switch moon.phase {
+        for phase in moons[day] ?? [] {
+            switch phase {
             case .new: found.append(Influence(kind: .newMoon, points: Points.newOrFullMoon))
             case .full: found.append(Influence(kind: .fullMoon, points: Points.newOrFullMoon))
             default: break
             }
         }
-        for ingress in ephemeris.ingresses where ingress.planet == .mercury && local(ingress.time) == day {
+        for ingress in mercuryIngresses[day] ?? [] {
             found.append(Influence(kind: .mercuryIngress(ingress.sign, retrograde: ingress.retrograde), points: Points.mercuryIngress))
         }
         // Strongest first; ties keep the order above, which is stable for the same data.

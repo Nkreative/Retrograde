@@ -58,7 +58,9 @@ struct MainTabView: View {
         case .overview: OverviewScreen(now: now, onOpenSurvivalKit: { selection = .survivalKit })
         case .survivalKit: SurvivalKitTab(now: now)
         case .calendar:
-            PlaceholderScreen(title: "MERCURY", detail: "Same orbit. Different days. Tap a date to explore what adds to the noise—and what helps soften it.", milestone: "Calendar arrives in M7.")
+            TimelineView(.everyMinute) { context in
+                CalendarScreen(now: now ?? context.date)
+            }
         }
     }
 }
