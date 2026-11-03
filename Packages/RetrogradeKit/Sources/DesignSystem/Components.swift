@@ -254,28 +254,30 @@ public struct CycleProgressBar: View {
     let progress: Double
     let fill: Color
     let marker: Color
+    let markerSize: CGFloat
 
-    public init(progress: Double, fill: Color = RetroColor.pink, marker: Color = RetroColor.yellow) {
+    public init(progress: Double, fill: Color = RetroColor.pink, marker: Color = RetroColor.yellow, markerSize: CGFloat = 11) {
         self.progress = min(max(progress, 0), 1)
         self.fill = fill
         self.marker = marker
+        self.markerSize = markerSize
     }
 
     public var body: some View {
         GeometryReader { geo in
             let x = geo.size.width * progress
             ZStack(alignment: .leading) {
-                Capsule().fill(RetroColor.line)
-                Capsule().fill(fill).frame(width: max(x, 5))
+                Capsule().fill(RetroColor.line).frame(height: 5)
+                Capsule().fill(fill).frame(width: max(x, 5), height: 5)
                 Circle()
                     .fill(marker)
-                    .overlay(Circle().strokeBorder(RetroColor.background, lineWidth: 2))
-                    .frame(width: 11, height: 11)
-                    .offset(x: min(max(x - 5.5, 0), geo.size.width - 11))
+                    .overlay(Circle().strokeBorder(RetroColor.background, lineWidth: markerSize > 9 ? 2 : 1.5))
+                    .frame(width: markerSize, height: markerSize)
+                    .offset(x: min(max(x - markerSize / 2, 0), geo.size.width - markerSize))
             }
         }
-        .frame(height: 11)
-        .padding(.vertical, -3) // the track is 5 pt; the marker overhangs it
+        .frame(height: markerSize)
+        .padding(.vertical, -(markerSize - 5) / 2) // the track is 5 pt; the marker overhangs it
         .accessibilityElement()
         .accessibilityValue(Text("\(Int((progress * 100).rounded())) percent"))
     }
@@ -394,15 +396,21 @@ public struct TaskCheckbox: View {
     }
 
     public var body: some View {
+        // All three states share a 16 pt slot and read at the same size: a 13 pt box, or a lock
+        // glyph of the same visible height.
         ZStack {
             switch state {
             case .open:
-                RoundedRectangle(cornerRadius: RetroMetrics.Radius.checkbox).strokeBorder(RetroColor.textMuted, lineWidth: 1)
+                RoundedRectangle(cornerRadius: RetroMetrics.Radius.checkbox)
+                    .strokeBorder(RetroColor.textMuted, lineWidth: 1.25)
+                    .frame(width: 13, height: 13)
             case .done:
-                RoundedRectangle(cornerRadius: RetroMetrics.Radius.checkbox).fill(RetroColor.pink)
-                Image(systemName: RetroSymbol.check).font(.system(size: 9, weight: .heavy)).foregroundStyle(RetroColor.text)
+                RoundedRectangle(cornerRadius: RetroMetrics.Radius.checkbox)
+                    .fill(RetroColor.pink)
+                    .frame(width: 13, height: 13)
+                Image(systemName: RetroSymbol.check).font(.system(size: 8, weight: .heavy)).foregroundStyle(RetroColor.text)
             case .locked:
-                Image(systemName: RetroSymbol.lock).font(.system(size: 10)).foregroundStyle(RetroColor.textMuted)
+                Image(systemName: RetroSymbol.lock).font(.system(size: 13, weight: .medium)).foregroundStyle(RetroColor.textMuted)
             }
         }
         .frame(width: 16, height: 16)

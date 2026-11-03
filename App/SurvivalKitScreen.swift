@@ -47,33 +47,46 @@ struct SurvivalKitScreen: View {
     var body: some View {
         let cycleID = KitCycle.id(at: now)
         let done = completions.completedTaskIDs(in: cycleID)
-        ScrollView {
-            VStack(alignment: .leading, spacing: RetroMetrics.sectionSpacing) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("SMALL MOVES. YOU’LL GET IT DONE.")
-                        .retroText(.cardTitle)
-                        .foregroundStyle(RetroColor.text)
-                        .accessibilityAddTraits(.isHeader)
-                    Text("Main things you can control. The cosmos can wait.")
-                        .retroText(.body)
-                        .foregroundStyle(RetroColor.textMuted)
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: RetroMetrics.sectionSpacing) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("SMALL MOVES. YOU’LL GET IT DONE.")
+                            .retroText(.cardTitle)
+                            .foregroundStyle(RetroColor.text)
+                            .accessibilityAddTraits(.isHeader)
+                        Text("Main things you can control. The cosmos can wait.")
+                            .retroText(.body)
+                            .foregroundStyle(RetroColor.textMuted)
+                    }
+                    VStack(alignment: .leading, spacing: 16) {
+                        KitProgress(status: SkyData.calculator?.status(of: .mercury, at: now), done: done.count, total: kit.tasks.count)
+                        ForEach(kit.sections) { section in
+                            SectionCard(section: section, done: done, isPremium: premium.isPremium, policy: policy)
+                        }
+                        if !premium.isPremium {
+                            PremiumNudge(lockedCount: policy.lockedCount(in: kit, isPremium: false))
+                        }
+                    }
                 }
-                VStack(alignment: .leading, spacing: 16) {
-                    KitProgress(status: SkyData.calculator?.status(of: .mercury, at: now), done: done.count, total: kit.tasks.count)
-                    ForEach(kit.sections) { section in
-                        SectionCard(section: section, done: done, isPremium: premium.isPremium, policy: policy)
-                    }
-                    if !premium.isPremium {
-                        PremiumNudge(lockedCount: policy.lockedCount(in: kit, isPremium: false))
-                    }
+                .padding(.horizontal, RetroMetrics.screenPadding)
+                .padding(.top, 12)
+                .padding(.bottom, 20)
+                .id(Self.contentID)
+            }
+            #if DEBUG
+            .onAppear {
+                // `-scrollKit bottom` opens the kit scrolled to the end, for review screenshots.
+                if UserDefaults.standard.string(forKey: "scrollKit") == "bottom" {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { proxy.scrollTo(Self.contentID, anchor: .bottom) }
                 }
             }
-            .padding(.horizontal, RetroMetrics.screenPadding)
-            .padding(.top, 12)
-            .padding(.bottom, 20)
+            #endif
         }
         .retroScreenBackground()
     }
+
+    private static let contentID = "kit-content"
 }
 
 /// Which cycle's kit is current: the latest Mercury retrograde to have begun.
@@ -83,7 +96,7 @@ enum KitCycle {
     }
 }
 
-/// Cycle bar (pink) with its labels above, and kit bar (yellow) with its labels below.
+/// Cycle progress (pink) and kit progress (yellow).
 private struct KitProgress: View {
     let status: CycleStatus?
     let done: Int
@@ -96,13 +109,19 @@ private struct KitProgress: View {
             return "Day \(status.day) of \(status.totalDays)"
         }()
         let kitProgress = total == 0 ? 0 : Double(done) / Double(total)
-        VStack(spacing: 7) {
+        // Two separate groups, each bar with its labels underneath, coloured to match:
+        // pink for where Mercury is, yellow for how much of the kit is done.
+        VStack(spacing: 18) {
             if let status, let copy {
-                MarkerLabels(progress: status.progress, start: copy.barStart, current: cycleLabel, end: copy.barEnd, currentColor: RetroColor.textMuted, followsMarker: false)
-                CycleProgressBar(progress: status.progress)
+                VStack(spacing: 7) {
+                    CycleProgressBar(progress: status.progress, markerSize: 9)
+                    MarkerLabels(progress: status.progress, start: copy.barStart, current: cycleLabel, end: copy.barEnd, currentColor: RetroColor.pink, followsMarker: false)
+                }
             }
-            CycleProgressBar(progress: kitProgress, fill: RetroColor.yellow)
-            MarkerLabels(progress: kitProgress, start: "CONFUSED", current: "\(done) of \(total) done", end: "SAFE", currentColor: RetroColor.yellow, followsMarker: false)
+            VStack(spacing: 7) {
+                CycleProgressBar(progress: kitProgress, fill: RetroColor.yellow, markerSize: 9)
+                MarkerLabels(progress: kitProgress, start: "CONFUSED", current: "\(done) of \(total) done", end: "SAFE", currentColor: RetroColor.yellow, followsMarker: false)
+            }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(done) of \(total) tasks done this cycle")
@@ -160,16 +179,23 @@ private struct TaskRow: View {
         }
     }
 
+    /// Half the cap height of 12 pt Inter: centres the checkbox on the first line of text.
+    @ScaledMetric(relativeTo: .footnote) private var firstLineCentre: CGFloat = 4.4
+
     private func row(checkbox: TaskCheckbox.State, textColor: Color, textOpacity: Double = 1) -> some View {
-        HStack(spacing: 10) {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
             TaskCheckbox(checkbox)
+                .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + firstLineCentre }
             Text(task.title)
                 .retroText(.body)
                 .foregroundStyle(textColor)
                 .opacity(textOpacity)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
+        // Tappable across the full width and half the gap above and below, so rows meet edge to edge.
+        .padding(.vertical, 6)
         .contentShape(Rectangle())
+        .padding(.vertical, -6)
         .accessibilityElement(children: .combine)
     }
 }

@@ -37,8 +37,7 @@ struct MainTabView: View {
                 }
             }
             .frame(maxHeight: .infinity)
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+            // Stacked below the content (not floating over it) so nothing can scroll underneath.
             RetroTabBar(items: AppTab.allCases.map(\.item), selection: $selection)
         }
         .retroScreenBackground()
