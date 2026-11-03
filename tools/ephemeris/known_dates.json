@@ -1,0 +1,19 @@
+{
+ "note": "Independent cross-check list: station dates (UT calendar date) as printed in widely published almanac/retrograde tables. The generated file must agree within one day. Add rows when spot-checking new years.",
+ "stations": [
+  {"planet": "mercury", "stationRetrograde": "2025-03-15", "stationDirect": "2025-04-07"},
+  {"planet": "mercury", "stationRetrograde": "2025-07-18", "stationDirect": "2025-08-11"},
+  {"planet": "mercury", "stationRetrograde": "2025-11-09", "stationDirect": "2025-11-29"},
+  {"planet": "mercury", "stationRetrograde": "2026-02-26", "stationDirect": "2026-03-20"},
+  {"planet": "mercury", "stationRetrograde": "2026-06-29", "stationDirect": "2026-07-23"},
+  {"planet": "mercury", "stationRetrograde": "2026-10-24", "stationDirect": "2026-11-13"},
+  {"planet": "venus", "stationRetrograde": "2025-03-01", "stationDirect": "2025-04-12"},
+  {"planet": "venus", "stationRetrograde": "2026-10-03", "stationDirect": "2026-11-14"},
+  {"planet": "mars", "stationRetrograde": "2024-12-06", "stationDirect": "2025-02-23"}
+ ],
+ "moonPhases": [
+  {"phase": "full", "date": "2026-01-03"},
+  {"phase": "new", "date": "2026-11-09"},
+  {"phase": "full", "date": "2026-11-24"}
+ ]
+}

@@ -1,0 +1,50 @@
+import Foundation
+import Testing
+import RetroCore
+@testable import AstroData
+
+@Suite struct BundledEphemerisTests {
+    let ephemeris: Ephemeris
+
+    init() throws {
+        ephemeris = try BundledEphemeris.load()
+    }
+
+    @Test func coversLaunchRange() {
+        #expect(ephemeris.coverage == CalendarDay(year: 2025, month: 1, day: 1)...CalendarDay(year: 2030, month: 12, day: 31))
+        #expect(Set(ephemeris.retrogrades.map(\.planet)) == Set(Planet.allCases))
+        #expect(ephemeris.sources.count == 2)
+    }
+
+    @Test func mercuryIsRetrogradeOnNovember3rd2026() throws {
+        var london = Calendar(identifier: .gregorian)
+        london.timeZone = TimeZone(identifier: "Europe/London")!
+        let now = try #require(BundledEphemeris.parseMinute("2026-11-03T12:00Z"))
+        let status = try #require(CycleCalculator(ephemeris: ephemeris, calendar: london).status(of: .mercury, at: now))
+        #expect(status.phase == .retrograde)
+        #expect(status.day == 11)
+        #expect(status.totalDays == 21)
+        #expect(CalendarDay(status.end, in: london) == CalendarDay(year: 2026, month: 11, day: 13))
+    }
+
+    @Test func statusIsAvailableAcrossTheWholeCoverage() {
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = TimeZone(identifier: "UTC")!
+        let calc = CycleCalculator(ephemeris: ephemeris, calendar: utc)
+        var day = ephemeris.coverage.lowerBound
+        while day <= ephemeris.coverage.upperBound {
+            #expect(calc.status(of: .mercury, at: day.start(in: utc)) != nil, "no Mercury status on \(day)")
+            day = day.adding(days: 1)
+        }
+    }
+
+    @Test func rejectsUnknownSchema() {
+        let json = #"{"schemaVersion":2,"coverage":{"start":"2025-01-01","end":"2025-12-31"},"sources":[],"retrogrades":[],"ingresses":[],"moonPhases":[]}"#
+        #expect(throws: BundledEphemeris.LoadError.self) { try BundledEphemeris.decode(Data(json.utf8)) }
+    }
+
+    @Test func parsesTimestamps() {
+        #expect(BundledEphemeris.parseMinute("2026-10-24T07:10Z") == (try? Date("2026-10-24T07:10:00Z", strategy: .iso8601)))
+        #expect(BundledEphemeris.parseMinute("2026-10-24 07:10") == nil)
+    }
+}

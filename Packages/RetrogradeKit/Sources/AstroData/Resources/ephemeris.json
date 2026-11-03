@@ -1,0 +1,3200 @@
+{
+ "schemaVersion": 1,
+ "generatedAt": "2026-11-03T18:45Z",
+ "coverage": {
+  "start": "2025-01-01",
+  "end": "2030-12-31"
+ },
+ "sources": [
+  {
+   "name": "NASA/JPL Horizons",
+   "url": "https://ssd.jpl.nasa.gov/horizons/",
+   "use": "Geocentric apparent ecliptic-of-date longitudes, hourly UT; stations, shadows and ingresses derived."
+  },
+  {
+   "name": "US Naval Observatory, Astronomical Applications Department",
+   "url": "https://aa.usno.navy.mil/data/api",
+   "use": "Primary moon phases, UT."
+  }
+ ],
+ "retrogrades": [
+  {
+   "planet": "pluto",
+   "preShadowStart": "2024-01-09T23:44Z",
+   "stationRetrograde": "2024-05-02T17:58Z",
+   "stationDirect": "2024-10-12T00:45Z",
+   "postShadowEnd": "2025-02-02T14:15Z",
+   "stationRetrogradeLongitude": 302.1039,
+   "stationDirectLongitude": 299.6419
+  },
+  {
+   "planet": "saturn",
+   "preShadowStart": "2024-03-24T02:28Z",
+   "stationRetrograde": "2024-06-29T19:13Z",
+   "stationDirect": "2024-11-15T14:22Z",
+   "postShadowEnd": "2025-02-18T13:24Z",
+   "stationRetrogradeLongitude": 349.428,
+   "stationDirectLongitude": 342.6926
+  },
+  {
+   "planet": "neptune",
+   "preShadowStart": "2024-03-11T10:43Z",
+   "stationRetrograde": "2024-07-02T10:28Z",
+   "stationDirect": "2024-12-07T23:22Z",
+   "postShadowEnd": "2025-03-28T16:26Z",
+   "stationRetrogradeLongitude": 359.9319,
+   "stationDirectLongitude": 357.131
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2024-07-17T03:51Z",
+   "stationRetrograde": "2024-08-05T04:55Z",
+   "stationDirect": "2024-08-28T21:13Z",
+   "postShadowEnd": "2024-09-11T23:52Z",
+   "stationRetrogradeLongitude": 154.1046,
+   "stationDirectLongitude": 141.4088
+  },
+  {
+   "planet": "uranus",
+   "preShadowStart": "2024-05-16T02:29Z",
+   "stationRetrograde": "2024-09-01T15:24Z",
+   "stationDirect": "2025-01-30T16:14Z",
+   "postShadowEnd": "2025-05-17T06:47Z",
+   "stationRetrogradeLongitude": 57.2567,
+   "stationDirectLongitude": 53.2615
+  },
+  {
+   "planet": "jupiter",
+   "preShadowStart": "2024-07-15T14:47Z",
+   "stationRetrograde": "2024-10-09T07:00Z",
+   "stationDirect": "2025-02-04T09:42Z",
+   "postShadowEnd": "2025-04-30T20:11Z",
+   "stationRetrogradeLongitude": 81.3377,
+   "stationDirectLongitude": 71.2783
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2024-11-07T12:32Z",
+   "stationRetrograde": "2024-11-26T02:40Z",
+   "stationDirect": "2024-12-15T20:59Z",
+   "postShadowEnd": "2025-01-03T03:15Z",
+   "stationRetrogradeLongitude": 262.6717,
+   "stationDirectLongitude": 246.396
+  },
+  {
+   "planet": "mars",
+   "preShadowStart": "2024-10-05T04:40Z",
+   "stationRetrograde": "2024-12-06T23:32Z",
+   "stationDirect": "2025-02-24T02:02Z",
+   "postShadowEnd": "2025-05-02T06:07Z",
+   "stationRetrogradeLongitude": 126.1711,
+   "stationDirectLongitude": 107.0152
+  },
+  {
+   "planet": "venus",
+   "preShadowStart": "2025-01-28T13:23Z",
+   "stationRetrograde": "2025-03-02T00:34Z",
+   "stationDirect": "2025-04-13T01:05Z",
+   "postShadowEnd": "2025-05-16T06:04Z",
+   "stationRetrogradeLongitude": 10.8357,
+   "stationDirectLongitude": 354.6249
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2025-03-01T07:59Z",
+   "stationRetrograde": "2025-03-15T06:47Z",
+   "stationDirect": "2025-04-07T11:09Z",
+   "postShadowEnd": "2025-04-26T08:28Z",
+   "stationRetrogradeLongitude": 9.5889,
+   "stationDirectLongitude": 356.8263
+  },
+  {
+   "planet": "pluto",
+   "preShadowStart": "2025-01-10T15:41Z",
+   "stationRetrograde": "2025-05-04T15:47Z",
+   "stationDirect": "2025-10-14T03:07Z",
+   "postShadowEnd": "2026-02-04T20:25Z",
+   "stationRetrogradeLongitude": 303.8187,
+   "stationDirectLongitude": 301.367
+  },
+  {
+   "planet": "neptune",
+   "preShadowStart": "2025-03-13T21:50Z",
+   "stationRetrograde": "2025-07-04T21:46Z",
+   "stationDirect": "2025-12-10T11:55Z",
+   "postShadowEnd": "2026-03-31T05:43Z",
+   "stationRetrogradeLongitude": 2.1755,
+   "stationDirectLongitude": 359.3726
+  },
+  {
+   "planet": "saturn",
+   "preShadowStart": "2025-04-06T14:49Z",
+   "stationRetrograde": "2025-07-13T04:05Z",
+   "stationDirect": "2025-11-28T03:51Z",
+   "postShadowEnd": "2026-03-02T18:13Z",
+   "stationRetrogradeLongitude": 1.9344,
+   "stationDirectLongitude": 355.1576
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2025-06-30T05:54Z",
+   "stationRetrograde": "2025-07-18T04:45Z",
+   "stationDirect": "2025-08-11T07:29Z",
+   "postShadowEnd": "2025-08-25T08:36Z",
+   "stationRetrogradeLongitude": 135.5752,
+   "stationDirectLongitude": 124.2494
+  },
+  {
+   "planet": "uranus",
+   "preShadowStart": "2025-05-20T18:33Z",
+   "stationRetrograde": "2025-09-06T04:57Z",
+   "stationDirect": "2026-02-04T02:13Z",
+   "postShadowEnd": "2026-05-21T16:42Z",
+   "stationRetrogradeLongitude": 61.4637,
+   "stationDirectLongitude": 57.4598
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2025-10-21T11:10Z",
+   "stationRetrograde": "2025-11-09T18:59Z",
+   "stationDirect": "2025-11-29T17:41Z",
+   "postShadowEnd": "2025-12-17T03:56Z",
+   "stationRetrogradeLongitude": 246.8619,
+   "stationDirectLongitude": 230.7069
+  },
+  {
+   "planet": "jupiter",
+   "preShadowStart": "2025-08-17T07:34Z",
+   "stationRetrograde": "2025-11-11T16:38Z",
+   "stationDirect": "2026-03-11T03:33Z",
+   "postShadowEnd": "2026-06-06T15:40Z",
+   "stationRetrogradeLongitude": 115.1525,
+   "stationDirectLongitude": 105.0873
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2026-02-11T22:12Z",
+   "stationRetrograde": "2026-02-26T06:49Z",
+   "stationDirect": "2026-03-20T19:34Z",
+   "postShadowEnd": "2026-04-09T11:42Z",
+   "stationRetrogradeLongitude": 352.5653,
+   "stationDirectLongitude": 338.4907
+  },
+  {
+   "planet": "pluto",
+   "preShadowStart": "2026-01-12T07:43Z",
+   "stationRetrograde": "2026-05-06T15:12Z",
+   "stationDirect": "2026-10-16T02:50Z",
+   "postShadowEnd": "2027-02-07T01:16Z",
+   "stationRetrogradeLongitude": 305.5095,
+   "stationDirectLongitude": 303.0686
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2026-06-13T00:53Z",
+   "stationRetrograde": "2026-06-29T17:36Z",
+   "stationDirect": "2026-07-23T22:57Z",
+   "postShadowEnd": "2026-08-07T03:37Z",
+   "stationRetrogradeLongitude": 116.2573,
+   "stationDirectLongitude": 106.3165
+  },
+  {
+   "planet": "neptune",
+   "preShadowStart": "2026-03-16T08:55Z",
+   "stationRetrograde": "2026-07-07T11:24Z",
+   "stationDirect": "2026-12-12T22:21Z",
+   "postShadowEnd": "2027-04-02T19:00Z",
+   "stationRetrogradeLongitude": 4.4181,
+   "stationDirectLongitude": 1.6129
+  },
+  {
+   "planet": "saturn",
+   "preShadowStart": "2026-04-20T12:17Z",
+   "stationRetrograde": "2026-07-26T19:52Z",
+   "stationDirect": "2026-12-10T23:30Z",
+   "postShadowEnd": "2027-03-15T06:51Z",
+   "stationRetrogradeLongitude": 14.75,
+   "stationDirectLongitude": 7.931
+  },
+  {
+   "planet": "uranus",
+   "preShadowStart": "2026-05-25T10:44Z",
+   "stationRetrograde": "2026-09-10T18:47Z",
+   "stationDirect": "2027-02-08T12:17Z",
+   "postShadowEnd": "2027-05-26T03:47Z",
+   "stationRetrogradeLongitude": 65.697,
+   "stationDirectLongitude": 61.6826
+  },
+  {
+   "planet": "venus",
+   "preShadowStart": "2026-08-31T14:46Z",
+   "stationRetrograde": "2026-10-03T07:14Z",
+   "stationDirect": "2026-11-14T00:29Z",
+   "postShadowEnd": "2026-12-15T18:44Z",
+   "stationRetrogradeLongitude": 218.4911,
+   "stationDirectLongitude": 202.8636
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2026-10-04T09:09Z",
+   "stationRetrograde": "2026-10-24T07:10Z",
+   "stationDirect": "2026-11-13T15:56Z",
+   "postShadowEnd": "2026-11-30T06:16Z",
+   "stationRetrogradeLongitude": 230.979,
+   "stationDirectLongitude": 215.0335
+  },
+  {
+   "planet": "jupiter",
+   "preShadowStart": "2026-09-17T04:29Z",
+   "stationRetrograde": "2026-12-13T00:56Z",
+   "stationDirect": "2027-04-13T02:20Z",
+   "postShadowEnd": "2027-07-11T04:50Z",
+   "stationRetrogradeLongitude": 147.0246,
+   "stationDirectLongitude": 136.9955
+  },
+  {
+   "planet": "mars",
+   "preShadowStart": "2026-11-05T15:34Z",
+   "stationRetrograde": "2027-01-10T12:58Z",
+   "stationDirect": "2027-04-01T14:10Z",
+   "postShadowEnd": "2027-06-08T01:58Z",
+   "stationRetrogradeLongitude": 160.429,
+   "stationDirectLongitude": 140.9266
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2027-01-25T18:58Z",
+   "stationRetrograde": "2027-02-09T17:36Z",
+   "stationDirect": "2027-03-03T12:34Z",
+   "postShadowEnd": "2027-03-23T14:58Z",
+   "stationRetrogradeLongitude": 335.9812,
+   "stationDirectLongitude": 320.9231
+  },
+  {
+   "planet": "pluto",
+   "preShadowStart": "2027-01-13T23:39Z",
+   "stationRetrograde": "2027-05-08T12:30Z",
+   "stationDirect": "2027-10-18T04:03Z",
+   "postShadowEnd": "2028-02-09T05:12Z",
+   "stationRetrogradeLongitude": 307.1781,
+   "stationDirectLongitude": 304.7483
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2027-05-26T06:04Z",
+   "stationRetrograde": "2027-06-10T18:16Z",
+   "stationDirect": "2027-07-04T19:38Z",
+   "postShadowEnd": "2027-07-19T08:43Z",
+   "stationRetrogradeLongitude": 96.3611,
+   "stationDirectLongitude": 87.4692
+  },
+  {
+   "planet": "neptune",
+   "preShadowStart": "2027-03-18T20:10Z",
+   "stationRetrograde": "2027-07-09T23:15Z",
+   "stationDirect": "2027-12-15T09:32Z",
+   "postShadowEnd": "2028-04-04T08:08Z",
+   "stationRetrogradeLongitude": 6.6595,
+   "stationDirectLongitude": 3.8526
+  },
+  {
+   "planet": "saturn",
+   "preShadowStart": "2027-05-04T18:05Z",
+   "stationRetrograde": "2027-08-09T18:08Z",
+   "stationDirect": "2027-12-24T02:47Z",
+   "postShadowEnd": "2028-03-27T04:32Z",
+   "stationRetrogradeLongitude": 27.8804,
+   "stationDirectLongitude": 21.0206
+  },
+  {
+   "planet": "uranus",
+   "preShadowStart": "2027-05-30T03:47Z",
+   "stationRetrograde": "2027-09-15T09:22Z",
+   "stationDirect": "2028-02-12T23:23Z",
+   "postShadowEnd": "2028-05-29T15:24Z",
+   "stationRetrogradeLongitude": 69.9557,
+   "stationDirectLongitude": 65.9311
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2027-09-17T07:29Z",
+   "stationRetrograde": "2027-10-07T14:35Z",
+   "stationDirect": "2027-10-28T14:12Z",
+   "postShadowEnd": "2027-11-13T09:55Z",
+   "stationRetrogradeLongitude": 214.9278,
+   "stationDirectLongitude": 199.3121
+  },
+  {
+   "planet": "jupiter",
+   "preShadowStart": "2027-10-17T05:51Z",
+   "stationRetrograde": "2028-01-12T08:47Z",
+   "stationDirect": "2028-05-13T20:01Z",
+   "postShadowEnd": "2028-08-11T12:53Z",
+   "stationRetrogradeLongitude": 177.5121,
+   "stationDirectLongitude": 167.5403
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2028-01-08T19:23Z",
+   "stationRetrograde": "2028-01-24T11:01Z",
+   "stationDirect": "2028-02-14T12:40Z",
+   "postShadowEnd": "2028-03-05T16:43Z",
+   "stationRetrogradeLongitude": 319.6984,
+   "stationDirectLongitude": 303.9854
+  },
+  {
+   "planet": "pluto",
+   "preShadowStart": "2028-01-15T15:37Z",
+   "stationRetrograde": "2028-05-09T09:06Z",
+   "stationDirect": "2028-10-19T03:37Z",
+   "postShadowEnd": "2029-02-10T08:11Z",
+   "stationRetrogradeLongitude": 308.8254,
+   "stationDirectLongitude": 306.4069
+  },
+  {
+   "planet": "venus",
+   "preShadowStart": "2028-04-07T13:47Z",
+   "stationRetrograde": "2028-05-10T23:01Z",
+   "stationDirect": "2028-06-22T22:15Z",
+   "postShadowEnd": "2028-07-26T21:10Z",
+   "stationRetrogradeLongitude": 79.6868,
+   "stationDirectLongitude": 63.1797
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2028-05-06T18:40Z",
+   "stationRetrograde": "2028-05-21T08:44Z",
+   "stationDirect": "2028-06-14T06:05Z",
+   "postShadowEnd": "2028-06-29T08:58Z",
+   "stationRetrogradeLongitude": 76.3146,
+   "stationDirectLongitude": 67.7568
+  },
+  {
+   "planet": "neptune",
+   "preShadowStart": "2028-03-20T07:53Z",
+   "stationRetrograde": "2028-07-11T13:22Z",
+   "stationDirect": "2028-12-16T21:03Z",
+   "postShadowEnd": "2029-04-06T20:58Z",
+   "stationRetrogradeLongitude": 8.9003,
+   "stationDirectLongitude": 6.0919
+  },
+  {
+   "planet": "saturn",
+   "preShadowStart": "2028-05-18T07:15Z",
+   "stationRetrograde": "2028-08-22T22:27Z",
+   "stationDirect": "2029-01-05T12:33Z",
+   "postShadowEnd": "2029-04-09T11:39Z",
+   "stationRetrogradeLongitude": 41.3136,
+   "stationDirectLongitude": 34.4166
+  },
+  {
+   "planet": "uranus",
+   "preShadowStart": "2028-06-02T21:28Z",
+   "stationRetrograde": "2028-09-19T00:28Z",
+   "stationDirect": "2029-02-16T10:40Z",
+   "postShadowEnd": "2029-06-03T03:50Z",
+   "stationRetrogradeLongitude": 74.241,
+   "stationDirectLongitude": 70.2054
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2028-08-30T07:17Z",
+   "stationRetrograde": "2028-09-19T16:32Z",
+   "stationDirect": "2028-10-11T10:28Z",
+   "postShadowEnd": "2028-10-26T13:50Z",
+   "stationRetrogradeLongitude": 198.5941,
+   "stationDirectLongitude": 183.4806
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2028-12-21T21:24Z",
+   "stationRetrograde": "2029-01-07T07:55Z",
+   "stationDirect": "2029-01-27T18:43Z",
+   "postShadowEnd": "2029-02-16T16:52Z",
+   "stationRetrogradeLongitude": 303.6339,
+   "stationDirectLongitude": 287.5413
+  },
+  {
+   "planet": "jupiter",
+   "preShadowStart": "2028-11-15T11:40Z",
+   "stationRetrograde": "2029-02-10T13:05Z",
+   "stationDirect": "2029-06-13T21:09Z",
+   "postShadowEnd": "2029-09-11T05:46Z",
+   "stationRetrogradeLongitude": 207.4239,
+   "stationDirectLongitude": 197.5069
+  },
+  {
+   "planet": "mars",
+   "preShadowStart": "2028-12-10T02:31Z",
+   "stationRetrograde": "2029-02-14T08:15Z",
+   "stationDirect": "2029-05-05T19:01Z",
+   "postShadowEnd": "2029-07-09T04:02Z",
+   "stationRetrogradeLongitude": 193.9226,
+   "stationDirectLongitude": 174.929
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2029-04-17T22:45Z",
+   "stationRetrograde": "2029-05-01T23:07Z",
+   "stationDirect": "2029-05-25T19:20Z",
+   "postShadowEnd": "2029-06-10T19:56Z",
+   "stationRetrogradeLongitude": 56.6723,
+   "stationDirectLongitude": 47.5609
+  },
+  {
+   "planet": "pluto",
+   "preShadowStart": "2029-01-16T07:28Z",
+   "stationRetrograde": "2029-05-11T04:38Z",
+   "stationDirect": "2029-10-21T03:39Z",
+   "postShadowEnd": "2030-02-12T10:32Z",
+   "stationRetrogradeLongitude": 310.4528,
+   "stationDirectLongitude": 308.0456
+  },
+  {
+   "planet": "neptune",
+   "preShadowStart": "2029-03-22T20:07Z",
+   "stationRetrograde": "2029-07-14T02:24Z",
+   "stationDirect": "2029-12-19T08:34Z",
+   "postShadowEnd": "2030-04-09T09:22Z",
+   "stationRetrogradeLongitude": 11.1413,
+   "stationDirectLongitude": 8.332
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2029-08-13T09:10Z",
+   "stationRetrograde": "2029-09-02T12:17Z",
+   "stationDirect": "2029-09-25T02:02Z",
+   "postShadowEnd": "2029-10-09T16:21Z",
+   "stationRetrogradeLongitude": 181.8309,
+   "stationDirectLongitude": 167.4472
+  },
+  {
+   "planet": "saturn",
+   "preShadowStart": "2029-06-02T01:56Z",
+   "stationRetrograde": "2029-09-06T08:31Z",
+   "stationDirect": "2030-01-19T03:54Z",
+   "postShadowEnd": "2030-04-23T04:20Z",
+   "stationRetrogradeLongitude": 55.019,
+   "stationDirectLongitude": 48.0904
+  },
+  {
+   "planet": "uranus",
+   "preShadowStart": "2029-06-07T16:27Z",
+   "stationRetrograde": "2029-09-23T16:31Z",
+   "stationDirect": "2030-02-20T23:03Z",
+   "postShadowEnd": "2030-06-07T16:21Z",
+   "stationRetrogradeLongitude": 78.5532,
+   "stationDirectLongitude": 74.5077
+  },
+  {
+   "planet": "venus",
+   "preShadowStart": "2029-11-15T09:28Z",
+   "stationRetrograde": "2029-12-16T23:46Z",
+   "stationDirect": "2030-01-26T21:35Z",
+   "postShadowEnd": "2030-02-27T14:22Z",
+   "stationRetrogradeLongitude": 294.0284,
+   "stationDirectLongitude": 278.6282
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2029-12-04T23:17Z",
+   "stationRetrograde": "2029-12-22T05:48Z",
+   "stationDirect": "2030-01-11T05:48Z",
+   "postShadowEnd": "2030-01-30T15:54Z",
+   "stationRetrogradeLongitude": 287.7078,
+   "stationDirectLongitude": 271.4371
+  },
+  {
+   "planet": "jupiter",
+   "preShadowStart": "2029-12-16T21:24Z",
+   "stationRetrograde": "2030-03-13T14:35Z",
+   "stationDirect": "2030-07-15T01:31Z",
+   "postShadowEnd": "2030-10-11T04:18Z",
+   "stationRetrogradeLongitude": 237.6334,
+   "stationDirectLongitude": 227.7625
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2030-03-30T07:49Z",
+   "stationRetrograde": "2030-04-13T02:35Z",
+   "stationDirect": "2030-05-06T20:15Z",
+   "postShadowEnd": "2030-05-24T00:39Z",
+   "stationRetrogradeLongitude": 37.7993,
+   "stationDirectLongitude": 27.4364
+  },
+  {
+   "planet": "pluto",
+   "preShadowStart": "2030-01-17T22:59Z",
+   "stationRetrograde": "2030-05-12T23:49Z",
+   "stationDirect": "2030-10-23T02:32Z",
+   "postShadowEnd": "2031-02-14T12:17Z",
+   "stationRetrogradeLongitude": 312.0608,
+   "stationDirectLongitude": 309.6648
+  },
+  {
+   "planet": "neptune",
+   "preShadowStart": "2030-03-25T08:44Z",
+   "stationRetrograde": "2030-07-16T16:39Z",
+   "stationDirect": "2030-12-21T20:40Z",
+   "postShadowEnd": "2031-04-11T21:27Z",
+   "stationRetrogradeLongitude": 13.383,
+   "stationDirectLongitude": 10.5734
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2030-07-27T12:48Z",
+   "stationRetrograde": "2030-08-16T01:19Z",
+   "stationDirect": "2030-09-08T09:27Z",
+   "postShadowEnd": "2030-09-22T14:58Z",
+   "stationRetrogradeLongitude": 164.4957,
+   "stationDirectLongitude": 151.1078
+  },
+  {
+   "planet": "saturn",
+   "preShadowStart": "2030-06-16T23:43Z",
+   "stationRetrograde": "2030-09-20T21:24Z",
+   "stationDirect": "2031-02-02T02:27Z",
+   "postShadowEnd": "2031-05-07T06:17Z",
+   "stationRetrogradeLongitude": 68.9463,
+   "stationDirectLongitude": 61.9935
+  },
+  {
+   "planet": "uranus",
+   "preShadowStart": "2030-06-12T12:11Z",
+   "stationRetrograde": "2030-09-28T08:43Z",
+   "stationDirect": "2031-02-25T11:20Z",
+   "postShadowEnd": "2031-06-12T05:42Z",
+   "stationRetrogradeLongitude": 82.8942,
+   "stationDirectLongitude": 78.8386
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2030-11-17T23:57Z",
+   "stationRetrograde": "2030-12-06T02:45Z",
+   "stationDirect": "2030-12-25T21:17Z",
+   "postShadowEnd": "2031-01-13T14:46Z",
+   "stationRetrogradeLongitude": 271.8645,
+   "stationDirectLongitude": 255.5573
+  },
+  {
+   "planet": "mercury",
+   "preShadowStart": "2031-03-12T04:56Z",
+   "stationRetrograde": "2031-03-26T00:45Z",
+   "stationDirect": "2031-04-18T11:16Z",
+   "postShadowEnd": "2031-05-06T19:07Z",
+   "stationRetrogradeLongitude": 19.7426,
+   "stationDirectLongitude": 7.8412
+  },
+  {
+   "planet": "mars",
+   "preShadowStart": "2031-01-25T09:57Z",
+   "stationRetrograde": "2031-03-29T00:33Z",
+   "stationDirect": "2031-06-13T11:57Z",
+   "postShadowEnd": "2031-08-10T00:49Z",
+   "stationRetrogradeLongitude": 231.6361,
+   "stationDirectLongitude": 214.438
+  },
+  {
+   "planet": "jupiter",
+   "preShadowStart": "2031-01-19T06:05Z",
+   "stationRetrograde": "2031-04-15T12:00Z",
+   "stationDirect": "2031-08-16T04:57Z",
+   "postShadowEnd": "2031-11-10T10:07Z",
+   "stationRetrogradeLongitude": 268.986,
+   "stationDirectLongitude": 259.1433
+  },
+  {
+   "planet": "pluto",
+   "preShadowStart": "2031-01-19T14:23Z",
+   "stationRetrograde": "2031-05-14T20:55Z",
+   "stationDirect": "2031-10-24T22:58Z",
+   "postShadowEnd": "2032-02-16T13:26Z",
+   "stationRetrogradeLongitude": 313.6503,
+   "stationDirectLongitude": 311.2652
+  },
+  {
+   "planet": "neptune",
+   "preShadowStart": "2031-03-27T21:50Z",
+   "stationRetrograde": "2031-07-19T06:07Z",
+   "stationDirect": "2031-12-24T07:42Z",
+   "postShadowEnd": "2032-04-13T09:14Z",
+   "stationRetrogradeLongitude": 15.6266,
+   "stationDirectLongitude": 12.817
+  },
+  {
+   "planet": "venus",
+   "preShadowStart": "2031-06-16T22:44Z",
+   "stationRetrograde": "2031-07-20T17:06Z",
+   "stationDirect": "2031-09-01T17:59Z",
+   "postShadowEnd": "2031-10-05T02:24Z",
+   "stationRetrogradeLongitude": 146.4269,
+   "stationDirectLongitude": 130.0197
+  },
+  {
+   "planet": "uranus",
+   "preShadowStart": "2031-06-17T09:24Z",
+   "stationRetrograde": "2031-10-03T02:40Z",
+   "stationDirect": "2032-03-01T01:24Z",
+   "postShadowEnd": "2032-06-15T19:07Z",
+   "stationRetrogradeLongitude": 87.2647,
+   "stationDirectLongitude": 83.2004
+  },
+  {
+   "planet": "saturn",
+   "preShadowStart": "2031-07-01T22:20Z",
+   "stationRetrograde": "2031-10-05T10:48Z",
+   "stationDirect": "2032-02-16T07:04Z",
+   "postShadowEnd": "2032-05-20T16:22Z",
+   "stationRetrogradeLongitude": 83.0277,
+   "stationDirectLongitude": 76.0599
+  }
+ ],
+ "ingresses": [
+  {
+   "planet": "venus",
+   "sign": "pisces",
+   "time": "2025-01-03T03:24Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "cancer",
+   "time": "2025-01-06T10:44Z",
+   "retrograde": true
+  },
+  {
+   "planet": "mercury",
+   "sign": "capricorn",
+   "time": "2025-01-08T10:30Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "aquarius",
+   "time": "2025-01-28T02:53Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "aries",
+   "time": "2025-02-04T07:57Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "pisces",
+   "time": "2025-02-14T12:06Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "aries",
+   "time": "2025-03-03T09:04Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "pisces",
+   "time": "2025-03-27T08:41Z",
+   "retrograde": true
+  },
+  {
+   "planet": "mercury",
+   "sign": "pisces",
+   "time": "2025-03-30T02:18Z",
+   "retrograde": true
+  },
+  {
+   "planet": "neptune",
+   "sign": "aries",
+   "time": "2025-03-30T11:59Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "aries",
+   "time": "2025-04-16T06:25Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "leo",
+   "time": "2025-04-18T04:21Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "aries",
+   "time": "2025-04-30T17:16Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "taurus",
+   "time": "2025-05-10T12:15Z",
+   "retrograde": false
+  },
+  {
+   "planet": "saturn",
+   "sign": "aries",
+   "time": "2025-05-25T03:36Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "gemini",
+   "time": "2025-05-26T00:59Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "taurus",
+   "time": "2025-06-06T04:43Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "cancer",
+   "time": "2025-06-08T22:58Z",
+   "retrograde": false
+  },
+  {
+   "planet": "jupiter",
+   "sign": "cancer",
+   "time": "2025-06-09T21:02Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "virgo",
+   "time": "2025-06-17T08:36Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "leo",
+   "time": "2025-06-26T19:09Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "gemini",
+   "time": "2025-07-04T15:31Z",
+   "retrograde": false
+  },
+  {
+   "planet": "uranus",
+   "sign": "gemini",
+   "time": "2025-07-07T07:47Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "cancer",
+   "time": "2025-07-31T03:57Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "libra",
+   "time": "2025-08-06T23:23Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "leo",
+   "time": "2025-08-25T16:27Z",
+   "retrograde": false
+  },
+  {
+   "planet": "saturn",
+   "sign": "pisces",
+   "time": "2025-09-01T08:06Z",
+   "retrograde": true
+  },
+  {
+   "planet": "mercury",
+   "sign": "virgo",
+   "time": "2025-09-02T13:23Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "libra",
+   "time": "2025-09-18T10:06Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "virgo",
+   "time": "2025-09-19T12:39Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "scorpio",
+   "time": "2025-09-22T07:55Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "scorpio",
+   "time": "2025-10-06T16:41Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "libra",
+   "time": "2025-10-13T21:19Z",
+   "retrograde": false
+  },
+  {
+   "planet": "neptune",
+   "sign": "pisces",
+   "time": "2025-10-22T09:50Z",
+   "retrograde": true
+  },
+  {
+   "planet": "mercury",
+   "sign": "sagittarius",
+   "time": "2025-10-29T11:02Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "sagittarius",
+   "time": "2025-11-04T13:01Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "scorpio",
+   "time": "2025-11-06T22:40Z",
+   "retrograde": false
+  },
+  {
+   "planet": "uranus",
+   "sign": "taurus",
+   "time": "2025-11-08T02:20Z",
+   "retrograde": true
+  },
+  {
+   "planet": "mercury",
+   "sign": "scorpio",
+   "time": "2025-11-19T03:20Z",
+   "retrograde": true
+  },
+  {
+   "planet": "venus",
+   "sign": "sagittarius",
+   "time": "2025-11-30T20:14Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "sagittarius",
+   "time": "2025-12-11T22:40Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "capricorn",
+   "time": "2025-12-15T07:34Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "capricorn",
+   "time": "2025-12-24T16:26Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "capricorn",
+   "time": "2026-01-01T21:11Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "aquarius",
+   "time": "2026-01-17T12:43Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "aquarius",
+   "time": "2026-01-20T16:41Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "aquarius",
+   "time": "2026-01-23T09:17Z",
+   "retrograde": false
+  },
+  {
+   "planet": "neptune",
+   "sign": "aries",
+   "time": "2026-01-26T17:36Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "pisces",
+   "time": "2026-02-06T22:48Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "pisces",
+   "time": "2026-02-10T10:19Z",
+   "retrograde": false
+  },
+  {
+   "planet": "saturn",
+   "sign": "aries",
+   "time": "2026-02-14T00:12Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "pisces",
+   "time": "2026-03-02T14:16Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "aries",
+   "time": "2026-03-06T10:46Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "taurus",
+   "time": "2026-03-30T16:01Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "aries",
+   "time": "2026-04-09T19:36Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "aries",
+   "time": "2026-04-15T03:21Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "gemini",
+   "time": "2026-04-24T04:03Z",
+   "retrograde": false
+  },
+  {
+   "planet": "uranus",
+   "sign": "gemini",
+   "time": "2026-04-26T00:52Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "taurus",
+   "time": "2026-05-03T02:57Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "gemini",
+   "time": "2026-05-17T10:26Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "taurus",
+   "time": "2026-05-18T22:25Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "cancer",
+   "time": "2026-05-19T01:05Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "cancer",
+   "time": "2026-06-01T11:56Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "leo",
+   "time": "2026-06-13T10:47Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "gemini",
+   "time": "2026-06-28T19:29Z",
+   "retrograde": false
+  },
+  {
+   "planet": "jupiter",
+   "sign": "leo",
+   "time": "2026-06-30T05:52Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "virgo",
+   "time": "2026-07-09T17:22Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "libra",
+   "time": "2026-08-06T19:13Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "leo",
+   "time": "2026-08-09T16:28Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "cancer",
+   "time": "2026-08-11T08:31Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "virgo",
+   "time": "2026-08-25T11:04Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "scorpio",
+   "time": "2026-09-10T08:07Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "libra",
+   "time": "2026-09-10T16:21Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "leo",
+   "time": "2026-09-28T02:49Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "scorpio",
+   "time": "2026-09-30T11:44Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "libra",
+   "time": "2026-10-25T09:10Z",
+   "retrograde": true
+  },
+  {
+   "planet": "mars",
+   "sign": "virgo",
+   "time": "2026-11-25T23:37Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "scorpio",
+   "time": "2026-12-04T08:13Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "sagittarius",
+   "time": "2026-12-06T08:33Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "capricorn",
+   "time": "2026-12-25T18:22Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "sagittarius",
+   "time": "2027-01-07T08:53Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "aquarius",
+   "time": "2027-01-13T06:06Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "pisces",
+   "time": "2027-02-01T01:26Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "capricorn",
+   "time": "2027-02-03T14:31Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "aquarius",
+   "time": "2027-02-18T12:16Z",
+   "retrograde": true
+  },
+  {
+   "planet": "mars",
+   "sign": "leo",
+   "time": "2027-02-21T14:13Z",
+   "retrograde": true
+  },
+  {
+   "planet": "venus",
+   "sign": "aquarius",
+   "time": "2027-03-01T06:32Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "pisces",
+   "time": "2027-03-18T10:02Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "pisces",
+   "time": "2027-03-26T08:17Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "aries",
+   "time": "2027-04-08T23:20Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "aries",
+   "time": "2027-04-20T03:57Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "taurus",
+   "time": "2027-04-24T22:18Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "gemini",
+   "time": "2027-05-09T01:58Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "virgo",
+   "time": "2027-05-14T14:47Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "taurus",
+   "time": "2027-05-14T21:02Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "cancer",
+   "time": "2027-05-28T17:07Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "gemini",
+   "time": "2027-06-08T12:33Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "gemini",
+   "time": "2027-06-26T07:19Z",
+   "retrograde": true
+  },
+  {
+   "planet": "venus",
+   "sign": "cancer",
+   "time": "2027-07-03T02:02Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "cancer",
+   "time": "2027-07-12T13:48Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "libra",
+   "time": "2027-07-15T05:40Z",
+   "retrograde": false
+  },
+  {
+   "planet": "jupiter",
+   "sign": "virgo",
+   "time": "2027-07-26T04:49Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "leo",
+   "time": "2027-07-27T12:31Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "leo",
+   "time": "2027-08-02T10:52Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "virgo",
+   "time": "2027-08-17T04:43Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "virgo",
+   "time": "2027-08-20T19:43Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "scorpio",
+   "time": "2027-09-02T01:52Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "libra",
+   "time": "2027-09-03T11:37Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "libra",
+   "time": "2027-09-14T00:25Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "scorpio",
+   "time": "2027-09-27T09:10Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "scorpio",
+   "time": "2027-10-08T03:59Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "sagittarius",
+   "time": "2027-10-15T23:14Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "libra",
+   "time": "2027-10-16T07:36Z",
+   "retrograde": true
+  },
+  {
+   "planet": "venus",
+   "sign": "sagittarius",
+   "time": "2027-11-01T07:35Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "scorpio",
+   "time": "2027-11-10T00:26Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "capricorn",
+   "time": "2027-11-25T11:59Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "capricorn",
+   "time": "2027-11-25T18:38Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "sagittarius",
+   "time": "2027-11-29T10:24Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "capricorn",
+   "time": "2027-12-18T11:58Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "aquarius",
+   "time": "2027-12-19T18:40Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "aquarius",
+   "time": "2028-01-03T16:02Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "aquarius",
+   "time": "2028-01-06T05:58Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "pisces",
+   "time": "2028-01-13T07:20Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "aries",
+   "time": "2028-02-07T10:01Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "pisces",
+   "time": "2028-02-10T16:32Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "taurus",
+   "time": "2028-03-04T20:01Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "pisces",
+   "time": "2028-03-13T07:07Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "aries",
+   "time": "2028-03-19T19:36Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "aries",
+   "time": "2028-03-31T12:28Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "gemini",
+   "time": "2028-04-03T20:28Z",
+   "retrograde": false
+  },
+  {
+   "planet": "saturn",
+   "sign": "taurus",
+   "time": "2028-04-13T03:40Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "taurus",
+   "time": "2028-04-15T11:48Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "taurus",
+   "time": "2028-04-27T22:21Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "gemini",
+   "time": "2028-05-01T01:42Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "gemini",
+   "time": "2028-06-07T18:20Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "cancer",
+   "time": "2028-07-09T01:38Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "cancer",
+   "time": "2028-07-20T20:10Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "leo",
+   "time": "2028-07-24T01:51Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "cancer",
+   "time": "2028-08-07T15:26Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "virgo",
+   "time": "2028-08-08T05:10Z",
+   "retrograde": false
+  },
+  {
+   "planet": "jupiter",
+   "sign": "libra",
+   "time": "2028-08-24T05:09Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "libra",
+   "time": "2028-08-27T13:08Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "leo",
+   "time": "2028-09-04T14:36Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "leo",
+   "time": "2028-09-05T23:18Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "virgo",
+   "time": "2028-10-02T10:08Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "virgo",
+   "time": "2028-10-24T01:11Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "libra",
+   "time": "2028-10-27T13:52Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "scorpio",
+   "time": "2028-11-02T15:04Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "scorpio",
+   "time": "2028-11-21T00:58Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "sagittarius",
+   "time": "2028-11-21T04:00Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "capricorn",
+   "time": "2028-12-10T09:12Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "sagittarius",
+   "time": "2028-12-15T03:39Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "libra",
+   "time": "2028-12-21T08:46Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "aquarius",
+   "time": "2028-12-31T14:49Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "capricorn",
+   "time": "2029-01-08T02:47Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "capricorn",
+   "time": "2029-01-13T12:13Z",
+   "retrograde": true
+  },
+  {
+   "planet": "venus",
+   "sign": "aquarius",
+   "time": "2029-02-01T01:03Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "aquarius",
+   "time": "2029-02-13T17:52Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "pisces",
+   "time": "2029-02-25T00:03Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "pisces",
+   "time": "2029-03-06T18:15Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "aries",
+   "time": "2029-03-21T01:04Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "aries",
+   "time": "2029-03-23T12:19Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "taurus",
+   "time": "2029-04-07T08:52Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "virgo",
+   "time": "2029-04-07T13:09Z",
+   "retrograde": true
+  },
+  {
+   "planet": "venus",
+   "sign": "taurus",
+   "time": "2029-04-14T05:06Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "gemini",
+   "time": "2029-05-08T12:46Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "cancer",
+   "time": "2029-06-02T00:11Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "libra",
+   "time": "2029-06-05T04:49Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "gemini",
+   "time": "2029-06-13T16:46Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "leo",
+   "time": "2029-06-26T15:37Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "cancer",
+   "time": "2029-07-01T12:01Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "leo",
+   "time": "2029-07-15T13:37Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "virgo",
+   "time": "2029-07-21T12:21Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "virgo",
+   "time": "2029-07-31T23:35Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "scorpio",
+   "time": "2029-08-07T16:03Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "libra",
+   "time": "2029-08-15T17:06Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "libra",
+   "time": "2029-08-27T02:21Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "virgo",
+   "time": "2029-09-08T10:59Z",
+   "retrograde": true
+  },
+  {
+   "planet": "venus",
+   "sign": "scorpio",
+   "time": "2029-09-10T10:54Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "sagittarius",
+   "time": "2029-09-23T08:14Z",
+   "retrograde": false
+  },
+  {
+   "planet": "jupiter",
+   "sign": "scorpio",
+   "time": "2029-09-24T06:24Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "sagittarius",
+   "time": "2029-10-07T04:47Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "libra",
+   "time": "2029-10-08T12:41Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "scorpio",
+   "time": "2029-10-26T06:04Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "capricorn",
+   "time": "2029-11-04T00:32Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "capricorn",
+   "time": "2029-11-05T13:39Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "sagittarius",
+   "time": "2029-11-13T22:09Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "capricorn",
+   "time": "2029-12-03T22:47Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "aquarius",
+   "time": "2029-12-13T05:25Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "pisces",
+   "time": "2030-01-20T10:27Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "aquarius",
+   "time": "2030-02-08T14:03Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "pisces",
+   "time": "2030-02-27T09:00Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "aries",
+   "time": "2030-02-27T19:07Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "aquarius",
+   "time": "2030-03-06T12:51Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "aries",
+   "time": "2030-03-15T08:42Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "taurus",
+   "time": "2030-04-01T04:47Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "pisces",
+   "time": "2030-04-05T09:19Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "taurus",
+   "time": "2030-04-08T05:27Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "aries",
+   "time": "2030-04-28T13:44Z",
+   "retrograde": true
+  },
+  {
+   "planet": "venus",
+   "sign": "aries",
+   "time": "2030-05-02T06:37Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "taurus",
+   "time": "2030-05-15T01:30Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "gemini",
+   "time": "2030-05-19T09:28Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "taurus",
+   "time": "2030-05-28T03:33Z",
+   "retrograde": false
+  },
+  {
+   "planet": "saturn",
+   "sign": "gemini",
+   "time": "2030-06-01T02:34Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "gemini",
+   "time": "2030-06-08T06:31Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "gemini",
+   "time": "2030-06-22T12:23Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "cancer",
+   "time": "2030-06-22T23:56Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "cancer",
+   "time": "2030-07-01T15:20Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "leo",
+   "time": "2030-07-07T10:23Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "cancer",
+   "time": "2030-07-17T12:46Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "virgo",
+   "time": "2030-07-26T14:54Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "leo",
+   "time": "2030-08-11T05:24Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "leo",
+   "time": "2030-08-15T23:56Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "virgo",
+   "time": "2030-09-04T14:50Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "libra",
+   "time": "2030-09-28T18:34Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "libra",
+   "time": "2030-10-01T10:50Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "virgo",
+   "time": "2030-10-02T09:42Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "scorpio",
+   "time": "2030-10-18T17:03Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "scorpio",
+   "time": "2030-10-22T18:40Z",
+   "retrograde": false
+  },
+  {
+   "planet": "jupiter",
+   "sign": "sagittarius",
+   "time": "2030-10-22T23:14Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "sagittarius",
+   "time": "2030-11-07T00:31Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "sagittarius",
+   "time": "2030-11-15T17:01Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mars",
+   "sign": "libra",
+   "time": "2030-11-21T07:55Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "capricorn",
+   "time": "2030-12-01T02:27Z",
+   "retrograde": false
+  },
+  {
+   "planet": "venus",
+   "sign": "capricorn",
+   "time": "2030-12-09T14:52Z",
+   "retrograde": false
+  },
+  {
+   "planet": "mercury",
+   "sign": "sagittarius",
+   "time": "2030-12-10T15:11Z",
+   "retrograde": true
+  }
+ ],
+ "moonPhases": [
+  {
+   "phase": "firstQuarter",
+   "time": "2025-01-06T23:56Z"
+  },
+  {
+   "phase": "full",
+   "time": "2025-01-13T22:27Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2025-01-21T20:31Z"
+  },
+  {
+   "phase": "new",
+   "time": "2025-01-29T12:36Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2025-02-05T08:02Z"
+  },
+  {
+   "phase": "full",
+   "time": "2025-02-12T13:53Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2025-02-20T17:32Z"
+  },
+  {
+   "phase": "new",
+   "time": "2025-02-28T00:45Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2025-03-06T16:31Z"
+  },
+  {
+   "phase": "full",
+   "time": "2025-03-14T06:55Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2025-03-22T11:29Z"
+  },
+  {
+   "phase": "new",
+   "time": "2025-03-29T10:58Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2025-04-05T02:15Z"
+  },
+  {
+   "phase": "full",
+   "time": "2025-04-13T00:22Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2025-04-21T01:35Z"
+  },
+  {
+   "phase": "new",
+   "time": "2025-04-27T19:31Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2025-05-04T13:52Z"
+  },
+  {
+   "phase": "full",
+   "time": "2025-05-12T16:56Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2025-05-20T11:59Z"
+  },
+  {
+   "phase": "new",
+   "time": "2025-05-27T03:02Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2025-06-03T03:41Z"
+  },
+  {
+   "phase": "full",
+   "time": "2025-06-11T07:44Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2025-06-18T19:19Z"
+  },
+  {
+   "phase": "new",
+   "time": "2025-06-25T10:31Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2025-07-02T19:30Z"
+  },
+  {
+   "phase": "full",
+   "time": "2025-07-10T20:37Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2025-07-18T00:38Z"
+  },
+  {
+   "phase": "new",
+   "time": "2025-07-24T19:11Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2025-08-01T12:41Z"
+  },
+  {
+   "phase": "full",
+   "time": "2025-08-09T07:55Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2025-08-16T05:12Z"
+  },
+  {
+   "phase": "new",
+   "time": "2025-08-23T06:06Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2025-08-31T06:25Z"
+  },
+  {
+   "phase": "full",
+   "time": "2025-09-07T18:09Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2025-09-14T10:33Z"
+  },
+  {
+   "phase": "new",
+   "time": "2025-09-21T19:54Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2025-09-29T23:54Z"
+  },
+  {
+   "phase": "full",
+   "time": "2025-10-07T03:47Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2025-10-13T18:13Z"
+  },
+  {
+   "phase": "new",
+   "time": "2025-10-21T12:25Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2025-10-29T16:21Z"
+  },
+  {
+   "phase": "full",
+   "time": "2025-11-05T13:19Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2025-11-12T05:28Z"
+  },
+  {
+   "phase": "new",
+   "time": "2025-11-20T06:47Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2025-11-28T06:59Z"
+  },
+  {
+   "phase": "full",
+   "time": "2025-12-04T23:14Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2025-12-11T20:52Z"
+  },
+  {
+   "phase": "new",
+   "time": "2025-12-20T01:43Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2025-12-27T19:10Z"
+  },
+  {
+   "phase": "full",
+   "time": "2026-01-03T10:03Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2026-01-10T15:48Z"
+  },
+  {
+   "phase": "new",
+   "time": "2026-01-18T19:52Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2026-01-26T04:47Z"
+  },
+  {
+   "phase": "full",
+   "time": "2026-02-01T22:09Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2026-02-09T12:43Z"
+  },
+  {
+   "phase": "new",
+   "time": "2026-02-17T12:01Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2026-02-24T12:27Z"
+  },
+  {
+   "phase": "full",
+   "time": "2026-03-03T11:38Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2026-03-11T09:38Z"
+  },
+  {
+   "phase": "new",
+   "time": "2026-03-19T01:23Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2026-03-25T19:18Z"
+  },
+  {
+   "phase": "full",
+   "time": "2026-04-02T02:12Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2026-04-10T04:51Z"
+  },
+  {
+   "phase": "new",
+   "time": "2026-04-17T11:52Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2026-04-24T02:32Z"
+  },
+  {
+   "phase": "full",
+   "time": "2026-05-01T17:23Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2026-05-09T21:10Z"
+  },
+  {
+   "phase": "new",
+   "time": "2026-05-16T20:01Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2026-05-23T11:11Z"
+  },
+  {
+   "phase": "full",
+   "time": "2026-05-31T08:45Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2026-06-08T10:00Z"
+  },
+  {
+   "phase": "new",
+   "time": "2026-06-15T02:54Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2026-06-21T21:55Z"
+  },
+  {
+   "phase": "full",
+   "time": "2026-06-29T23:56Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2026-07-07T19:29Z"
+  },
+  {
+   "phase": "new",
+   "time": "2026-07-14T09:43Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2026-07-21T11:05Z"
+  },
+  {
+   "phase": "full",
+   "time": "2026-07-29T14:36Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2026-08-06T02:21Z"
+  },
+  {
+   "phase": "new",
+   "time": "2026-08-12T17:37Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2026-08-20T02:46Z"
+  },
+  {
+   "phase": "full",
+   "time": "2026-08-28T04:18Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2026-09-04T07:51Z"
+  },
+  {
+   "phase": "new",
+   "time": "2026-09-11T03:27Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2026-09-18T20:44Z"
+  },
+  {
+   "phase": "full",
+   "time": "2026-09-26T16:49Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2026-10-03T13:25Z"
+  },
+  {
+   "phase": "new",
+   "time": "2026-10-10T15:50Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2026-10-18T16:12Z"
+  },
+  {
+   "phase": "full",
+   "time": "2026-10-26T04:12Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2026-11-01T20:28Z"
+  },
+  {
+   "phase": "new",
+   "time": "2026-11-09T07:02Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2026-11-17T11:48Z"
+  },
+  {
+   "phase": "full",
+   "time": "2026-11-24T14:53Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2026-12-01T06:08Z"
+  },
+  {
+   "phase": "new",
+   "time": "2026-12-09T00:52Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2026-12-17T05:42Z"
+  },
+  {
+   "phase": "full",
+   "time": "2026-12-24T01:28Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2026-12-30T18:59Z"
+  },
+  {
+   "phase": "new",
+   "time": "2027-01-07T20:24Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2027-01-15T20:34Z"
+  },
+  {
+   "phase": "full",
+   "time": "2027-01-22T12:17Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2027-01-29T10:55Z"
+  },
+  {
+   "phase": "new",
+   "time": "2027-02-06T15:56Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2027-02-14T07:58Z"
+  },
+  {
+   "phase": "full",
+   "time": "2027-02-20T23:23Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2027-02-28T05:16Z"
+  },
+  {
+   "phase": "new",
+   "time": "2027-03-08T09:29Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2027-03-15T16:25Z"
+  },
+  {
+   "phase": "full",
+   "time": "2027-03-22T10:44Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2027-03-30T00:54Z"
+  },
+  {
+   "phase": "new",
+   "time": "2027-04-06T23:51Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2027-04-13T22:56Z"
+  },
+  {
+   "phase": "full",
+   "time": "2027-04-20T22:27Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2027-04-28T20:18Z"
+  },
+  {
+   "phase": "new",
+   "time": "2027-05-06T10:58Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2027-05-13T04:44Z"
+  },
+  {
+   "phase": "full",
+   "time": "2027-05-20T10:59Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2027-05-28T13:58Z"
+  },
+  {
+   "phase": "new",
+   "time": "2027-06-04T19:40Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2027-06-11T10:56Z"
+  },
+  {
+   "phase": "full",
+   "time": "2027-06-19T00:44Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2027-06-27T04:54Z"
+  },
+  {
+   "phase": "new",
+   "time": "2027-07-04T03:02Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2027-07-10T18:39Z"
+  },
+  {
+   "phase": "full",
+   "time": "2027-07-18T15:45Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2027-07-26T16:55Z"
+  },
+  {
+   "phase": "new",
+   "time": "2027-08-02T10:05Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2027-08-09T04:54Z"
+  },
+  {
+   "phase": "full",
+   "time": "2027-08-17T07:29Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2027-08-25T02:27Z"
+  },
+  {
+   "phase": "new",
+   "time": "2027-08-31T17:41Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2027-09-07T18:31Z"
+  },
+  {
+   "phase": "full",
+   "time": "2027-09-15T23:03Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2027-09-23T10:20Z"
+  },
+  {
+   "phase": "new",
+   "time": "2027-09-30T02:36Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2027-10-07T11:47Z"
+  },
+  {
+   "phase": "full",
+   "time": "2027-10-15T13:47Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2027-10-22T17:29Z"
+  },
+  {
+   "phase": "new",
+   "time": "2027-10-29T13:36Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2027-11-06T08:00Z"
+  },
+  {
+   "phase": "full",
+   "time": "2027-11-14T03:26Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2027-11-21T00:48Z"
+  },
+  {
+   "phase": "new",
+   "time": "2027-11-28T03:24Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2027-12-06T05:22Z"
+  },
+  {
+   "phase": "full",
+   "time": "2027-12-13T16:09Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2027-12-20T09:11Z"
+  },
+  {
+   "phase": "new",
+   "time": "2027-12-27T20:12Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2028-01-05T01:40Z"
+  },
+  {
+   "phase": "full",
+   "time": "2028-01-12T04:03Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2028-01-18T19:26Z"
+  },
+  {
+   "phase": "new",
+   "time": "2028-01-26T15:12Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2028-02-03T19:10Z"
+  },
+  {
+   "phase": "full",
+   "time": "2028-02-10T15:04Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2028-02-17T08:08Z"
+  },
+  {
+   "phase": "new",
+   "time": "2028-02-25T10:37Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2028-03-04T09:02Z"
+  },
+  {
+   "phase": "full",
+   "time": "2028-03-11T01:06Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2028-03-17T23:23Z"
+  },
+  {
+   "phase": "new",
+   "time": "2028-03-26T04:31Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2028-04-02T19:15Z"
+  },
+  {
+   "phase": "full",
+   "time": "2028-04-09T10:26Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2028-04-16T16:37Z"
+  },
+  {
+   "phase": "new",
+   "time": "2028-04-24T19:47Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2028-05-02T02:26Z"
+  },
+  {
+   "phase": "full",
+   "time": "2028-05-08T19:49Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2028-05-16T10:43Z"
+  },
+  {
+   "phase": "new",
+   "time": "2028-05-24T08:16Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2028-05-31T07:36Z"
+  },
+  {
+   "phase": "full",
+   "time": "2028-06-07T06:09Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2028-06-15T04:27Z"
+  },
+  {
+   "phase": "new",
+   "time": "2028-06-22T18:27Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2028-06-29T12:10Z"
+  },
+  {
+   "phase": "full",
+   "time": "2028-07-06T18:11Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2028-07-14T20:56Z"
+  },
+  {
+   "phase": "new",
+   "time": "2028-07-22T03:02Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2028-07-28T17:40Z"
+  },
+  {
+   "phase": "full",
+   "time": "2028-08-05T08:10Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2028-08-13T11:45Z"
+  },
+  {
+   "phase": "new",
+   "time": "2028-08-20T10:44Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2028-08-27T01:36Z"
+  },
+  {
+   "phase": "full",
+   "time": "2028-09-03T23:47Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2028-09-12T00:46Z"
+  },
+  {
+   "phase": "new",
+   "time": "2028-09-18T18:24Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2028-09-25T13:10Z"
+  },
+  {
+   "phase": "full",
+   "time": "2028-10-03T16:25Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2028-10-11T11:57Z"
+  },
+  {
+   "phase": "new",
+   "time": "2028-10-18T02:57Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2028-10-25T04:53Z"
+  },
+  {
+   "phase": "full",
+   "time": "2028-11-02T09:17Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2028-11-09T21:26Z"
+  },
+  {
+   "phase": "new",
+   "time": "2028-11-16T13:18Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2028-11-24T00:14Z"
+  },
+  {
+   "phase": "full",
+   "time": "2028-12-02T01:40Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2028-12-09T05:39Z"
+  },
+  {
+   "phase": "new",
+   "time": "2028-12-16T02:06Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2028-12-23T21:45Z"
+  },
+  {
+   "phase": "full",
+   "time": "2028-12-31T16:48Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2029-01-07T13:26Z"
+  },
+  {
+   "phase": "new",
+   "time": "2029-01-14T17:24Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2029-01-22T19:23Z"
+  },
+  {
+   "phase": "full",
+   "time": "2029-01-30T06:03Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2029-02-05T21:52Z"
+  },
+  {
+   "phase": "new",
+   "time": "2029-02-13T10:31Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2029-02-21T15:10Z"
+  },
+  {
+   "phase": "full",
+   "time": "2029-02-28T17:10Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2029-03-07T07:51Z"
+  },
+  {
+   "phase": "new",
+   "time": "2029-03-15T04:19Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2029-03-23T07:33Z"
+  },
+  {
+   "phase": "full",
+   "time": "2029-03-30T02:26Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2029-04-05T19:51Z"
+  },
+  {
+   "phase": "new",
+   "time": "2029-04-13T21:40Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2029-04-21T19:50Z"
+  },
+  {
+   "phase": "full",
+   "time": "2029-04-28T10:37Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2029-05-05T09:48Z"
+  },
+  {
+   "phase": "new",
+   "time": "2029-05-13T13:42Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2029-05-21T04:16Z"
+  },
+  {
+   "phase": "full",
+   "time": "2029-05-27T18:37Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2029-06-04T01:19Z"
+  },
+  {
+   "phase": "new",
+   "time": "2029-06-12T03:50Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2029-06-19T09:54Z"
+  },
+  {
+   "phase": "full",
+   "time": "2029-06-26T03:22Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2029-07-03T17:57Z"
+  },
+  {
+   "phase": "new",
+   "time": "2029-07-11T15:51Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2029-07-18T14:14Z"
+  },
+  {
+   "phase": "full",
+   "time": "2029-07-25T13:36Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2029-08-02T11:15Z"
+  },
+  {
+   "phase": "new",
+   "time": "2029-08-10T01:56Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2029-08-16T18:55Z"
+  },
+  {
+   "phase": "full",
+   "time": "2029-08-24T01:51Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2029-09-01T04:33Z"
+  },
+  {
+   "phase": "new",
+   "time": "2029-09-08T10:44Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2029-09-15T01:29Z"
+  },
+  {
+   "phase": "full",
+   "time": "2029-09-22T16:29Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2029-09-30T20:57Z"
+  },
+  {
+   "phase": "new",
+   "time": "2029-10-07T19:14Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2029-10-14T11:09Z"
+  },
+  {
+   "phase": "full",
+   "time": "2029-10-22T09:27Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2029-10-30T11:32Z"
+  },
+  {
+   "phase": "new",
+   "time": "2029-11-06T04:24Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2029-11-13T00:35Z"
+  },
+  {
+   "phase": "full",
+   "time": "2029-11-21T04:03Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2029-11-28T23:48Z"
+  },
+  {
+   "phase": "new",
+   "time": "2029-12-05T14:52Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2029-12-12T17:49Z"
+  },
+  {
+   "phase": "full",
+   "time": "2029-12-20T22:46Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2029-12-28T09:49Z"
+  },
+  {
+   "phase": "new",
+   "time": "2030-01-04T02:49Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2030-01-11T14:06Z"
+  },
+  {
+   "phase": "full",
+   "time": "2030-01-19T15:54Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2030-01-26T18:14Z"
+  },
+  {
+   "phase": "new",
+   "time": "2030-02-02T16:07Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2030-02-10T11:49Z"
+  },
+  {
+   "phase": "full",
+   "time": "2030-02-18T06:20Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2030-02-25T01:58Z"
+  },
+  {
+   "phase": "new",
+   "time": "2030-03-04T06:34Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2030-03-12T08:47Z"
+  },
+  {
+   "phase": "full",
+   "time": "2030-03-19T17:56Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2030-03-26T09:51Z"
+  },
+  {
+   "phase": "new",
+   "time": "2030-04-02T22:02Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2030-04-11T02:57Z"
+  },
+  {
+   "phase": "full",
+   "time": "2030-04-18T03:20Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2030-04-24T18:39Z"
+  },
+  {
+   "phase": "new",
+   "time": "2030-05-02T14:12Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2030-05-10T17:11Z"
+  },
+  {
+   "phase": "full",
+   "time": "2030-05-17T11:19Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2030-05-24T04:57Z"
+  },
+  {
+   "phase": "new",
+   "time": "2030-06-01T06:21Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2030-06-09T03:36Z"
+  },
+  {
+   "phase": "full",
+   "time": "2030-06-15T18:41Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2030-06-22T17:19Z"
+  },
+  {
+   "phase": "new",
+   "time": "2030-06-30T21:34Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2030-07-08T11:02Z"
+  },
+  {
+   "phase": "full",
+   "time": "2030-07-15T02:12Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2030-07-22T08:07Z"
+  },
+  {
+   "phase": "new",
+   "time": "2030-07-30T11:11Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2030-08-06T16:43Z"
+  },
+  {
+   "phase": "full",
+   "time": "2030-08-13T10:44Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2030-08-21T01:15Z"
+  },
+  {
+   "phase": "new",
+   "time": "2030-08-28T23:07Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2030-09-04T21:55Z"
+  },
+  {
+   "phase": "full",
+   "time": "2030-09-11T21:18Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2030-09-19T19:56Z"
+  },
+  {
+   "phase": "new",
+   "time": "2030-09-27T09:54Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2030-10-04T03:56Z"
+  },
+  {
+   "phase": "full",
+   "time": "2030-10-11T10:47Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2030-10-19T14:50Z"
+  },
+  {
+   "phase": "new",
+   "time": "2030-10-26T20:17Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2030-11-02T11:56Z"
+  },
+  {
+   "phase": "full",
+   "time": "2030-11-10T03:30Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2030-11-18T08:32Z"
+  },
+  {
+   "phase": "new",
+   "time": "2030-11-25T06:46Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2030-12-01T22:57Z"
+  },
+  {
+   "phase": "full",
+   "time": "2030-12-09T22:40Z"
+  },
+  {
+   "phase": "lastQuarter",
+   "time": "2030-12-18T00:01Z"
+  },
+  {
+   "phase": "new",
+   "time": "2030-12-24T17:32Z"
+  },
+  {
+   "phase": "firstQuarter",
+   "time": "2030-12-31T13:36Z"
+  }
+ ]
+}

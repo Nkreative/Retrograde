@@ -1,0 +1,22 @@
+# Decisions since the product brief
+
+Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
+
+## 2026-11-03
+
+- **Paywall plans:** Lifetime access (one-time purchase, "BEST VALUE", selected by default, button "Get lifetime access") and Yearly subscription (intro offer, button "Start Premium"). No monthly plan. Custom paywall on StoreKit 2 (Apple's subscription-only screen can't show a one-time purchase). Premium = active yearly **or** lifetime owned. ✕ visible immediately; "Continue free" always available.
+- **Free Survival Kit:** per section, first task unlocked, next two shown locked as a preview, rest blurred. Locked/blurred tasks are not tappable; the "23 more tasks in Premium" card leads to the paywall.
+- **Progress:** "X of 27 done" counts tasks marked done in the current cycle's kit, for free and Premium users.
+- **Calendar:** one toggle — "Expand" (week → month) / "Collapse" (month → week).
+- **Header:** share, bell (Notifications), gear (Settings) on every screen. Settings sheet holds plan, Restore purchases, Manage subscription, help and legal links. No account page.
+- **Bundle ID:** `com.nkreative.retrograde` (placeholder until confirmed; changeable before first App Store upload).
+
+## 2026-11-02
+
+- **Stack:** SwiftUI, iOS 17 minimum, dark mode only.
+- **Task completion** resets when each new Mercury retrograde begins.
+- **Notifications:** when Mercury turns retrograde / direct; "before" alerts 2 weeks and 3 days ahead of each; unfinished-task reminders every other day.
+- **Data:** NASA JPL Horizons + USNO, 2025–2030; shadow periods in scope (needed for future planets).
+- **Intensity:** in-house, documented rule-based rating; editorial copy written in the app's voice.
+- **Apple Developer account:** individual.
+- **Process:** any screen not in the approved Figma must be drawn on the Figma review page and approved before it is built.
