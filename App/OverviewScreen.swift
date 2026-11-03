@@ -107,26 +107,36 @@ private struct CountdownRow: View {
     }
 }
 
-/// Synthwave artwork from Figma with the stage headline on top.
+/// The approved "cosmic chaos" artwork, shown whole at its 2:1 proportions (so the girl, the
+/// tangled orbits and every icon stay in frame). The stage headline is live text in a dark band
+/// that blends into the artwork's night sky, overlapping only the empty top edge.
 private struct HeroCard: View {
     let headline: String
+    /// Height of the dark band above the artwork; the headline dips just into the sky below it.
+    @ScaledMetric(relativeTo: .title) private var band: CGFloat = 60
 
     var body: some View {
-        Image("OverviewHero")
-            .resizable()
-            .scaledToFill()
-            .accessibilityHidden(true)
-            .frame(maxWidth: .infinity)
-            .aspectRatio(382 / 147, contentMode: .fit)
-            .clipped()
-            .overlay(alignment: .topLeading) {
-                Text(headline)
-                    .retroText(.hero)
-                    .foregroundStyle(RetroColor.text)
-                    .shadow(color: .black.opacity(0.35), radius: 6)
-                    .padding(24)
-                    .accessibilityAddTraits(.isHeader)
-            }
+        VStack(spacing: 0) {
+            Color.clear.frame(height: band)
+            Image("OverviewHero")
+                .resizable()
+                .aspectRatio(2, contentMode: .fit)
+                .frame(maxWidth: .infinity)
+                .overlay(alignment: .top) {
+                    // The artwork's top rows are already near the background colour; this removes the seam.
+                    LinearGradient(colors: [RetroColor.background, RetroColor.background.opacity(0)], startPoint: .top, endPoint: .bottom)
+                        .frame(height: 24)
+                }
+                .accessibilityHidden(true)
+        }
+        .overlay(alignment: .topLeading) {
+            Text(headline)
+                .retroText(.hero)
+                .foregroundStyle(RetroColor.text)
+                .shadow(color: .black.opacity(0.5), radius: 8)
+                .padding(.top, 8)
+                .accessibilityAddTraits(.isHeader)
+        }
     }
 }
 
