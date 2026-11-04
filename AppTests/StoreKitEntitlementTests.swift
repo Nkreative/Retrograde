@@ -55,11 +55,25 @@ import Testing
     /// records show the subscription expired, then let the app's status settle.
     private func expireYearly() async throws -> PremiumStatus {
         for _ in 0..<5 {
-            try session.expireSubscription(productIdentifier: yearlyID)
+            do {
+                try session.expireSubscription(productIdentifier: yearlyID)
+            } catch where Self.isTransientTestEnvironmentError(error) {
+                // Known intermittent Xcode StoreKit test-environment failure; retry (max 5 attempts).
+            }
             let status = await settle { if case .yearlyExpired = $0 { true } else { false } }
             if case .yearlyExpired = status { return status }
         }
         return store.status
+    }
+
+    /// The Xcode StoreKit test environment's intermittent internal failure: SKServiceErrorDomain 2
+    /// wrapping SKInternalErrorDomain 17. Anything else is a real error and still fails the test.
+    private static func isTransientTestEnvironmentError(_ error: Error) -> Bool {
+        let e = error as NSError
+        guard e.domain == "SKServiceErrorDomain", e.code == 2,
+              let underlying = e.userInfo[NSUnderlyingErrorKey] as? NSError
+        else { return false }
+        return underlying.domain == "SKInternalErrorDomain" && underlying.code == 17
     }
 
     private func transaction(_ productID: String) throws -> SKTestTransaction {
