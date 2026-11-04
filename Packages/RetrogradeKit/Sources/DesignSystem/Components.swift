@@ -127,6 +127,7 @@ public struct PrimaryButton: View {
                     Image(systemName: systemImage).font(.system(size: 16, weight: .semibold))
                 }
                 Text(title).retroText(.button)
+                    .multilineTextAlignment(layout == .center ? .center : .leading) // when large text wraps it
                 Spacer(minLength: 0)
                 if showsArrow {
                     Image(systemName: RetroSymbol.forward).font(.system(size: 15, weight: .semibold))

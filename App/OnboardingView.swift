@@ -63,38 +63,67 @@ private struct PageHeader: View {
             Color.clear.frame(width: 44, height: 44)
         }
         .padding(.horizontal, RetroMetrics.screenPadding - 10)
+        .background(RetroColor.background.ignoresSafeArea(edges: .top)) // scrolled content passes under it
     }
 }
 
-/// Shared page layout: scrollable content with the call to action pinned above the home indicator,
-/// so it stays visible on small phones and at large text sizes.
+/// Shared page layout. When everything fits, the call to action sits at the bottom of the screen;
+/// when it doesn't (small phones, large text), the page scrolls as one with the actions after the
+/// content, so nothing is ever hidden behind a pinned footer.
 private struct OnboardingPage<Visual: View, Extra: View, Actions: View>: View {
     let headline: String
     let message: String
     @ViewBuilder let visual: Visual
     @ViewBuilder let extra: Extra
     @ViewBuilder let actions: Actions
+    /// Centres the content in spare height instead of leaving it all above the actions.
+    var centered = false
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                visual.frame(maxWidth: .infinity)
-                Text(headline).retroText(.hero).foregroundStyle(RetroColor.text).accessibilityAddTraits(.isHeader)
-                Text(message).retroText(.bodyLarge).foregroundStyle(RetroColor.textMuted)
-                extra
+        ViewThatFits(in: .vertical) {
+            VStack(spacing: 0) {
+                if centered { Spacer(minLength: 0) }
+                content
+                Spacer(minLength: 16)
+                actionStack
             }
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 24) {
+                        content
+                        actionStack.id(Self.actionsID)
+                    }
+                }
+                .scrollBounceBehavior(.basedOnSize)
+                #if DEBUG
+                .onAppear {
+                    // `-scrollOnboarding bottom` shows the actions at large text sizes, for review screenshots.
+                    if UserDefaults.standard.string(forKey: "scrollOnboarding") == "bottom" {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { proxy.scrollTo(Self.actionsID, anchor: .bottom) }
+                    }
+                }
+                #endif
+            }
+        }
+    }
+
+    private static var actionsID: String { "onboarding-actions" }
+
+    private var content: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            visual.frame(maxWidth: .infinity)
+            Text(headline).retroText(.hero).foregroundStyle(RetroColor.text).accessibilityAddTraits(.isHeader)
+            Text(message).retroText(.bodyLarge).foregroundStyle(RetroColor.textMuted)
+            extra
+        }
+        .padding(.horizontal, RetroMetrics.screenPadding)
+        .padding(.top, 56) // below the back arrow and page dots
+    }
+
+    private var actionStack: some View {
+        VStack(spacing: 6) { actions }
             .padding(.horizontal, RetroMetrics.screenPadding)
-            .padding(.top, 56)
-            .padding(.bottom, 16)
-        }
-        .scrollBounceBehavior(.basedOnSize)
-        .safeAreaInset(edge: .bottom) {
-            VStack(spacing: 6) { actions }
-                .padding(.horizontal, RetroMetrics.screenPadding)
-                .padding(.top, 10)
-                .padding(.bottom, 8)
-                .background(RetroColor.background.opacity(0.96))
-        }
+            .padding(.bottom, 8)
     }
 }
 
@@ -107,10 +136,40 @@ private struct MercuryPage: View {
         OnboardingPage(
             headline: "MERCURY’S DOING IT AGAIN.",
             message: "Sometimes Mercury appears to move backward across the sky. We call it retrograde.",
-            visual: { RetrogradeLoop().frame(height: 250) },
+            visual: {
+                VStack(spacing: 22) {
+                    BrandLockup()
+                    RetrogradeLoop()
+                }
+            },
             extra: { EmptyView() },
-            actions: { PrimaryButton("Next", action: next) }
+            actions: { PrimaryButton("Next", action: next) },
+            centered: true
         )
+    }
+}
+
+/// The approved logo and wordmark (Figma splash), fading in gently on first appearance.
+private struct BrandLockup: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var shown = false
+
+    var body: some View {
+        VStack(spacing: 12) {
+            BrandMark(size: 56)
+            Text("RETROGRADE").retroText(.title).foregroundStyle(RetroColor.text)
+        }
+        // Brand chrome, like the app header: it stops growing at the largest text sizes.
+        .dynamicTypeSize(...DynamicTypeSize.xLarge)
+        .frame(maxWidth: .infinity)
+        .opacity(shown ? 1 : 0)
+        .offset(y: shown || reduceMotion ? 0 : 6)
+        .onAppear {
+            // Reduce Motion: a short fade only, no movement.
+            withAnimation(reduceMotion ? .easeOut(duration: 0.25) : .easeOut(duration: 0.9).delay(0.15)) { shown = true }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Retrograde")
     }
 }
 
@@ -133,10 +192,12 @@ struct RetrogradeLoop: View {
                     }
                 }
             }
+            // Grows into spare height on tall phones, keeping the page balanced.
+            .frame(minHeight: 180, maxHeight: 290)
             .background(RetroColor.surface, in: RoundedRectangle(cornerRadius: RetroMetrics.Radius.panel))
             .overlay(RoundedRectangle(cornerRadius: RetroMetrics.Radius.panel).strokeBorder(RetroColor.line, lineWidth: 1))
             Text("Its apparent path, as seen from Earth. Mercury doesn’t really reverse — Earth’s view of it shifts.")
-                .retroText(.monoSmall).foregroundStyle(RetroColor.textMuted)
+                .retroText(.body).foregroundStyle(RetroColor.textMuted)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .accessibilityElement(children: .ignore)
@@ -150,6 +211,12 @@ private struct LoopCanvas: View {
     let dot: Double
 
     var body: some View {
+        // An illustration: its small label stops growing at the largest text sizes (the caption
+        // and VoiceOver description carry the meaning).
+        canvas.dynamicTypeSize(...DynamicTypeSize.xxLarge)
+    }
+
+    private var canvas: some View {
         Canvas { ctx, size in
             // Background stars (fixed positions).
             var rng = SeededRandom(seed: 7)
@@ -175,7 +242,10 @@ private struct LoopCanvas: View {
             let m = point(dot, in: size)
             ctx.fill(Path(ellipseIn: CGRect(x: m.x - 14, y: m.y - 14, width: 28, height: 28)), with: .color(RetroColor.yellow.opacity(0.18)))
             ctx.fill(Path(ellipseIn: CGRect(x: m.x - 6, y: m.y - 6, width: 12, height: 12)), with: .color(RetroColor.yellow))
-            ctx.draw(Text("MERCURY").font(RetroTextStyle.monoTiny.font).foregroundColor(RetroColor.text), at: CGPoint(x: m.x, y: m.y + 20))
+            // Label above Mercury (the path it has drawn trails below it), kept inside the frame.
+            let label = ctx.resolve(Text("MERCURY").font(RetroTextStyle.monoTiny.font).foregroundColor(RetroColor.text))
+            let half = label.measure(in: size).width / 2 + 4
+            ctx.draw(label, at: CGPoint(x: min(max(m.x, half), size.width - half), y: m.y - 21))
         }
     }
 

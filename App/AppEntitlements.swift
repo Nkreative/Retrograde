@@ -40,8 +40,12 @@ enum AppEntitlements {
     static var promotion: LaunchPromotion {
         #if DEBUG
         if promotionPreview {
+            // Started at midnight Pacific yesterday, like an App Store Connect price change.
+            var pacific = Calendar(identifier: .gregorian)
+            pacific.timeZone = LaunchPromotion.scheduleTimeZone
+            let start = pacific.date(byAdding: .day, value: -1, to: pacific.startOfDay(for: .now))
             let l = LaunchPromotion.launch
-            return LaunchPromotion(plan: l.plan, start: .now - 86_400, durationDays: l.durationDays, percentOff: l.percentOff, prices: l.prices)
+            return LaunchPromotion(plan: l.plan, start: start, durationDays: l.durationDays, percentOff: l.percentOff, prices: l.prices)
         }
         #endif
         return .launch

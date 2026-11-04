@@ -1,3 +1,5 @@
+import Foundation
+
 /// Paywall wording built from StoreKit's localized prices and periods — never hardcoded amounts.
 public enum PaywallCopy {
     public static func planName(_ plan: PremiumPlan) -> String {
@@ -55,9 +57,12 @@ public enum PaywallCopy {
         "LAUNCH · \(promotion.percentOff)% OFF"
     }
 
-    /// Plan line during a promotion; `ends` is the end date formatted for the person's locale.
-    public static func promotionDetail(ends: String) -> String {
-        "Launch special until \(ends). One-time purchase."
+    /// Plan line during a promotion: its last day from the configured schedule ("Nov 17"), in the
+    /// person's language but on App Store Connect's Pacific calendar, so the date is the same everywhere.
+    public static func promotionDetail(_ promotion: LaunchPromotion.Display, locale: Locale = .autoupdatingCurrent) -> String {
+        var style = Date.FormatStyle.dateTime.month(.abbreviated).day().locale(locale)
+        style.timeZone = LaunchPromotion.scheduleTimeZone
+        return "Launch special through \(promotion.lastDay.formatted(style)). One-time purchase."
     }
 
     /// VoiceOver label for a plan card: name, Best value (Lifetime only), full price and frequency, trial.

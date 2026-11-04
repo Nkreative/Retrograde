@@ -254,7 +254,7 @@ private struct PlanCard: View {
     private var detail: String {
         guard let offer else { return "Loading price…" }
         if let promotion {
-            return PaywallCopy.promotionDetail(ends: promotion.endsAt.formatted(.dateTime.month(.abbreviated).day()))
+            return PaywallCopy.promotionDetail(promotion)
         }
         return PaywallCopy.planDetail(offer)
     }
@@ -263,16 +263,19 @@ private struct PlanCard: View {
     /// wraps internally: if it doesn't fit beside the plan text, the whole group moves below it.
     @ViewBuilder private var price: some View {
         if let offer {
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
+            // The crossed-out regular price sits clearly apart from the price being charged.
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
                 if let promotion {
                     Text(promotion.regularPrice)
-                        .font(.custom("Inter-Regular", size: 12, relativeTo: .footnote))
-                        .strikethrough()
+                        .retroText(.bodyLarge)
+                        .strikethrough(color: RetroColor.textMuted)
                         .foregroundStyle(RetroColor.textMuted)
                 }
-                Text(offer.displayPrice).retroText(.price).foregroundStyle(RetroColor.text)
-                if let unit = PaywallCopy.priceUnit(offer) {
-                    Text(unit).font(.custom("Inter-Regular", size: 12, relativeTo: .footnote)).foregroundStyle(RetroColor.textMuted)
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(offer.displayPrice).retroText(.price).foregroundStyle(RetroColor.text)
+                    if let unit = PaywallCopy.priceUnit(offer) {
+                        Text(unit).font(.custom("Inter-Regular", size: 12, relativeTo: .footnote)).foregroundStyle(RetroColor.textMuted)
+                    }
                 }
             }
             .lineLimit(1)

@@ -74,7 +74,7 @@ Because the trial is configured only for the US and Canada, customers in other c
 - the person's storefront is one the promotion lists (US only), in the listed currency (USD);
 - StoreKit's actual Lifetime price for that storefront is exactly the configured promotional price ($9.99).
 
-The price the person pays and sees is always StoreKit's. The app never hardcodes it, and never assumes a discount just because the price happens to be $9.99. To extend the special to other countries, add each storefront's currency, regular and promotional price to `LaunchPromotion.launch.prices` and schedule the matching price change in App Store Connect.
+The plan line says "Launch special through <last day>": the last full day before the regular price returns, on the Pacific calendar (e.g. a Dec 1 start reads "through Dec 14"). The price the person pays and sees is always StoreKit's. The app never hardcodes it, and never assumes a discount just because the price happens to be $9.99. To extend the special to other countries, add each storefront's currency, regular and promotional price to `LaunchPromotion.launch.prices` and schedule the matching price change in App Store Connect.
 
 ### Before Sandbox testing (on your iPhone)
 Done: legal entity decision (individual for now), Paid Apps Agreement, bundle ID, both products.

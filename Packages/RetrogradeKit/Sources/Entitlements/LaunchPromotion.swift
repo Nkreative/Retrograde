@@ -22,7 +22,12 @@ public struct LaunchPromotion: Equatable, Sendable {
         public let percentOff: Int
         /// The regular price in the storefront's currency format, shown crossed out.
         public let regularPrice: String
+        /// When the regular price returns (start + duration, from the configured schedule).
         public let endsAt: Date
+
+        /// The last day of the promotion in App Store Connect's pricing time zone: the day before
+        /// the regular price returns at midnight Pacific.
+        public var lastDay: Date { endsAt - 1 }
     }
 
     public enum Status: Equatable, Sendable {
@@ -62,11 +67,14 @@ public struct LaunchPromotion: Equatable, Sendable {
         prices: ["USA": StorefrontPrice(currencyCode: "USD", regular: Decimal(string: "19.99")!, promotional: Decimal(string: "9.99")!)]
     )
 
-    /// 14 calendar days after `start`, counted in Pacific time (App Store Connect's pricing time zone).
+    /// App Store Connect schedules price changes in Pacific time.
+    public static let scheduleTimeZone = TimeZone(identifier: "America/Los_Angeles")!
+
+    /// 14 calendar days after `start`, counted in Pacific time.
     public var end: Date? {
         guard let start else { return nil }
         var pacific = Calendar(identifier: .gregorian)
-        pacific.timeZone = TimeZone(identifier: "America/Los_Angeles")!
+        pacific.timeZone = Self.scheduleTimeZone
         return pacific.date(byAdding: .day, value: durationDays, to: start)
     }
 
