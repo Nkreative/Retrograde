@@ -2,6 +2,16 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-04 (M10 revision: onboarding matches the approved Figma frames)
+
+Replaces the three-screen onboarding and its polish notes in the entry below; the paywall, launch promotion, 3-day trial and progress rules there still apply.
+
+- **Splash** (Figma "Retrograde — title only"): the Figma logo (65 × 68 pt, `SplashLogo`) above "RETROGRADE" (Archivo Black 30), centred on the app background, for about 2 seconds, then a crossfade. No progress dots, copy or buttons. iOS's launch screen uses the same background colour, so there's no flash before it. Shown only while onboarding isn't finished: returning users open straight into the app, with no added delay on launch or when coming back from the background.
+- **Notifications screen** (Figma "Get notified!" frames): "GET NOTIFIED!", the Figma explanation, "Turn on notifications" and "No I will feel it no need to tell me" — the Figma copy, used as the source of truth for wording. Mercury is the Figma planet (the Mercury artwork, cropped and turned exactly as in the mockup), drifting once from the upper right, partly off-screen, to the left over about 5 seconds, following the three Figma frames; with Reduce Motion it fades in, still, at the middle position. Positions follow the 430 × 932 pt frame scaled to each phone; when text is too large to fit, the screen scrolls with the buttons after the text.
+- **Permission:** iOS is asked only when "Turn on notifications" is tapped, and only if it has never asked or delivery is provisional (quiet), which iOS allows to be upgraded once. Already allowed: a single Continue. Denied: Continue plus a line pointing to iOS Settings; never asked again. Either button, or Continue, finishes onboarding. Nothing is scheduled yet (M11).
+- **After onboarding:** a crossfade into the app, then the existing paywall once for people who aren't Premium (unchanged purchase code, Lifetime selected, launch promotion when verified, 3-day trial when eligible, Continue free, Restore, terms). Onboarding is complete before the paywall, so quitting at any point after it never shows either again. Quitting during the splash or the notifications screen shows onboarding again on the next launch.
+- **Removed:** the three-step navigation, page dots, retrograde-loop diagram, features page and bell illustration. Debug-only replay stays (Settings › Developer, `-onboarding reset`), excluded from release builds.
+
 ## 2026-11-04 (M10 onboarding and launch promotion)
 
 - **Polish (before sign-off):** screen 1 opens with the approved logo and wordmark from the Figma splash (`BrandMark` + "RETROGRADE"), fading in gently (fade only with Reduce Motion), above the animation; the caption under the animation is now body size; on tall phones the content is centred so the page stays balanced. Pages fit on one screen when they can; when they don't (small phones, large text) the whole page scrolls with the buttons after the content, so nothing hides behind a pinned footer. Paywall: the promotion line reads "Launch special through <last day>", the last full day on App Store Connect's Pacific calendar, derived from the configured start and duration; the crossed-out regular price has clear space before the launch price.

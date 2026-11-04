@@ -43,13 +43,16 @@ private func freshDefaults() throws -> (UserDefaults, () -> Void) {
         #expect(NotificationAuthorization(.notDetermined) == .notDetermined)
         #expect(NotificationAuthorization(.denied) == .denied)
         #expect(NotificationAuthorization(.authorized) == .allowed)
-        #expect(NotificationAuthorization(.provisional) == .allowed)
+        #expect(NotificationAuthorization(.provisional) == .provisional)
     }
 
     @Test func onlyPromptsWhenNeverAsked() {
         #expect(NotificationAuthorization.notDetermined.shouldPrompt)
         #expect(!NotificationAuthorization.denied.shouldPrompt)
         #expect(!NotificationAuthorization.allowed.shouldPrompt)
+        #expect(NotificationAuthorization.provisional.shouldPrompt) // one upgrade request from quiet delivery
+        #expect(NotificationAuthorization(.authorized) == .allowed)
+        #expect(NotificationAuthorization(.denied) == .denied)
     }
     #endif
 }

@@ -84,6 +84,29 @@ public struct RetroGlyphView: View {
     }
 }
 
+/// The splash logo exactly as in Figma ("Retrograde Logo 1", 65 × 68 pt): the brand mark drawn at
+/// splash size with its fine 1.4 pt strokes, which a scaled-up `BrandMark` would thicken.
+public struct SplashLogo: View {
+    public init() {}
+
+    public var body: some View {
+        let box = CGSize(width: 65, height: 68)
+        ZStack {
+            SVGPath(data: "M32.5 68C50.4493 68 65 52.7777 65 34C65 15.2223 50.4493 0 32.5 0C14.5507 0 0 15.2223 0 34C0 52.7777 14.5507 68 32.5 68Z", viewBox: box)
+                .fill(RetroColor.pink)
+            StrokedSVGPath(
+                data: "M36.6818 13.875C25.3903 18.9375 14.099 33.5624 13.5613 44.8124C13.0236 54.9376 21.0889 57.75 31.305 52.125C43.6716 45.375 54.963 30.1876 51.7369 21.75C51.1992 20.0624 50.1238 18.9375 48.5108 17.8125M49.0486 25.125L48.511 17.8125L55.5008 18.375M38.8327 34.6876C38.8327 39.0368 35.4625 42.5624 31.3051 42.5624C27.1478 42.5624 23.7776 39.0368 23.7776 34.6876C23.7776 30.3382 27.1478 26.8124 31.3051 26.8124C35.4625 26.8124 38.8327 30.3382 38.8327 34.6876Z",
+                viewBox: box, lineWidth: 1.40625
+            )
+            .fill(.white)
+            SVGPath(data: "M42.5964 14.7188C43.6358 14.7188 44.4784 13.8373 44.4784 12.75C44.4784 11.6627 43.6358 10.7812 42.5964 10.7812C41.5572 10.7812 40.7147 11.6627 40.7147 12.75C40.7147 13.8373 41.5572 14.7188 42.5964 14.7188Z", viewBox: box)
+                .fill(.white)
+        }
+        .frame(width: box.width, height: box.height)
+        .accessibilityLabel("Retrograde")
+    }
+}
+
 /// The Retrograde logo: pink disc with the white orbit mark.
 public struct BrandMark: View {
     let size: CGFloat

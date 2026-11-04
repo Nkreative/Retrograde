@@ -110,6 +110,7 @@ private struct PermissionStatus: View {
     private var title: String {
         switch authorization {
         case .allowed: "Notifications are allowed"
+        case .provisional: "Delivered quietly"
         case .denied: "Notifications are off for Retrograde"
         case .notDetermined: "Permission not requested yet"
         }
@@ -118,6 +119,7 @@ private struct PermissionStatus: View {
     private var detail: String {
         switch authorization {
         case .allowed: "Retrograde can show alerts once they’re available."
+        case .provisional: "Retrograde alerts go straight to Notification Center, without sounds or banners. You can change this in iOS Settings."
         case .denied: "Your choices are saved, but iOS won’t show Retrograde alerts until you turn notifications on."
         case .notDetermined: "We’ll ask once alerts are ready — and only if you’ve turned some on."
         }
@@ -126,6 +128,7 @@ private struct PermissionStatus: View {
     private var icon: String {
         switch authorization {
         case .allowed: "checkmark.circle.fill"
+        case .provisional: "bell"
         case .denied: RetroSymbol.notificationsOff
         case .notDetermined: "bell.badge"
         }
@@ -138,10 +141,11 @@ private struct PermissionStatus: View {
 enum NotificationPermission {
     static func current() async -> NotificationAuthorization {
         #if DEBUG
-        // `-notificationAuth denied|allowed|notDetermined` for review screenshots.
+        // `-notificationAuth denied|allowed|provisional|notDetermined` for review screenshots.
         switch UserDefaults.standard.string(forKey: "notificationAuth") {
         case "denied": return .denied
         case "allowed": return .allowed
+        case "provisional": return .provisional
         case "notDetermined": return .notDetermined
         default: break
         }

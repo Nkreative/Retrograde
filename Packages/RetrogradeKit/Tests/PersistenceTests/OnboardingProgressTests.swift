@@ -10,47 +10,38 @@ import Testing
         return (d, { d.removePersistentDomain(forName: suite) })
     }
 
-    @Test func freshInstallStartsAtTheBeginning() throws {
+    @Test func freshInstallShowsOnboarding() throws {
         let (d, cleanup) = try defaults(); defer { cleanup() }
         let p = OnboardingProgress(defaults: d)
-        #expect(p.step == .mercury && !p.isComplete)
+        #expect(p.step == .notifications && !p.isComplete)
     }
 
-    @Test func interruptedOnboardingResumesAtTheSameStep() throws {
+    @Test func interruptedOnboardingShowsAgain() throws {
         let (d, cleanup) = try defaults(); defer { cleanup() }
-        let p = OnboardingProgress(defaults: d)
-        p.advance(); p.advance()
-        #expect(OnboardingProgress(defaults: d).step == .notifications)
+        _ = OnboardingProgress(defaults: d) // app closed during the splash or notifications screen
+        #expect(!OnboardingProgress(defaults: d).isComplete)
     }
 
     @Test func completedOnboardingNeverReplays() throws {
         let (d, cleanup) = try defaults(); defer { cleanup() }
-        OnboardingProgress(defaults: d).complete()
-        let relaunched = OnboardingProgress(defaults: d)
-        #expect(relaunched.isComplete)
-        relaunched.back() // can't go back from completed
+        OnboardingProgress(defaults: d).complete() // completed before the paywall appears
         #expect(OnboardingProgress(defaults: d).isComplete)
+        #expect(OnboardingProgress(defaults: d, initial: .notifications).isComplete)
     }
 
-    @Test func leavingNotificationsCompletesBeforeThePaywall() throws {
+    @Test func reset() throws {
         let (d, cleanup) = try defaults(); defer { cleanup() }
         let p = OnboardingProgress(defaults: d)
-        p.advance(); p.advance(); p.advance()
-        #expect(p.isComplete) // the paywall comes after, so reopening never shows it again
-    }
-
-    @Test func backAndReset() throws {
-        let (d, cleanup) = try defaults(); defer { cleanup() }
-        let p = OnboardingProgress(defaults: d)
-        p.advance(); p.back()
-        #expect(p.step == .mercury)
         p.complete(); p.reset()
-        #expect(OnboardingProgress(defaults: d).step == .mercury)
+        #expect(OnboardingProgress(defaults: d).step == .notifications)
     }
 
-    @Test func unknownSavedValueFallsBackSafely() throws {
+    /// Earlier builds saved "mercury" / "features"; anything but "completed" isn't done.
+    @Test func earlierOrUnknownSavedValuesFallBackSafely() throws {
         let (d, cleanup) = try defaults(); defer { cleanup() }
-        d.set("garbage", forKey: OnboardingProgress.storageKey)
-        #expect(OnboardingProgress(defaults: d).step == .mercury)
+        for value in ["mercury", "features", "garbage"] {
+            d.set(value, forKey: OnboardingProgress.storageKey)
+            #expect(OnboardingProgress(defaults: d).step == .notifications)
+        }
     }
 }

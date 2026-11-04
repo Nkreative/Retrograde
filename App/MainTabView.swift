@@ -22,14 +22,16 @@ struct MainTabView: View {
     @State private var router: AppRouter
     @State private var paywall: PaywallPresenter
     @Environment(NotificationHistory.self) private var history
-    @Environment(OnboardingProgress.self) private var onboarding
     @Environment(EntitlementStore.self) private var entitlements
     /// Debug-only clock override for reviewing other cycle stages.
     private let now: Date?
+    /// Set when onboarding has just finished: Premium is offered once, then this is cleared.
+    @Binding private var offersPremium: Bool
 
-    init(initialTab: AppTab = .overview, now: Date? = nil) {
+    init(initialTab: AppTab = .overview, now: Date? = nil, offersPremium: Binding<Bool> = .constant(false)) {
         let router = AppRouter(tab: initialTab)
         self.now = now
+        _offersPremium = offersPremium
         let paywall = PaywallPresenter()
         #if DEBUG
         // `-showPaywall YES` opens the paywall on launch, for review.
@@ -65,11 +67,10 @@ struct MainTabView: View {
         .environment(paywall)
         .environment(router)
         .fullScreenCover(isPresented: $paywall.isPresented) { PaywallView() }
-        .background {
-            // A separate host so the onboarding and paywall covers never compete.
-            Color.clear.fullScreenCover(isPresented: Binding(get: { !onboarding.isComplete }, set: { _ in })) {
-                OnboardingView(onFinished: showLaunchOffer)
-                    .environment(onboarding)
+        .onAppear {
+            if offersPremium {
+                offersPremium = false
+                showLaunchOffer()
             }
         }
         .sheet(isPresented: $router.showsSettings) { SettingsView().environment(paywall) }
@@ -79,7 +80,7 @@ struct MainTabView: View {
     /// After onboarding: the Premium offer, unless purchases are already verified as Premium.
     private func showLaunchOffer() {
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(600)) // let the onboarding cover close
+            try? await Task.sleep(for: .milliseconds(450)) // let the crossfade from onboarding finish
             for _ in 0..<30 where !entitlements.hasLoaded { try? await Task.sleep(for: .milliseconds(100)) }
             if !entitlements.isPremium { paywall.present() }
         }

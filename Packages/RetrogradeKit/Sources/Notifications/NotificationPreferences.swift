@@ -83,17 +83,21 @@ public enum NotificationAuthorization: Equatable, Sendable {
     case notDetermined
     /// Turned off for Retrograde in iOS Settings.
     case denied
-    /// Allowed (including provisional / ephemeral).
+    /// Delivered quietly to Notification Center; iOS lets the app ask once to upgrade to full alerts.
+    case provisional
+    /// Allowed (including ephemeral).
     case allowed
 
-    /// Only ask iOS when it has never asked: a person who declined is never prompted again.
-    public var shouldPrompt: Bool { self == .notDetermined }
+    /// Ask iOS only when it has never asked (or to upgrade quiet delivery): a person who declined
+    /// is never prompted again.
+    public var shouldPrompt: Bool { self == .notDetermined || self == .provisional }
 
     #if canImport(UserNotifications)
     public init(_ status: UNAuthorizationStatus) {
         switch status {
         case .notDetermined: self = .notDetermined
         case .denied: self = .denied
+        case .provisional: self = .provisional
         default: self = .allowed
         }
     }
