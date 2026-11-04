@@ -6,7 +6,7 @@ import Foundation
 /// Production: StoreKit 2 verified transactions only.
 /// Debug: StoreKit too — against `StoreKit/Retrograde.storekit` when run from Xcode — unless the
 /// M8 simulator is explicitly requested with `-entitlementSource simulated`, or a throwaway state
-/// with `-entitlement free|yearly|lifetime|expiredYearly|gracePeriod|billingIssue` (`-premium YES`
+/// with `-entitlement free|yearly|lifetime|lifetimeAndYearly|expiredYearly|gracePeriod|billingIssue` (`-premium YES`
 /// = lifetime). The simulator is not compiled into release builds.
 @MainActor
 enum AppEntitlements {
@@ -40,6 +40,7 @@ enum AppEntitlements {
         switch preset {
         case "yearly": _ = buyYearly()
         case "lifetime": Task { _ = try? await sim.purchase(.lifetime) }
+        case "lifetimeAndYearly": Task { _ = try? await sim.purchase(.yearly); _ = try? await sim.purchase(.lifetime) }
         case "expiredYearly": Task { _ = try? await sim.purchase(.yearly); sim.expireYearly() }
         case "gracePeriod": Task { _ = try? await sim.purchase(.yearly); sim.enterGracePeriod() }
         case "billingIssue": Task { _ = try? await sim.purchase(.yearly); sim.enterBillingRetry() }

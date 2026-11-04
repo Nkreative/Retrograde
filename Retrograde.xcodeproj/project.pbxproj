@@ -14,6 +14,7 @@
 		A10000000000000000000036 /* Persistence in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000046 /* Persistence */; };
 		A10000000000000000000037 /* SurvivalKit in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000047 /* SurvivalKit */; };
 		A10000000000000000000038 /* Entitlements in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000048 /* Entitlements */; };
+		A10000000000000000000039 /* Notifications in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000049 /* Notifications */; };
 		B10000000000000000000038 /* Entitlements in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000048 /* Entitlements */; };
 /* End PBXBuildFile section */
 
@@ -54,6 +55,7 @@
 				A10000000000000000000032 /* AstroData in Frameworks */,
 				A10000000000000000000033 /* DesignSystem in Frameworks */,
 				A10000000000000000000034 /* Editorial in Frameworks */,
+				A10000000000000000000039 /* Notifications in Frameworks */,
 				A10000000000000000000038 /* Entitlements in Frameworks */,
 				A10000000000000000000037 /* SurvivalKit in Frameworks */,
 				A10000000000000000000036 /* Persistence in Frameworks */,
@@ -114,6 +116,7 @@
 				A10000000000000000000042 /* AstroData */,
 				A10000000000000000000043 /* DesignSystem */,
 				A10000000000000000000044 /* Editorial */,
+				A10000000000000000000049 /* Notifications */,
 				A10000000000000000000048 /* Entitlements */,
 				A10000000000000000000047 /* SurvivalKit */,
 				A10000000000000000000046 /* Persistence */,
@@ -473,6 +476,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A10000000000000000000045 /* XCLocalSwiftPackageReference "Packages/RetrogradeKit" */;
 			productName = Entitlements;
+		};
+		A10000000000000000000049 /* Notifications */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000045 /* XCLocalSwiftPackageReference "Packages/RetrogradeKit" */;
+			productName = Notifications;
 		};
 		B10000000000000000000048 /* Entitlements */ = {
 			isa = XCSwiftPackageProductDependency;

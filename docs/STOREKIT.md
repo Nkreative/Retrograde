@@ -74,6 +74,7 @@ Still to check or do:
 14. **TestFlight:** internal testing is immediate; external testers need Beta App Review and test information (feedback email, description).
 
 ### Before App Store submission
+15a. **Support contact in the app:** set `AppLinks.supportPage` and/or `AppLinks.supportEmail` — Contact Support stays hidden until then, and App Store Connect also requires a Support URL.
 15. **Privacy policy in the app:** set `AppLinks.privacyPolicy` in `App/AppLinks.swift` — archiving is blocked until it's set.
 15b. **App Information:** subtitle, category (Lifestyle suggested), age rating questionnaire, copyright line, **Privacy Policy URL** and **Support URL** (both required).
 16. **App Privacy:** answer only after the data-flow audit (planned before submission) — don't assume "Data Not Collected".

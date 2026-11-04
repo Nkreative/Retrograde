@@ -18,9 +18,7 @@ enum AppTab: String, CaseIterable {
 struct MainTabView: View {
     @State private var selection: AppTab
     @State private var paywall: PaywallPresenter
-    #if DEBUG
-    @State private var showsSimulator = false
-    #endif
+    @State private var showsSettings = false
     /// Debug-only clock override for reviewing other cycle stages.
     private let now: Date?
 
@@ -31,8 +29,8 @@ struct MainTabView: View {
         #if DEBUG
         // `-showPaywall YES` opens the paywall on launch, for review.
         paywall.isPresented = UserDefaults.standard.bool(forKey: "showPaywall")
-        // `-openSimulator YES` opens the Premium simulator on launch, for review.
-        _showsSimulator = State(initialValue: UserDefaults.standard.bool(forKey: "openSimulator"))
+        // `-openSettings YES` opens Settings on launch, for review.
+        _showsSettings = State(initialValue: UserDefaults.standard.bool(forKey: "openSettings"))
         #endif
         _paywall = State(initialValue: paywall)
         #if DEBUG
@@ -42,7 +40,7 @@ struct MainTabView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            AppHeader(onShare: {}, onNotifications: {}, onSettings: openSettings)
+            AppHeader(onShare: {}, onNotifications: { showsSettings = true }, onSettings: { showsSettings = true })
             ZStack {
                 ForEach(AppTab.allCases, id: \.self) { tab in
                     screen(for: tab)
@@ -58,16 +56,7 @@ struct MainTabView: View {
         .retroScreenBackground()
         .environment(paywall)
         .fullScreenCover(isPresented: $paywall.isPresented) { PaywallView() }
-        #if DEBUG
-        .sheet(isPresented: $showsSimulator) { PremiumSimulatorView() }
-        #endif
-    }
-
-    /// Settings arrives in M9. Debug builds open the Premium simulator here instead.
-    private func openSettings() {
-        #if DEBUG
-        showsSimulator = true
-        #endif
+        .sheet(isPresented: $showsSettings) { SettingsView().environment(paywall) }
     }
 
     @ViewBuilder

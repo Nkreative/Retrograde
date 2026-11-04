@@ -2,6 +2,14 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-04 (M9c Settings)
+
+- **Opening Settings:** the existing header gear (top-right on every screen, approved in M3) opens Settings as a sheet with native navigation; the bell opens it too until M11 gives notifications their own screen. No Settings tab. The debug Premium simulator moved into Settings › Developer (debug builds only).
+- **Premium** (`PremiumSummary`, from the shared entitlement store): Free → Upgrade (opens the paywall) + Restore; Yearly → "Renews/Ends <Apple's verified date>" + Manage Subscription + Restore + Request a Refund; Lifetime → "never expires and never renews" + Restore + Request a Refund; Lifetime with a still-renewing Yearly → Lifetime first, a reminder to cancel Yearly separately, Manage Subscription first. Payment problems: grace period keeps Premium with a fix-payment notice; billing retry shows "Yearly paused". Before the first verified read it says "Checking your purchases…" rather than Free; failed reads keep the last verified state. Refund requests appear only with real StoreKit (hidden while the debug simulator is used).
+- **Notifications:** Retrograde begins (on), Retrograde ends (on), Daily cosmic guidance (off) — saved locally (`NotificationPreferences`, Notifications module) for M11 to schedule; Settings says alerts arrive in an upcoming update and never asks for permission. The earlier "2 weeks / 3 days before" alerts can be added in M11 on the same model.
+- **How it works:** plain-language methodology and data-source/font credits screens.
+- **About & Support:** Privacy Policy and Contact Support show only once their URL/email is set in `AppLinks` (debug builds flag "URL NOT SET"; release builds hide them); Terms → Apple's EULA; version and build; footer "Retrograde is operated by NKreative LLC." The App Store seller remains the individual account holder — nothing claims NKreative LLC is the seller.
+
 ## 2026-11-04 (M9b refinements)
 
 - **Prices** (final): Inter SemiBold 16 pt, right-aligned, with the frequency inline at 12 pt secondary ("$9.99 / yr"). The price group never wraps internally; for long localized prices or large text it moves as a whole below the plan description, and BEST VALUE drops below "Lifetime access".

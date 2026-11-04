@@ -1,5 +1,6 @@
 import DesignSystem
 import Entitlements
+import Notifications
 import Persistence
 import SwiftData
 import SwiftUI
@@ -9,6 +10,7 @@ struct RetrogradeApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var completions: CompletionStore
     @State private var entitlements = AppEntitlements.make()
+    @State private var notificationPreferences = NotificationPreferences()
 
     init() {
         RetroFonts.register()
@@ -44,6 +46,7 @@ struct RetrogradeApp: App {
             RootView()
                 .environment(completions)
                 .environment(entitlements)
+                .environment(notificationPreferences)
                 .preferredColorScheme(.dark)
                 // Verified entitlements at launch, then live updates; re-checked on every return to the app.
                 .task { if !Self.isHostingTests { await entitlements.start() } }

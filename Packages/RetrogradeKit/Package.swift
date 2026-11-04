@@ -12,6 +12,7 @@ let package = Package(
         .library(name: "SurvivalKit", targets: ["SurvivalKit"]),
         .library(name: "Persistence", targets: ["Persistence"]),
         .library(name: "Entitlements", targets: ["Entitlements"]),
+        .library(name: "Notifications", targets: ["Notifications"]),
     ],
     targets: [
         // Planet cycles, sky events and the cycle/day calculations. No UI, no I/O.
@@ -30,6 +31,8 @@ let package = Package(
         .target(name: "Persistence"),
         // Premium status: one source of truth from StoreKit 2 verified transactions (simulator in debug only).
         .target(name: "Entitlements"),
+        // Notification preferences (stored now; scheduling arrives in M11).
+        .target(name: "Notifications"),
         // Colours, fonts, icons and shared SwiftUI components from the Figma design.
         .target(
             name: "DesignSystem",
@@ -41,6 +44,7 @@ let package = Package(
         .testTarget(name: "EditorialTests", dependencies: ["Editorial", "RetroCore", "AstroData"]),
         .testTarget(name: "SurvivalKitTests", dependencies: ["SurvivalKit", "RetroCore", "AstroData"]),
         .testTarget(name: "PersistenceTests", dependencies: ["Persistence"]),
+        .testTarget(name: "NotificationsTests", dependencies: ["Notifications"]),
         .testTarget(name: "EntitlementsTests", dependencies: ["Entitlements", "SurvivalKit", "Persistence", "Editorial", "RetroCore", "AstroData"]),
     ]
 )

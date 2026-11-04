@@ -4,48 +4,42 @@ import Entitlements
 import SwiftUI
 
 /// Debug-only view of the Premium state, with simulator controls when the debug build runs with
-/// `-entitlementSource simulated`. Not compiled into release builds. Opened from the gear button
-/// until Settings arrives (M9c).
+/// `-entitlementSource simulated`. Not compiled into release builds. Pushed from Settings › Developer.
 struct PremiumSimulatorView: View {
     @Environment(EntitlementStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
-
     var body: some View {
-        NavigationStack {
-            List {
-                Section("Current status") {
-                    LabeledContent("Status", value: store.status.debugName)
-                    LabeledContent("Unlocks Premium", value: store.isPremium ? "Yes" : "No")
-                    LabeledContent("Source", value: AppEntitlements.simulator == nil ? "StoreKit" : "Simulator")
+        List {
+            Section("Current status") {
+                LabeledContent("Status", value: store.status.debugName)
+                LabeledContent("Unlocks Premium", value: store.isPremium ? "Yes" : "No")
+                LabeledContent("Source", value: AppEntitlements.simulator == nil ? "StoreKit" : "Simulator")
+            }
+            if let sim = AppEntitlements.simulator {
+                Section("Simulate") {
+                    Button("Buy Yearly") { Task { _ = try? await store.purchase(.yearly) } }
+                    Button("Buy Lifetime") { Task { _ = try? await store.purchase(.lifetime) } }
+                    Button("Turn off auto-renew") { sim.turnOffAutoRenew() }
+                    Button("Billing problem (grace period)") { sim.enterGracePeriod() }
+                    Button("Billing problem (retry, no grace)") { sim.enterBillingRetry() }
+                    Button("Expire Yearly now") { sim.expireYearly() }
+                    Button("Refund Yearly") { sim.refund(.yearly) }
+                    Button("Refund Lifetime") { sim.refund(.lifetime) }
+                    Button("Reset to Free", role: .destructive) { sim.reset() }
                 }
-                if let sim = AppEntitlements.simulator {
-                    Section("Simulate") {
-                        Button("Buy Yearly") { Task { _ = try? await store.purchase(.yearly) } }
-                        Button("Buy Lifetime") { Task { _ = try? await store.purchase(.lifetime) } }
-                        Button("Turn off auto-renew") { sim.turnOffAutoRenew() }
-                        Button("Billing problem (grace period)") { sim.enterGracePeriod() }
-                        Button("Billing problem (retry, no grace)") { sim.enterBillingRetry() }
-                        Button("Expire Yearly now") { sim.expireYearly() }
-                        Button("Refund Yearly") { sim.refund(.yearly) }
-                        Button("Refund Lifetime") { sim.refund(.lifetime) }
-                        Button("Reset to Free", role: .destructive) { sim.reset() }
-                    }
-                } else {
-                    Section {
-                        Text("Using StoreKit. From Xcode, purchases run against StoreKit/Retrograde.storekit; manage them with Debug › StoreKit › Manage Transactions. Launch with -entitlementSource simulated for the simulator.")
-                            .font(.footnote)
-                    }
-                }
+            } else {
                 Section {
-                    Button("Refresh from source") { Task { await store.refresh() } }
-                    Button("Restore purchases") { Task { try? await store.restorePurchases() } }
+                    Text("Using StoreKit. From Xcode, purchases run against StoreKit/Retrograde.storekit; manage them with Debug › StoreKit › Manage Transactions. Launch with -entitlementSource simulated for the simulator.")
+                        .font(.footnote)
                 }
             }
-            .navigationTitle("Premium (debug)")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            Section {
+                Button("Refresh from source") { Task { await store.refresh() } }
+                Button("Restore purchases") { Task { try? await store.restorePurchases() } }
+            }
         }
-    }
+    .navigationTitle("Premium (debug)")
+    .navigationBarTitleDisplayMode(.inline)
+}
 }
 
 extension PremiumStatus {
