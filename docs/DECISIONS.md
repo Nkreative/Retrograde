@@ -2,6 +2,14 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-04 (M9b paywall)
+
+- **Live StoreKit paywall:** prices, billing period and the free trial come from StoreKit for the person's storefront (`PlanOffer`); the trial appears only when the storefront has an introductory offer *and* StoreKit says the person is eligible — otherwise Yearly reads "Renews yearly. Cancel anytime." with no trial wording. Wording is generated from those values (`PaywallCopy`), never hardcoded amounts.
+- **Disclosure under the button** follows the selected plan: Yearly with trial — free period, then price and frequency, charged when the trial ends, auto-renews unless cancelled 24 h before, how to manage; Yearly without trial — price per year at confirmation, same renewal terms; Lifetime — one-time payment, no renewal.
+- **States** (`PurchaseFlow`): loading (placeholder cards), unavailable (retry, purchase disabled), purchasing (button "Processing…", all actions blocked so a second tap can't start another purchase), pending approval, purchase failed, restore failed, nothing to restore. Success closes the paywall as soon as Premium is verified, including a later Ask to Buy approval.
+- **Links:** Terms → Apple's standard EULA. Privacy appears only once `AppLinks.privacyPolicy` is set (debug builds show "PRIVACY (URL NOT SET)" as a reminder; release builds hide it).
+- **Scheme:** the shared scheme's `-now` argument is kept but off; tick it in Scheme › Arguments to test a date.
+
 ## 2026-11-03 (M9 decisions & M9a StoreKit)
 
 - **Products (final):** Yearly `com.nkreative.retrograde.premium.yearly` — auto-renewable, 1 year, US $9.99, 7-day free trial for eligible new subscribers; Lifetime `com.nkreative.retrograde.premium.lifetime` — non-consumable, US $19.99, no trial. Group "Retrograde Premium". Bundle ID `com.nkreative.retrograde`. International availability with Apple's localized pricing; Family Sharing off; billing grace period on (16 days); Apple's standard EULA; dedicated privacy policy and support page (URLs/email configurable placeholders until supplied; never published as placeholders). Lifetime stays the default paywall selection with BEST VALUE.

@@ -17,6 +17,16 @@
 		B10000000000000000000038 /* Entitlements in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000048 /* Entitlements */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		B10000000000000000000091 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A10000000000000000000002 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A10000000000000000000061;
+			remoteInfo = Retrograde;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		A10000000000000000000011 /* Retrograde.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Retrograde.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B10000000000000000000011 /* RetrogradeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RetrogradeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -193,16 +203,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXContainerItemProxy section */
-		B10000000000000000000091 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = A10000000000000000000002 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = A10000000000000000000061;
-			remoteInfo = Retrograde;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A10000000000000000000052 /* Sources */ = {

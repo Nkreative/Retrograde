@@ -89,6 +89,25 @@ public actor StoreKitEntitlementSource: EntitlementSource {
         try await AppStore.sync()
     }
 
+    public func offers() async throws -> [PlanOffer] {
+        var result: [PlanOffer] = []
+        for plan in PremiumPlan.allCases {
+            guard let product = try? await product(for: plan) else { continue }
+            var trial: BillingPeriod?
+            if let subscription = product.subscription,
+               let intro = subscription.introductoryOffer, intro.paymentMode == .freeTrial,
+               await subscription.isEligibleForIntroOffer {
+                trial = BillingPeriod(intro.period)
+            }
+            result.append(PlanOffer(
+                plan: plan, displayPrice: product.displayPrice,
+                billingPeriod: product.subscription.map { BillingPeriod($0.subscriptionPeriod) }, freeTrial: trial
+            ))
+        }
+        guard !result.isEmpty else { throw StoreError.productUnavailable(.lifetime) }
+        return result
+    }
+
     /// Products load on demand and are cached; a failure here never affects entitlements.
     public func product(for plan: PremiumPlan) async throws -> Product {
         if let cached = products[plan] { return cached }
@@ -98,5 +117,17 @@ public actor StoreKitEntitlementSource: EntitlementSource {
         }
         guard let product = products[plan] else { throw StoreError.productUnavailable(plan) }
         return product
+    }
+}
+
+extension BillingPeriod {
+    init(_ period: Product.SubscriptionPeriod) {
+        let unit: Unit = switch period.unit {
+        case .day: .day
+        case .week: .week
+        case .month: .month
+        default: .year
+        }
+        self.init(value: period.value, unit: unit)
     }
 }

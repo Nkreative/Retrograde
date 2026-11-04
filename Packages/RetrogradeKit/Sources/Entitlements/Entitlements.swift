@@ -103,6 +103,37 @@ public enum EntitlementRules {
     }
 }
 
+/// A length of time as StoreKit describes it (a billing period or a trial).
+public struct BillingPeriod: Equatable, Sendable {
+    public enum Unit: Sendable { case day, week, month, year }
+
+    public let value: Int
+    public let unit: Unit
+
+    public init(value: Int, unit: Unit) {
+        self.value = value
+        self.unit = unit
+    }
+}
+
+/// What the paywall shows for a plan, straight from StoreKit for the person's storefront.
+public struct PlanOffer: Equatable, Sendable {
+    public let plan: PremiumPlan
+    /// Localized, e.g. "$9.99" or "9,99 €".
+    public let displayPrice: String
+    /// Yearly's billing period; nil for Lifetime.
+    public let billingPeriod: BillingPeriod?
+    /// Only when the storefront offers a free trial *and* StoreKit says this person is eligible.
+    public let freeTrial: BillingPeriod?
+
+    public init(plan: PremiumPlan, displayPrice: String, billingPeriod: BillingPeriod? = nil, freeTrial: BillingPeriod? = nil) {
+        self.plan = plan
+        self.displayPrice = displayPrice
+        self.billingPeriod = billingPeriod
+        self.freeTrial = freeTrial
+    }
+}
+
 public enum PurchaseOutcome: Equatable, Sendable {
     case purchased
     /// Waiting on Ask to Buy or another approval; Premium unlocks when it completes.
@@ -119,6 +150,8 @@ public protocol EntitlementSource: AnyObject, Sendable {
     func purchase(_ plan: PremiumPlan) async throws -> PurchaseOutcome
     /// Re-syncs purchases with the App Store (Restore Purchases).
     func restore() async throws
+    /// Localized prices and offers for the paywall. Throws if no product can be loaded.
+    func offers() async throws -> [PlanOffer]
 }
 
 /// The single source of truth for Premium. Screens read `isPremium`; it updates as soon as a
@@ -181,5 +214,9 @@ public final class EntitlementStore {
     public func restorePurchases() async throws {
         try await source.restore()
         await refresh()
+    }
+
+    public func offers() async throws -> [PlanOffer] {
+        try await source.offers()
     }
 }

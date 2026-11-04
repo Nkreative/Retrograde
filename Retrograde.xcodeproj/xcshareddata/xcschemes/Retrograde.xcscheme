@@ -63,7 +63,7 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "-now 2026-11-13T12:00:00Z"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
       <StoreKitConfigurationFileReference

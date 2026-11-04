@@ -52,6 +52,8 @@ public final class SimulatedEntitlementSource: EntitlementSource, @unchecked Sen
     public func changes() -> AsyncStream<Void> { stream }
 
     public func purchase(_ plan: PremiumPlan) async throws -> PurchaseOutcome {
+        if failPurchases { throw URLError(.notConnectedToInternet) }
+        if let outcome = nextPurchase, outcome != .purchased { return outcome }
         let at = now()
         update { account in
             switch plan {
@@ -67,7 +69,26 @@ public final class SimulatedEntitlementSource: EntitlementSource, @unchecked Sen
     }
 
     public func restore() async throws {
+        if failRestore { throw URLError(.notConnectedToInternet) }
         continuation.yield()
+    }
+
+    // Debug knobs for reviewing paywall states.
+    public var failOffers = false
+    public var offersDelay: Duration = .zero
+    public var nextPurchase: PurchaseOutcome?
+    public var failPurchases = false
+    public var failRestore = false
+
+    public func offers() async throws -> [PlanOffer] {
+        try await Task.sleep(for: offersDelay)
+        if failOffers { throw URLError(.notConnectedToInternet) }
+        let trialEligible = account.yearly == nil
+        return [
+            PlanOffer(plan: .lifetime, displayPrice: "$19.99"),
+            PlanOffer(plan: .yearly, displayPrice: "$9.99", billingPeriod: .init(value: 1, unit: .year),
+                      freeTrial: trialEligible ? .init(value: 1, unit: .week) : nil),
+        ]
     }
 
     // MARK: Simulated App Store events

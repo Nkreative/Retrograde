@@ -7,8 +7,8 @@ import SurvivalKit
 import Testing
 @testable import Entitlements
 
-private let t0 = Date(timeIntervalSince1970: 1_793_750_400) // 2026-11-03 12:00 UTC
-private let day: TimeInterval = 86_400
+let t0 = Date(timeIntervalSince1970: 1_793_750_400) // 2026-11-03 12:00 UTC
+let day: TimeInterval = 86_400
 
 // MARK: - Rules (every StoreKit state)
 
@@ -68,7 +68,7 @@ private let day: TimeInterval = 86_400
 // MARK: - Store
 
 /// A source whose answers the test controls.
-private final class ScriptedSource: EntitlementSource, @unchecked Sendable {
+final class ScriptedSource: EntitlementSource, @unchecked Sendable {
     var snapshot = EntitlementSnapshot.none
     var failReads = false
     var purchaseOutcome = PurchaseOutcome.purchased
@@ -83,6 +83,9 @@ private final class ScriptedSource: EntitlementSource, @unchecked Sendable {
     func changes() -> AsyncStream<Void> { stream }
 
     func purchase(_ plan: PremiumPlan) async throws -> PurchaseOutcome {
+        purchaseCalls += 1
+        if holdPurchases { await withCheckedContinuation { purchaseGate = $0 } }
+        if failPurchase { throw URLError(.cannotConnectToHost) }
         if purchaseOutcome == .purchased {
             snapshot = plan == .lifetime ? EntitlementSnapshot(ownsLifetime: true)
                 : EntitlementSnapshot(yearly: YearlySubscription(state: .subscribed, expiresAt: t0 + 365 * day, willAutoRenew: true))
@@ -90,12 +93,32 @@ private final class ScriptedSource: EntitlementSource, @unchecked Sendable {
         return purchaseOutcome
     }
 
-    func restore() async throws { restoreCalls += 1 }
+    func restore() async throws {
+        restoreCalls += 1
+        if failRestore { throw URLError(.notConnectedToInternet) }
+    }
+
+    var offerList: [PlanOffer] = [
+        PlanOffer(plan: .lifetime, displayPrice: "$19.99"),
+        PlanOffer(plan: .yearly, displayPrice: "$9.99", billingPeriod: .init(value: 1, unit: .year), freeTrial: .init(value: 1, unit: .week)),
+    ]
+    var failOffers = false
+    var failPurchase = false
+    var failRestore = false
+    var purchaseCalls = 0
+    /// When set, purchases wait here until the test resumes them.
+    var purchaseGate: CheckedContinuation<Void, Never>?
+    var holdPurchases = false
+
+    func offers() async throws -> [PlanOffer] {
+        if failOffers { throw URLError(.notConnectedToInternet) }
+        return offerList
+    }
 }
 
 /// Waits briefly for the store's change listener to apply an update.
 @MainActor
-private func eventually(_ condition: @MainActor () -> Bool) async -> Bool {
+func eventually(_ condition: @MainActor () -> Bool) async -> Bool {
     for _ in 0..<100 {
         if condition() { return true }
         try? await Task.sleep(for: .milliseconds(10))

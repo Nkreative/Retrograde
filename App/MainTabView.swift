@@ -35,6 +35,9 @@ struct MainTabView: View {
         _showsSimulator = State(initialValue: UserDefaults.standard.bool(forKey: "openSimulator"))
         #endif
         _paywall = State(initialValue: paywall)
+        #if DEBUG
+        PaywallPresenter.current = paywall
+        #endif
     }
 
     var body: some View {

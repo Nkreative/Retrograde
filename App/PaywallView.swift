@@ -3,23 +3,27 @@ import Entitlements
 import Observation
 import SwiftUI
 
-/// Opens the Premium paywall from anywhere (locked tasks, the Premium card, later locked calendar days).
+/// Opens the Premium paywall from anywhere (locked tasks, the Premium card, locked calendar days).
 @MainActor
 @Observable
 final class PaywallPresenter {
     var isPresented = false
 
     func present() { isPresented = true }
+
+    #if DEBUG
+    /// The live presenter, for the screenshot tour in RetrogradeTests.
+    static weak var current: PaywallPresenter?
+    #endif
 }
 
-/// The approved paywall layout (Lifetime selected by default, Yearly alternative).
-/// Until StoreKit arrives in M9 this is a preview: plans can be chosen but nothing is bought.
+/// The approved paywall: artwork, benefits, Lifetime (default, BEST VALUE) and Yearly with live
+/// StoreKit prices, the purchase button for the selected plan with its terms, Continue free,
+/// Restore, Terms and Privacy. Purchase logic lives in `PurchaseFlow`.
 struct PaywallView: View {
-    enum Plan { case lifetime, yearly }
-
     @Environment(\.dismiss) private var dismiss
     @Environment(EntitlementStore.self) private var entitlements
-    @State private var plan: Plan = .lifetime
+    @State private var flow: PurchaseFlow?
 
     var body: some View {
         // Sized so the plans and the purchase button fit on the first screen: the artwork window
@@ -28,71 +32,67 @@ struct PaywallView: View {
             let roomy = screen.size.height + screen.safeAreaInsets.top + screen.safeAreaInsets.bottom >= 920
             content(heroRatio: roomy ? 0.86 : 0.78, headlineOverlap: roomy ? 56 : 44, spacing: roomy ? 16 : 13, benefitSpacing: roomy ? 11 : 9)
         }
+        .task {
+            let flow = self.flow ?? PurchaseFlow(store: entitlements)
+            self.flow = flow
+            #if DEBUG
+            PaywallDebug.flow = flow
+            #endif
+            await flow.load()
+        }
+        // Premium arrived (purchase, approval of a pending purchase, restore): close.
+        .onChange(of: entitlements.isPremium) { _, isPremium in
+            if isPremium { dismiss() }
+        }
+        .onChange(of: flow?.phase) { _, phase in
+            if let message = phase.flatMap(StatusBanner.message) {
+                AccessibilityNotification.Announcement(message).post()
+            }
+        }
     }
 
     private func content(heroRatio: CGFloat, headlineOverlap: CGFloat, spacing: CGFloat, benefitSpacing: CGFloat) -> some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                PaywallHero(windowRatio: heroRatio)
-                VStack(alignment: .leading, spacing: spacing) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("RETROGRADE PREMIUM").retroText(.mono).foregroundStyle(RetroColor.pink)
-                        Text("FULL BACKUP,\nEVERY CYCLE.").retroText(.hero).foregroundStyle(RetroColor.text).accessibilityAddTraits(.isHeader)
-                    }
-                    Text("The whole Survival Kit and every day of the calendar. Same cosmos, a lot more backup.")
-                        .retroText(.bodyLarge).foregroundStyle(RetroColor.textMuted)
-
-                    VStack(alignment: .leading, spacing: benefitSpacing) {
-                        benefit(RetroSymbol.firstAid, "All 27 Survival Kit tasks", "Not just the first one in each section.")
-                        benefit(RetroSymbol.planning, "Every calendar day, in detail", "Plan past the next four days — weeks ahead.")
-                        benefit(RetroSymbol.moon, "The full sky behind each day", "Retrogrades, shadows and moon phases, explained.")
-                        benefit(RetroSymbol.heart, "No ads. No account. Ever.", "Your progress stays on your phone.")
-                    }
-
-                    VStack(spacing: 10) {
-                        planCard(.lifetime, "Lifetime access", "One-time purchase. No renewal.", price: "$—.—", badge: "BEST VALUE")
-                        planCard(.yearly, "Yearly", "[Intro offer] then billed yearly", price: "$—.— / yr", badge: nil)
-                    }
-
-                    VStack(spacing: 6) {
-                        // Live StoreKit prices, offers and purchase states arrive in M9b.
-                        PrimaryButton(plan == .lifetime ? "Get lifetime access" : "Start Premium") {
-                            Task {
-                                _ = try? await entitlements.purchase(plan == .lifetime ? .lifetime : .yearly)
-                                if entitlements.isPremium { dismiss() }
-                            }
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: 0) {
+                    PaywallHero(windowRatio: heroRatio)
+                    VStack(alignment: .leading, spacing: spacing) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("RETROGRADE PREMIUM").retroText(.mono).foregroundStyle(RetroColor.pink)
+                            Text("FULL BACKUP,\nEVERY CYCLE.").retroText(.hero).foregroundStyle(RetroColor.text).accessibilityAddTraits(.isHeader)
                         }
-                        Text("Preview — prices and terms connect in the next step.")
-                            .retroText(.finePrint)
-                            .foregroundStyle(RetroColor.textMuted)
-                    }
-                    Button("Continue free") { dismiss() }
-                        .retroText(.bodyStrong)
-                        .foregroundStyle(RetroColor.text)
-                        .frame(maxWidth: .infinity, minHeight: 44)
+                        Text("The whole Survival Kit and every day of the calendar. Same cosmos, a lot more backup.")
+                            .retroText(.bodyLarge).foregroundStyle(RetroColor.textMuted)
 
-                    VStack(spacing: 8) {
-                        HStack(spacing: 6) {
-                            Button("RESTORE PURCHASES") {
-                                Task {
-                                    try? await entitlements.restorePurchases()
-                                    if entitlements.isPremium { dismiss() }
-                                }
-                            }
-                            Text("·  TERMS  ·  PRIVACY")
+                        VStack(alignment: .leading, spacing: benefitSpacing) {
+                            benefit(RetroSymbol.firstAid, "All 27 Survival Kit tasks", "Not just the first one in each section.")
+                            benefit(RetroSymbol.planning, "Every calendar day, in detail", "Plan past the next four days — weeks ahead.")
+                            benefit(RetroSymbol.moon, "The full sky behind each day", "Retrogrades, shadows and moon phases, explained.")
+                            benefit(RetroSymbol.heart, "No ads. No account. Ever.", "Your progress stays on your phone.")
                         }
-                        .retroText(.monoSmall)
-                        Text("Yearly access auto-renews until cancelled. Lifetime access is a one-time purchase. Cancel Yearly anytime in Settings › Apple Account › Subscriptions.")
-                            .retroText(.finePrint)
-                            .multilineTextAlignment(.center)
+
+                        PlanList(flow: flow)
+                        if let message = flow.flatMap({ StatusBanner.message(for: $0.phase) }) {
+                            StatusBanner(phase: flow!.phase, message: message)
+                        }
+                        PurchaseButton(flow: flow) { await buy() }
+
+                        Button("Continue free") { dismiss() }
+                            .retroText(.bodyStrong)
+                            .foregroundStyle(RetroColor.text)
+                            .frame(maxWidth: .infinity, minHeight: 44)
+
+                        LegalRow(flow: flow) { await restore() }
+                            .id(Self.bottomID)
                     }
-                    .foregroundStyle(RetroColor.textMuted)
-                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, RetroMetrics.screenPadding)
+                    .padding(.top, -headlineOverlap) // the headline sits on the artwork's faded edge
+                    .padding(.bottom, 24)
                 }
-                .padding(.horizontal, RetroMetrics.screenPadding)
-                .padding(.top, -headlineOverlap) // the headline sits on the artwork's faded edge
-                .padding(.bottom, 24)
             }
+            #if DEBUG
+            .onAppear { PaywallDebug.scrollToBottom = { proxy.scrollTo(Self.bottomID, anchor: .bottom) } }
+            #endif
         }
         .ignoresSafeArea(edges: .top)
         .retroScreenBackground()
@@ -115,6 +115,18 @@ struct PaywallView: View {
         }
     }
 
+    private static let bottomID = "paywall-bottom"
+
+    private func buy() async {
+        guard let flow, await flow.purchase() else { return }
+        dismiss()
+    }
+
+    private func restore() async {
+        guard let flow, await flow.restore() else { return }
+        dismiss()
+    }
+
     private func benefit(_ icon: String, _ title: String, _ detail: String) -> some View {
         HStack(spacing: 12) {
             IconChip(systemImage: icon)
@@ -125,32 +137,206 @@ struct PaywallView: View {
         }
         .accessibilityElement(children: .combine)
     }
+}
 
-    private func planCard(_ option: Plan, _ name: String, _ detail: String, price: String, badge: String?) -> some View {
-        let selected = plan == option
-        return Button { plan = option } label: {
+#if DEBUG
+/// Hooks for the screenshot tour (RetrogradeTests); not compiled into release builds.
+@MainActor
+enum PaywallDebug {
+    static weak var flow: PurchaseFlow?
+    static var scrollToBottom: (() -> Void)?
+}
+#endif
+
+/// Lifetime and Yearly cards with live prices; placeholders while loading; a retry when unavailable.
+private struct PlanList: View {
+    let flow: PurchaseFlow?
+
+    var body: some View {
+        let phase = flow?.phase ?? .loading
+        VStack(spacing: 10) {
+            switch phase {
+            case .loading:
+                ForEach(PremiumPlan.paywallOrder, id: \.self) { plan in
+                    PlanCard(plan: plan, offer: nil, selected: plan == .lifetime, enabled: false) {}
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Loading prices")
+            case .unavailable:
+                Unavailable { Task { await flow?.load() } }
+            default:
+                if let flow {
+                    ForEach(PremiumPlan.paywallOrder, id: \.self) { plan in
+                        PlanCard(plan: plan, offer: flow.offers[plan], selected: flow.selectedPlan == plan, enabled: !flow.isBusy && flow.offers[plan] != nil) {
+                            flow.select(plan)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct PlanCard: View {
+    let plan: PremiumPlan
+    let offer: PlanOffer?
+    let selected: Bool
+    let enabled: Bool
+    let action: () -> Void
+
+    var body: some View {
+        let bestValue = plan == .lifetime
+        Button(action: action) {
             HStack(spacing: 12) {
                 Circle()
                     .strokeBorder(selected ? RetroColor.pink : RetroColor.textMuted, lineWidth: selected ? 6 : 1.5)
                     .frame(width: 20, height: 20)
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 8) {
-                        Text(name).retroText(.button).foregroundStyle(RetroColor.text)
-                        if let badge { Badge(badge) }
-                    }
-                    Text(detail).retroText(.body).foregroundStyle(RetroColor.textMuted)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) { labels(bestValue: bestValue); Spacer(minLength: 8); price }
+                    VStack(alignment: .leading, spacing: 4) { labels(bestValue: bestValue); price }
                 }
-                Spacer(minLength: 8)
-                Text(price).font(RetroTextStyle.monoBold.font).foregroundStyle(RetroColor.text)
             }
             .padding(.vertical, 14)
             .padding(.horizontal, 16)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(selected ? RetroColor.wine : RetroColor.surface, in: RoundedRectangle(cornerRadius: RetroMetrics.Radius.card))
             .overlay(RoundedRectangle(cornerRadius: RetroMetrics.Radius.card).strokeBorder(selected ? RetroColor.pink : RetroColor.line, lineWidth: selected ? 2 : 1))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .disabled(!enabled)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(offer.map { PaywallCopy.accessibilityLabel($0, bestValue: bestValue) } ?? "\(PaywallCopy.planName(plan)), unavailable")
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
+    }
+
+    private func labels(bestValue: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 8) {
+                Text(PaywallCopy.planName(plan)).retroText(.button).foregroundStyle(RetroColor.text)
+                if bestValue { Badge("BEST VALUE") }
+            }
+            Text(offer.map(PaywallCopy.planDetail) ?? "Loading price…")
+                .retroText(.body)
+                .foregroundStyle(RetroColor.textMuted)
+                .redacted(reason: offer == nil ? .placeholder : [])
+        }
+    }
+
+    @ViewBuilder private var price: some View {
+        if let offer {
+            Text(PaywallCopy.priceLabel(offer)).font(RetroTextStyle.monoBold.font).foregroundStyle(RetroColor.text)
+        } else {
+            ProgressView().tint(RetroColor.textMuted)
+        }
+    }
+}
+
+private struct Unavailable: View {
+    let retry: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Prices aren’t available right now").retroText(.bodyStrong).foregroundStyle(RetroColor.text)
+            Text("We couldn’t reach the App Store. Check your connection and try again — nothing has been charged.")
+                .retroText(.body).foregroundStyle(RetroColor.textMuted)
+            SecondaryButton("Try again", systemImage: RetroSymbol.restart, action: retry)
+        }
+        .retroCard()
+    }
+}
+
+/// Pending approval, failed purchase or restore, nothing to restore.
+private struct StatusBanner: View {
+    let phase: PurchaseFlow.Phase
+    let message: String
+
+    static func message(for phase: PurchaseFlow.Phase) -> String? {
+        switch phase {
+        case .pending: "Waiting for approval. Premium unlocks automatically as soon as it’s approved."
+        case .purchaseFailed: "The purchase didn’t go through and you haven’t been charged. Please try again."
+        case .restoreFailed: "Couldn’t reach the App Store to restore. Check your connection and try again."
+        case .nothingToRestore: "No Premium purchase was found for this Apple Account."
+        default: nil
+        }
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: phase == .pending ? "hourglass" : "exclamationmark.circle")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(phase == .pending ? RetroColor.yellow : RetroColor.pink)
+            Text(message).retroText(.body).foregroundStyle(RetroColor.text)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(12)
+        .background(RetroColor.surface, in: RoundedRectangle(cornerRadius: RetroMetrics.Radius.button))
+        .overlay(RoundedRectangle(cornerRadius: RetroMetrics.Radius.button).strokeBorder(RetroColor.line, lineWidth: 1))
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// The purchase button for the selected plan, with that plan's terms underneath.
+private struct PurchaseButton: View {
+    let flow: PurchaseFlow?
+    let action: () async -> Void
+
+    var body: some View {
+        let purchasing: Bool = if case .purchasing = flow?.phase { true } else { false }
+        let enabled = flow?.canPurchase ?? false
+        let plan = flow?.selectedPlan ?? .lifetime
+        VStack(spacing: 8) {
+            PrimaryButton(purchasing ? "Processing…" : PaywallCopy.buttonTitle(plan)) {
+                Task { await action() }
+            }
+            .overlay(alignment: .leading) {
+                if purchasing { ProgressView().tint(RetroColor.text).padding(.leading, 20) }
+            }
+            .disabled(!enabled)
+            .opacity(enabled || purchasing ? 1 : 0.55)
+            .accessibilityHint(purchasing ? "Processing your purchase" : "")
+            if let offer = flow?.selectedOffer, flow?.phase != .unavailable {
+                Text(PaywallCopy.disclosure(offer))
+                    .retroText(.finePrint)
+                    .foregroundStyle(RetroColor.textMuted)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+    }
+}
+
+/// Restore Purchases · Terms · Privacy (Privacy appears once its URL is configured).
+private struct LegalRow: View {
+    let flow: PurchaseFlow?
+    let restore: () async -> Void
+
+    var body: some View {
+        let restoring = flow?.phase == .restoring
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 6) { links(restoring: restoring, separator: true) }
+            VStack(spacing: 8) { links(restoring: restoring, separator: false) }
+        }
+        .retroText(.monoSmall)
+        .foregroundStyle(RetroColor.textMuted)
+        .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder private func links(restoring: Bool, separator: Bool) -> some View {
+        Button(restoring ? "RESTORING…" : "RESTORE PURCHASES") { Task { await restore() } }
+            .disabled(flow?.isBusy ?? true)
+            .frame(minHeight: 44)
+        if separator { Text("·").accessibilityHidden(true) }
+        Link("TERMS", destination: AppLinks.termsOfUse).frame(minHeight: 44)
+        if let privacy = AppLinks.privacyPolicy {
+            if separator { Text("·").accessibilityHidden(true) }
+            Link("PRIVACY", destination: privacy).frame(minHeight: 44)
+        } else {
+            #if DEBUG
+            if separator { Text("·").accessibilityHidden(true) }
+            Text("PRIVACY (URL NOT SET)").foregroundStyle(RetroColor.pink).frame(minHeight: 44)
+            #endif
+        }
     }
 }
 

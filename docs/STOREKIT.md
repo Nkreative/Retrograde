@@ -46,17 +46,26 @@ Restore's sign-in dialog can't run unattended, so Restore is covered by the rein
 ### Before local StoreKit testing
 Nothing — `StoreKit/Retrograde.storekit` is in the project and the Retrograde scheme uses it.
 
+### Current App Store Connect status (2026-11-04)
+
+| Item | Status |
+|---|---|
+| Apple Developer enrollment | Individual |
+| Paid Apps Agreement | Active |
+| Bundle ID `com.nkreative.retrograde` | Registered |
+| Yearly `com.nkreative.retrograde.premium.yearly` | Created — US $9.99/year; 7-day free trial configured for the **US and Canada** |
+| Lifetime `com.nkreative.retrograde.premium.lifetime` | Created — US $19.99 |
+| Submission | Both products created, **not yet submitted** for review (they go with the first app version) |
+
+Because the trial is configured only for the US and Canada, customers in other countries see the Yearly price without trial wording — the app shows the trial only when StoreKit returns an introductory offer for the person's storefront *and* confirms they're eligible. The local test file (`StoreKit/Retrograde.storekit`) has no territory restriction, so local tests always see the trial for new subscribers.
+
 ### Before Sandbox testing (on your iPhone)
-1. **Decide the legal entity first** (see below): it determines who signs the agreements and which tax and bank details are used.
-2. **Agreements, Tax and Banking:** accept the Paid Apps Agreement; complete tax forms and bank account. Products won't load in Sandbox until this is active.
-3. **Certificates, Identifiers & Profiles → Identifiers:** register App ID `com.nkreative.retrograde` (explicit). In-App Purchase is included. If it's taken, stop and tell me — it's permanent.
-4. **App Store Connect → Apps → New App:** iOS, name "Retrograde" (must be unique on the App Store; have a fallback ready), English (U.S.), bundle ID above, a SKU such as `RETROGRADE-IOS`.
-5. **Monetization → In-App Purchases → +:** Non-Consumable, reference name "Retrograde Premium – Lifetime", product ID as above, price $19.99 (US base, other countries automatic), Family Sharing off, English display name and description.
-6. **Monetization → Subscriptions → +:** group "Retrograde Premium" (add an English group display name), then subscription "Retrograde Premium – Yearly", product ID as above, duration 1 year, price $9.99, all countries, Family Sharing off, English display name and description.
-7. **Yearly → Introductory Offers → +:** Free, 1 week, all countries, new subscribers.
-8. **Subscriptions → Billing Grace Period:** on, 16 days. Choose whether it covers all renewals or only paid-to-paid renewals (the latter excludes the trial's first charge).
-9. **Users and Access → Sandbox → Test Accounts:** create one or two testers with unused email addresses, region United States.
-10. **On the iPhone:** Settings › Developer › Sandbox Apple Account → sign in with a tester. Run from Xcode with your team selected; for Sandbox, set the scheme's StoreKit Configuration to None (I'll add a separate Sandbox scheme in M9b).
+Done: legal entity decision (individual for now), Paid Apps Agreement, bundle ID, both products.
+Still to check or do:
+1. **Billing Grace Period:** confirm it's on (16 days) and which renewals it covers.
+2. **Product metadata:** each product has an English display name and description; the group "Retrograde Premium" has a display name.
+3. **Users and Access → Sandbox → Test Accounts:** create one or two testers with unused email addresses (one US, optionally one Canada to see the trial, and one elsewhere to see no trial).
+4. **On the iPhone:** Settings › Developer › Sandbox Apple Account → sign in with a tester. Run from Xcode with your team selected, using a scheme whose StoreKit Configuration is None (a separate Sandbox scheme is planned).
 
 ### Before TestFlight
 11. **App icon:** a 1024×1024 icon is required to upload — none exists yet.
@@ -72,9 +81,9 @@ Nothing — `StoreKit/Retrograde.storekit` is in the project and the Retrograde 
 19. **In-App Purchases on the version:** first-time products must be added to the version and submitted with it; each needs a review screenshot of the paywall.
 20. **Pricing and Availability:** app free; all countries (or as decided).
 
-## Legal entity — decide before step 2
+## Legal entity
 
-Your Apple Developer membership is **individual**, while your business is **NKreative LLC**.
+Your Apple Developer membership is **individual** (Paid Apps Agreement signed as an individual), while your business is **NKreative LLC**. Revisit this before the first App Store submission:
 
 - On an individual account the App Store shows **your personal legal name** as the developer and seller, not NKreative LLC. You personally are the party to Apple's agreements, and the tax forms and bank account are in your name.
 - To sell as **NKreative LLC**, the membership must be an **organization** (needs a D-U-N-S number for the LLC, a business website/domain, and authority to bind the company). Apple Developer Support can convert an existing individual membership to an organization, keeping the account and apps; this is much simpler before the first release than after.

@@ -194,6 +194,56 @@ import Testing
         try await session.setSimulatedError(nil, forAPI: .subscriptionStatus)
     }
 
+    // MARK: Paywall offers and purchase flow (M9b)
+
+    @Test func offersShowLocalizedPricesAndTheTrialForNewSubscribers() async throws {
+        let offers = Dictionary(uniqueKeysWithValues: try await store.offers().map { ($0.plan, $0) })
+        #expect(offers[.lifetime] == PlanOffer(plan: .lifetime, displayPrice: "$19.99"))
+        let yearly = try #require(offers[.yearly])
+        #expect(yearly.displayPrice == "$9.99")
+        #expect(yearly.billingPeriod == BillingPeriod(value: 1, unit: .year))
+        #expect(yearly.freeTrial == BillingPeriod(value: 1, unit: .week))
+        #expect(PaywallCopy.planDetail(yearly) == "7 days free, then $9.99/year")
+    }
+
+    @Test func noTrialForSomeoneWhoAlreadySubscribed() async throws {
+        try await buy(yearlyID)
+        _ = try await expireYearly()
+        let yearly = try #require(try await store.offers().first { $0.plan == .yearly })
+        #expect(yearly.freeTrial == nil)
+        #expect(!PaywallCopy.planDetail(yearly).localizedCaseInsensitiveContains("free"))
+    }
+
+    @Test func purchaseFlowEndToEnd() async throws {
+        let flow = PurchaseFlow(store: store)
+        await flow.load()
+        #expect(flow.phase == .ready && flow.selectedPlan == .lifetime)
+        flow.select(.yearly)
+        #expect(await flow.purchase())
+        #expect(store.isPremium)
+        guard case .yearly = store.status else { Issue.record("\(store.status)"); return }
+    }
+
+    @Test func productsUnavailableThenRetry() async throws {
+        try await session.setSimulatedError(.generic(.networkError(URLError(.notConnectedToInternet))), forAPI: .loadProducts)
+        let flow = PurchaseFlow(store: store)
+        await flow.load()
+        #expect(flow.phase == .unavailable && !flow.canPurchase)
+        try await session.setSimulatedError(nil, forAPI: .loadProducts)
+        await flow.load()
+        #expect(flow.phase == .ready && flow.canPurchase)
+    }
+
+    @Test func purchaseErrorLeavesTheFlowRecoverable() async throws {
+        let flow = PurchaseFlow(store: store)
+        await flow.load()
+        try await session.setSimulatedError(.generic(.networkError(URLError(.notConnectedToInternet))), forAPI: .purchase)
+        #expect(await flow.purchase() == false)
+        #expect(flow.phase == .purchaseFailed && !store.isPremium)
+        try await session.setSimulatedError(nil, forAPI: .purchase)
+        #expect(await flow.purchase())
+    }
+
     /// Restore's App Store sync asks the person to sign in, so it can't run unattended; these cover
     /// what it relies on. The sign-in itself is checked by hand in Sandbox (see the M9 test plan).
     @Test func purchasesAreReadFromStoreKitNotFromTheApp() async throws {
