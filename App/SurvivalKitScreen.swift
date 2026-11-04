@@ -11,6 +11,7 @@ import SwiftUI
 struct SurvivalKitTab: View {
     var now: Date?
     @State private var path: [KitTask] = []
+    @Environment(AppRouter.self) private var router
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -25,6 +26,8 @@ struct SurvivalKitTab: View {
                 .toolbar(.hidden, for: .navigationBar)
             }
         }
+        // Back to the list when a notification points at a section.
+        .onChange(of: router.kitFocus) { _, id in if id != nil { path = [] } }
         #if DEBUG
         .onAppear {
             // `-openTask <task id>` opens a task directly, for review screenshots.
@@ -42,6 +45,7 @@ struct SurvivalKitScreen: View {
     @Environment(CompletionStore.self) private var completions
     @Environment(EntitlementStore.self) private var premium
     @Environment(PaywallPresenter.self) private var paywall
+    @Environment(AppRouter.self) private var router
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Sections the person has expanded; all start collapsed.
     @State private var expanded: Set<String> = Self.initiallyExpanded
@@ -73,6 +77,7 @@ struct SurvivalKitScreen: View {
                                 onToggle: { toggle(section.id) },
                                 onLocked: paywall.present
                             )
+                            .id(section.id)
                         }
                         if !premium.isPremium {
                             PremiumNudge(lockedCount: policy.lockedCount(in: kit, isPremium: false), action: paywall.present)
@@ -83,6 +88,13 @@ struct SurvivalKitScreen: View {
                 .padding(.top, 12)
                 .padding(.bottom, 20)
                 .id(Self.contentID)
+            }
+            // A tapped notification asked for a section: expand it and scroll to it.
+            .onChange(of: router.kitFocus) { _, id in
+                guard let id else { return }
+                expanded.insert(id)
+                withAnimation(reduceMotion ? nil : .easeInOut) { proxy.scrollTo(id, anchor: .top) }
+                router.kitFocus = nil
             }
             #if DEBUG
             .onAppear {

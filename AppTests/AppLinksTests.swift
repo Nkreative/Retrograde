@@ -17,12 +17,6 @@ import Testing
         }
     }
 
-    @Test func supportFallsBackToEmail() {
-        // With neither set, Contact Support is hidden rather than pointing somewhere invented.
-        if AppLinks.supportPage == nil && AppLinks.supportEmail == nil { #expect(AppLinks.support == nil) }
-        if AppLinks.supportPage == nil, let email = AppLinks.supportEmail { #expect(AppLinks.support?.absoluteString == "mailto:\(email)") }
-    }
-
     @Test func operatorAndVersion() {
         #expect(AppLinks.appOperator == "NKreative LLC")
         #expect(AppLinks.versionDescription.range(of: #"^\d+(\.\d+)* \(\d+\)$"#, options: .regularExpression) != nil)

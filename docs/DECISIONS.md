@@ -2,6 +2,13 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-04 (M9c follow-up: Notification Center, preferences, legal pages)
+
+- **Two destinations:** bell → Notification Center (history); gear → Settings. Settings has a Notifications row leading to the preferences page; the toggles no longer sit in Settings itself. A pink dot on the bell marks unread notifications.
+- **Notification Center** (`NotificationHistory`, Notifications module): newest first, title/message/time/icon, read and unread, Mark all as read, "You're all caught up." empty state, tapping opens the related Calendar day (month view for past days) or Survival Kit section. Persisted on device. It never invents entries: M11 records each alert it schedules under a stable per-event id (so rescheduling or relaunching never duplicates), entries appear only once their time has passed, and delivery is tracked as scheduled / due (time passed, delivery unknown) / delivered (only when iOS reports it). Sample entries exist only in debug builds (`-sampleNotifications YES`).
+- **Preferences** (approved mockup): Mercury — turns retrograde (on), turns direct (on), 2 weeks and 3 days before it turns retrograde (on), 2 weeks and 3 days before it turns direct (off); Survival Kit — new cycle's tasks (on), every other day if unfinished (off). Edited as a draft and saved with Save preferences. Shows iOS permission status without prompting, with Open iOS Settings when denied. The first M9c version's choices migrate (its starts/ends toggles keep their saved on/off; "daily guidance" has no counterpart in the approved set and is dropped). Lead times are one constant (`NotificationKind.leadTimes`) — the request said "2 days"; the mockup and the Nov 2 decision say 2 weeks, which is what's used.
+- **In-app legal and support:** Privacy Policy and Terms open in an in-app web page (loading, error, retry, open-in-Safari) — the same destinations from Settings and the paywall; Terms is Apple's EULA. Contact Support is a native page with an email action and copy-address fallback when no mail app is set up, plus the support page if configured. Privacy and Support appear only once configured; nothing is invented.
+
 ## 2026-11-04 (M9c Settings)
 
 - **Opening Settings:** the existing header gear (top-right on every screen, approved in M3) opens Settings as a sheet with native navigation; the bell opens it too until M11 gives notifications their own screen. No Settings tab. The debug Premium simulator moved into Settings › Developer (debug builds only).

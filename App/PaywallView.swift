@@ -333,10 +333,12 @@ private struct PurchaseButton: View {
     }
 }
 
-/// Restore Purchases · Terms · Privacy (Privacy appears once its URL is configured).
+/// Restore Purchases · Terms · Privacy (Privacy appears once its URL is configured). Terms and
+/// Privacy open the same in-app pages as Settings.
 private struct LegalRow: View {
     let flow: PurchaseFlow?
     let restore: () async -> Void
+    @State private var legalPage: LegalPage?
 
     var body: some View {
         let restoring = flow?.phase == .restoring
@@ -347,6 +349,18 @@ private struct LegalRow: View {
         .retroText(.monoSmall)
         .foregroundStyle(RetroColor.textMuted)
         .frame(maxWidth: .infinity)
+        .sheet(item: $legalPage) { page in
+            if let url = page.url {
+                NavigationStack {
+                    WebPageView(title: page.title, url: url)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) { Button("Done") { legalPage = nil } }
+                        }
+                }
+                .tint(RetroColor.pink)
+                .preferredColorScheme(.dark)
+            }
+        }
     }
 
     @ViewBuilder private func links(restoring: Bool, separator: Bool) -> some View {
@@ -354,10 +368,10 @@ private struct LegalRow: View {
             .disabled(flow?.isBusy ?? true)
             .frame(minHeight: 44)
         if separator { Text("·").accessibilityHidden(true) }
-        Link("TERMS", destination: AppLinks.termsOfUse).frame(minHeight: 44)
-        if let privacy = AppLinks.privacyPolicy {
+        Button("TERMS") { legalPage = .terms }.frame(minHeight: 44)
+        if LegalPage.privacy.url != nil {
             if separator { Text("·").accessibilityHidden(true) }
-            Link("PRIVACY", destination: privacy).frame(minHeight: 44)
+            Button("PRIVACY") { legalPage = .privacy }.frame(minHeight: 44)
         } else {
             #if DEBUG
             if separator { Text("·").accessibilityHidden(true) }

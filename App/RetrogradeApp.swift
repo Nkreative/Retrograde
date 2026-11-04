@@ -11,6 +11,7 @@ struct RetrogradeApp: App {
     @State private var completions: CompletionStore
     @State private var entitlements = AppEntitlements.make()
     @State private var notificationPreferences = NotificationPreferences()
+    @State private var notificationHistory = Self.makeHistory()
 
     init() {
         RetroFonts.register()
@@ -31,6 +32,19 @@ struct RetrogradeApp: App {
         _completions = State(initialValue: store)
     }
 
+    /// The on-device notification history. Debug builds launched with `-sampleNotifications YES`
+    /// use an in-memory history with sample entries instead (screenshots only).
+    private static func makeHistory() -> NotificationHistory {
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "sampleNotifications") {
+            let history = NotificationHistory(defaults: nil)
+            history.debugReplace(with: SampleNotifications.records())
+            return history
+        }
+        #endif
+        return NotificationHistory()
+    }
+
     /// When the app only hosts the StoreKit tests, it stays out of their way: no listener of its own
     /// reading or finishing the tests' transactions.
     private static var isHostingTests: Bool {
@@ -47,6 +61,7 @@ struct RetrogradeApp: App {
                 .environment(completions)
                 .environment(entitlements)
                 .environment(notificationPreferences)
+                .environment(notificationHistory)
                 .preferredColorScheme(.dark)
                 // Verified entitlements at launch, then live updates; re-checked on every return to the app.
                 .task { if !Self.isHostingTests { await entitlements.start() } }

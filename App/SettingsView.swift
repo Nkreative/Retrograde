@@ -1,34 +1,60 @@
 import DesignSystem
 import Entitlements
-import Notifications
 import StoreKit
 import SwiftUI
 
-/// Settings, opened from the gear in the header: Premium, notification choices, how Retrograde
-/// works, and About & Support. Native list and navigation, in Retrograde's dark style.
+/// Where Settings can navigate. Routes (not inline links) keep navigation testable and let debug
+/// builds open a page directly.
+enum SettingsRoute: Hashable {
+    case notifications
+    case methodology
+    case sources
+    case legal(LegalPage)
+    case support
+    #if DEBUG
+    case premiumSimulator
+    #endif
+
+    /// The page shown for a route, or nil if it isn't available (e.g. a URL not yet configured).
+    static func availability(of route: SettingsRoute) -> Bool {
+        switch route {
+        case let .legal(page): page.url != nil
+        case .support: SupportContact.configured.isAvailable
+        default: true
+        }
+    }
+}
+
+/// Settings, opened from the gear in the header: Premium, Notifications, how Retrograde works,
+/// and About & Support. Native list and navigation, in Retrograde's dark style.
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(EntitlementStore.self) private var entitlements
     @Environment(PaywallPresenter.self) private var paywall
-    @Environment(NotificationPreferences.self) private var notifications
+    @State private var path: [SettingsRoute] = Self.initialPath
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ScrollViewReader { proxy in
             List {
                 PremiumSection(onUpgrade: openPaywall)
-                NotificationsSection(preferences: notifications)
                 Section {
-                    NavigationLink { MethodologyView() } label: { Text("How we rate each day").retroText(.bodyLarge) }
-                    NavigationLink { SourcesView() } label: { Text("Where our sky data comes from").retroText(.bodyLarge) }
+                    row(.notifications, "Notifications", icon: RetroSymbol.notifications)
+                } header: {
+                    SectionHeader("Alerts")
+                }
+                .listRowBackground(RetroColor.surface)
+                Section {
+                    row(.methodology, "How we rate each day")
+                    row(.sources, "Where our sky data comes from")
                 } header: {
                     SectionHeader("How it works")
                 }
                 .listRowBackground(RetroColor.surface)
-                AboutSection().id(Self.aboutID)
+                AboutSection(row: { route, title, icon in row(route, title, icon: icon) }).id(Self.aboutID)
                 #if DEBUG
                 Section {
-                    NavigationLink("Premium simulator") { PremiumSimulatorView() }
+                    row(.premiumSimulator, "Premium simulator")
                 } header: {
                     SectionHeader("Developer (debug builds only)")
                 }
@@ -47,6 +73,7 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: SettingsRoute.self, destination: destination)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }.fontWeight(.semibold)
@@ -55,6 +82,45 @@ struct SettingsView: View {
         }
         .tint(RetroColor.pink)
         .preferredColorScheme(.dark)
+    }
+
+    private func row(_ route: SettingsRoute, _ title: String, icon: String? = nil) -> some View {
+        NavigationLink(value: route) {
+            HStack(spacing: 12) {
+                if let icon { Image(systemName: icon).frame(width: 22).foregroundStyle(RetroColor.pink).accessibilityHidden(true) }
+                Text(title).retroText(.bodyLarge).foregroundStyle(RetroColor.text)
+            }
+            .frame(minHeight: 44)
+        }
+    }
+
+    @ViewBuilder private func destination(_ route: SettingsRoute) -> some View {
+        switch route {
+        case .notifications: NotificationPreferencesView()
+        case .methodology: MethodologyView()
+        case .sources: SourcesView()
+        case let .legal(page):
+            if let url = page.url { WebPageView(title: page.title, url: url) }
+        case .support: SupportView(contact: .configured)
+        #if DEBUG
+        case .premiumSimulator: PremiumSimulatorView()
+        #endif
+        }
+    }
+
+    private static var initialPath: [SettingsRoute] {
+        #if DEBUG
+        // `-settingsPath notifications|terms|privacy|support` opens a page directly, for review.
+        switch UserDefaults.standard.string(forKey: "settingsPath") {
+        case "notifications": return [.notifications]
+        case "terms": return [.legal(.terms)]
+        case "privacy": return [.legal(.privacy)]
+        case "support": return [.support]
+        default: return []
+        }
+        #else
+        return []
+        #endif
     }
 
     private static let aboutID = "about"
@@ -187,50 +253,21 @@ private struct PremiumSection: View {
     }
 }
 
-// MARK: - Notifications
-
-private struct NotificationsSection: View {
-    @Bindable var preferences: NotificationPreferences
-
-    var body: some View {
-        Section {
-            toggle(.retrogradeStarts, "Retrograde begins", "When a planet turns retrograde.")
-            toggle(.retrogradeEnds, "Retrograde ends", "When a planet turns direct again.")
-            toggle(.dailyGuidance, "Daily cosmic guidance", "One note a day with the intensity and a habit.")
-        } header: {
-            SectionHeader("Notifications")
-        } footer: {
-            Text("Alerts arrive in an upcoming update. Your choices are saved now, and we’ll only ask for notification permission once alerts are ready.")
-                .retroText(.body).foregroundStyle(RetroColor.textMuted)
-        }
-        .listRowBackground(RetroColor.surface)
-    }
-
-    private func toggle(_ kind: NotificationKind, _ title: String, _ detail: String) -> some View {
-        Toggle(isOn: Binding(get: { preferences.isEnabled(kind) }, set: { preferences.set(kind, $0) })) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).retroText(.bodyLarge).foregroundStyle(RetroColor.text)
-                Text(detail).retroText(.body).foregroundStyle(RetroColor.textMuted)
-            }
-        }
-        .padding(.vertical, 2)
-        .accessibilityHint("Saved for when alerts are available")
-    }
-}
-
 // MARK: - About & Support
 
-private struct AboutSection: View {
+private struct AboutSection<Row: View>: View {
+    let row: (SettingsRoute, String, String?) -> Row
+
     var body: some View {
         Section {
-            if let privacy = AppLinks.privacyPolicy {
-                linkRow("Privacy Policy", privacy)
+            if SettingsRoute.availability(of: .legal(.privacy)) {
+                row(.legal(.privacy), "Privacy Policy", nil)
             } else {
                 missing("Privacy Policy")
             }
-            linkRow("Terms of Use", AppLinks.termsOfUse)
-            if let support = AppLinks.support {
-                linkRow("Contact Support", support)
+            row(.legal(.terms), "Terms of Use", nil)
+            if SettingsRoute.availability(of: .support) {
+                row(.support, "Contact Support", nil)
             } else {
                 missing("Contact Support")
             }
@@ -239,6 +276,7 @@ private struct AboutSection: View {
             } label: {
                 Text("Version").retroText(.bodyLarge).foregroundStyle(RetroColor.text)
             }
+            .frame(minHeight: 44)
             .accessibilityElement(children: .combine)
         } header: {
             SectionHeader("About & Support")
@@ -249,25 +287,13 @@ private struct AboutSection: View {
         .listRowBackground(RetroColor.surface)
     }
 
-    private func linkRow(_ title: String, _ url: URL) -> some View {
-        Link(destination: url) {
-            HStack {
-                Text(title).retroText(.bodyLarge).foregroundStyle(RetroColor.text)
-                Spacer()
-                Image(systemName: RetroSymbol.externalLink).font(.footnote).foregroundStyle(RetroColor.textMuted).accessibilityHidden(true)
-            }
-            .frame(minHeight: 44)
-        }
-        .accessibilityHint("Opens in Safari")
-    }
-
-    /// A link without its URL yet: shown in debug builds as a reminder, hidden in release builds.
+    /// A page without its URL/contact yet: flagged in debug builds, hidden in release builds.
     @ViewBuilder private func missing(_ title: String) -> some View {
         #if DEBUG
         HStack {
             Text(title).retroText(.bodyLarge).foregroundStyle(RetroColor.textMuted)
             Spacer()
-            Text("URL NOT SET").retroText(.monoSmall).foregroundStyle(RetroColor.pink)
+            Text("NOT SET").retroText(.monoSmall).foregroundStyle(RetroColor.pink)
         }
         .frame(minHeight: 44)
         #endif

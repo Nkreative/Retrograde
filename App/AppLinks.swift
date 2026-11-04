@@ -17,11 +17,6 @@ enum AppLinks {
     /// account is individual, so the App Store lists the account holder.
     static let appOperator = "NKreative LLC"
 
-    /// Contact support: the support page if set, else a mail link if an email is set.
-    static var support: URL? {
-        supportPage ?? supportEmail.flatMap { URL(string: "mailto:\($0)") }
-    }
-
     /// "1.0 (1)" from the bundle.
     static var versionDescription: String {
         let info = Bundle.main.infoDictionary

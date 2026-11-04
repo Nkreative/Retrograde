@@ -11,6 +11,7 @@ struct CalendarScreen: View {
     let now: Date
     @Environment(EntitlementStore.self) private var premium
     @Environment(PaywallPresenter.self) private var paywall
+    @Environment(AppRouter.self) private var router
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var selected: CalendarDay?
@@ -80,6 +81,14 @@ struct CalendarScreen: View {
         #endif
         }
         .retroScreenBackground()
+        // A tapped notification asked for a day: select it (past days need the month view).
+        .onChange(of: router.calendarFocus) { _, day in
+            guard let day else { return }
+            selected = day
+            anchor = day
+            if day < CalendarDay(now, in: .autoupdatingCurrent) { expanded = true }
+            router.calendarFocus = nil
+        }
         #if DEBUG
         .onAppear {
             // `-selectDay 2026-11-07` selects a day; `-calendarExpanded YES` opens the month view.

@@ -7,11 +7,14 @@ public struct AppHeader: View {
     let onShare: () -> Void
     let onNotifications: () -> Void
     let onSettings: () -> Void
+    /// Shows a dot on the bell when the Notification Center has unread items.
+    let hasUnreadNotifications: Bool
 
-    public init(onShare: @escaping () -> Void, onNotifications: @escaping () -> Void, onSettings: @escaping () -> Void) {
+    public init(onShare: @escaping () -> Void, onNotifications: @escaping () -> Void, onSettings: @escaping () -> Void, hasUnreadNotifications: Bool = false) {
         self.onShare = onShare
         self.onNotifications = onNotifications
         self.onSettings = onSettings
+        self.hasUnreadNotifications = hasUnreadNotifications
     }
 
     public var body: some View {
@@ -45,7 +48,8 @@ public struct AppHeader: View {
             Spacer(minLength: 8)
             HStack(spacing: spacing) {
                 HeaderIconButton(systemImage: RetroSymbol.share, label: "Share Retrograde", size: buttonSize, action: onShare)
-                HeaderIconButton(systemImage: RetroSymbol.notifications, label: "Notifications", size: buttonSize, action: onNotifications)
+                HeaderIconButton(systemImage: RetroSymbol.notifications, label: hasUnreadNotifications ? "Notifications, unread" : "Notifications",
+                                 size: buttonSize, showsBadge: hasUnreadNotifications, action: onNotifications)
                 HeaderIconButton(systemImage: RetroSymbol.settings, label: "Settings", size: buttonSize, action: onSettings)
             }
         }
@@ -57,12 +61,14 @@ public struct HeaderIconButton: View {
     let systemImage: String
     let label: String
     let size: CGFloat
+    let showsBadge: Bool
     let action: () -> Void
 
-    public init(systemImage: String, label: String, size: CGFloat = RetroMetrics.headerButtonSize, action: @escaping () -> Void) {
+    public init(systemImage: String, label: String, size: CGFloat = RetroMetrics.headerButtonSize, showsBadge: Bool = false, action: @escaping () -> Void) {
         self.systemImage = systemImage
         self.label = label
         self.size = size
+        self.showsBadge = showsBadge
         self.action = action
     }
 
@@ -73,6 +79,14 @@ public struct HeaderIconButton: View {
                 .foregroundStyle(RetroColor.text)
                 .frame(width: size, height: size)
                 .overlay(Circle().strokeBorder(RetroColor.line, lineWidth: 1))
+                .overlay(alignment: .topTrailing) {
+                    if showsBadge {
+                        Circle().fill(RetroColor.pink)
+                            .overlay(Circle().strokeBorder(RetroColor.background, lineWidth: 2))
+                            .frame(width: 11, height: 11)
+                            .offset(x: -2, y: 2)
+                    }
+                }
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)

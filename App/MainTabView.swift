@@ -1,4 +1,5 @@
 import DesignSystem
+import Notifications
 import SwiftUI
 
 enum AppTab: String, CaseIterable {
@@ -16,22 +17,24 @@ enum AppTab: String, CaseIterable {
 /// App shell: header on top, the three destinations, custom tab bar at the bottom.
 /// Every tab stays alive when hidden so scroll position and state survive switching.
 struct MainTabView: View {
-    @State private var selection: AppTab
+    @State private var router: AppRouter
     @State private var paywall: PaywallPresenter
-    @State private var showsSettings = false
+    @Environment(NotificationHistory.self) private var history
     /// Debug-only clock override for reviewing other cycle stages.
     private let now: Date?
 
     init(initialTab: AppTab = .overview, now: Date? = nil) {
-        _selection = State(initialValue: initialTab)
+        let router = AppRouter(tab: initialTab)
         self.now = now
         let paywall = PaywallPresenter()
         #if DEBUG
         // `-showPaywall YES` opens the paywall on launch, for review.
         paywall.isPresented = UserDefaults.standard.bool(forKey: "showPaywall")
-        // `-openSettings YES` opens Settings on launch, for review.
-        _showsSettings = State(initialValue: UserDefaults.standard.bool(forKey: "openSettings"))
+        // `-openSettings YES` / `-openNotifications YES` open them on launch, for review.
+        router.showsSettings = UserDefaults.standard.bool(forKey: "openSettings")
+        router.showsNotificationCenter = UserDefaults.standard.bool(forKey: "openNotifications")
         #endif
+        _router = State(initialValue: router)
         _paywall = State(initialValue: paywall)
         #if DEBUG
         PaywallPresenter.current = paywall
@@ -40,29 +43,32 @@ struct MainTabView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            AppHeader(onShare: {}, onNotifications: { showsSettings = true }, onSettings: { showsSettings = true })
+            AppHeader(onShare: {}, onNotifications: router.openNotificationCenter, onSettings: router.openSettings,
+                      hasUnreadNotifications: history.unreadCount > 0)
             ZStack {
                 ForEach(AppTab.allCases, id: \.self) { tab in
                     screen(for: tab)
-                        .opacity(tab == selection ? 1 : 0)
-                        .allowsHitTesting(tab == selection)
-                        .accessibilityHidden(tab != selection)
+                        .opacity(tab == router.tab ? 1 : 0)
+                        .allowsHitTesting(tab == router.tab)
+                        .accessibilityHidden(tab != router.tab)
                 }
             }
             .frame(maxHeight: .infinity)
             // Stacked below the content (not floating over it) so nothing can scroll underneath.
-            RetroTabBar(items: AppTab.allCases.map(\.item), selection: $selection)
+            RetroTabBar(items: AppTab.allCases.map(\.item), selection: $router.tab)
         }
         .retroScreenBackground()
         .environment(paywall)
+        .environment(router)
         .fullScreenCover(isPresented: $paywall.isPresented) { PaywallView() }
-        .sheet(isPresented: $showsSettings) { SettingsView().environment(paywall) }
+        .sheet(isPresented: $router.showsSettings) { SettingsView().environment(paywall) }
+        .sheet(isPresented: $router.showsNotificationCenter) { NotificationCenterView().environment(router) }
     }
 
     @ViewBuilder
     private func screen(for tab: AppTab) -> some View {
         switch tab {
-        case .overview: OverviewScreen(now: now, onOpenSurvivalKit: { selection = .survivalKit })
+        case .overview: OverviewScreen(now: now, onOpenSurvivalKit: { router.tab = .survivalKit })
         case .survivalKit: SurvivalKitTab(now: now)
         case .calendar:
             TimelineView(.everyMinute) { context in
