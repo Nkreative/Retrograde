@@ -56,7 +56,7 @@ public enum RetroTextStyle: CaseIterable, Sendable {
     case breathCount
     /// Space Mono 8 — captions under timers and examples ("FOR EXAMPLE").
     case monoTiny
-    /// Inter Bold 19 — paywall prices ("$19.99").
+    /// Inter SemiBold 16 — paywall prices ("$19.99").
     case price
     /// Inter Regular 11 — purchase terms under the paywall button.
     case disclosure
@@ -72,8 +72,8 @@ public enum RetroTextStyle: CaseIterable, Sendable {
     var postScriptName: String {
         switch self {
         case .display, .hero, .title, .section, .cardTitle, .breathCount: "ArchivoBlack-Regular"
-        case .button, .price: "Inter-Bold"
-        case .bodyStrong: "Inter-SemiBold"
+        case .button: "Inter-Bold"
+        case .bodyStrong, .price: "Inter-SemiBold"
         case .bodyLarge, .body, .finePrint, .prompt, .disclosure: "Inter-Regular"
         case .bodyHeavy: "Inter-ExtraBold"
         case .monoLarge, .mono, .monoSmall, .timer, .timerCompact, .monoTiny: "SpaceMono-Regular"
@@ -89,8 +89,8 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .timerCompact: 27
         case .breathCount: 21
         case .title: 20
-        case .section, .price: 19
-        case .cardTitle: 16
+        case .section: 19
+        case .cardTitle, .price: 16
         case .button: 14
         case .prompt: 15
         case .bodyStrong, .bodyLarge: 13
@@ -111,8 +111,8 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .monoTiny: .caption2
         case .hero: .title
         case .title: .title2
-        case .section, .price: .title3
-        case .cardTitle: .headline
+        case .section: .title3
+        case .cardTitle, .price: .headline
         case .button: .body
         case .bodyStrong, .bodyLarge: .subheadline
         case .body, .bodyHeavy, .monoLarge: .footnote

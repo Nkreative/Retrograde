@@ -240,14 +240,14 @@ private struct PlanCard: View {
         }
     }
 
-    /// Price large and right-aligned; the frequency ("/ yr") smaller underneath it. Never truncated:
-    /// longer localized prices push the card to the stacked layout instead.
+    /// "$9.99 / yr" on one line, right-aligned, the frequency smaller and secondary. The group never
+    /// wraps internally: if it doesn't fit beside the plan text, the whole group moves below it.
     @ViewBuilder private var price: some View {
         if let offer {
-            VStack(alignment: .trailing, spacing: 1) {
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(offer.displayPrice).retroText(.price).foregroundStyle(RetroColor.text)
                 if let unit = PaywallCopy.priceUnit(offer) {
-                    Text(unit).retroText(.monoSmall).foregroundStyle(RetroColor.textMuted)
+                    Text(unit).font(.custom("Inter-Regular", size: 12, relativeTo: .footnote)).foregroundStyle(RetroColor.textMuted)
                 }
             }
             .lineLimit(1)
@@ -257,6 +257,7 @@ private struct PlanCard: View {
         }
     }
 }
+
 
 private struct Unavailable: View {
     let retry: () -> Void

@@ -4,7 +4,7 @@ Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
 ## 2026-11-04 (M9b refinements)
 
-- **Prices:** Inter Bold 19 pt, right-aligned; frequency ("/ yr") smaller underneath. Never truncated — at large text the price moves below the plan text, and BEST VALUE drops below "Lifetime access".
+- **Prices** (final): Inter SemiBold 16 pt, right-aligned, with the frequency inline at 12 pt secondary ("$9.99 / yr"). The price group never wraps internally; for long localized prices or large text it moves as a whole below the plan description, and BEST VALUE drops below "Lifetime access".
 - **Button:** Lifetime "Get lifetime access"; Yearly "Start 7-day free trial" when StoreKit confirms an eligible trial, otherwise "Start Premium".
 - **Terms under the button:** Inter 11 pt at higher contrast; full trial, price, frequency, auto-renewal and cancellation wording kept; the page scrolls rather than shrinking text.
 - **Benefits:** "No ads. No account needed." and "The cosmic details behind each day".
