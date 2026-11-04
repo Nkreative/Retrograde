@@ -12,6 +12,7 @@ struct RetrogradeApp: App {
     @State private var entitlements = AppEntitlements.make()
     @State private var notificationPreferences = NotificationPreferences()
     @State private var notificationHistory = Self.makeHistory()
+    @State private var onboarding = Self.makeOnboarding()
 
     init() {
         RetroFonts.register()
@@ -45,6 +46,24 @@ struct RetrogradeApp: App {
         return NotificationHistory()
     }
 
+    /// Saved onboarding progress. While hosting tests it's in memory and already complete.
+    /// Debug: `-onboarding reset` starts it again; `-onboarding skip` hides it for this launch.
+    private static func makeOnboarding() -> OnboardingProgress {
+        if isHostingTests { return OnboardingProgress(defaults: nil, initial: .completed) }
+        #if DEBUG
+        switch UserDefaults.standard.string(forKey: "onboarding") {
+        case "reset":
+            let progress = OnboardingProgress()
+            progress.reset()
+            return progress
+        case "skip":
+            return OnboardingProgress(defaults: nil, initial: .completed)
+        default: break
+        }
+        #endif
+        return OnboardingProgress()
+    }
+
     /// When the app only hosts the StoreKit tests, it stays out of their way: no listener of its own
     /// reading or finishing the tests' transactions.
     private static var isHostingTests: Bool {
@@ -62,6 +81,7 @@ struct RetrogradeApp: App {
                 .environment(entitlements)
                 .environment(notificationPreferences)
                 .environment(notificationHistory)
+                .environment(onboarding)
                 .preferredColorScheme(.dark)
                 // Verified entitlements at launch, then live updates; re-checked on every return to the app.
                 .task { if !Self.isHostingTests { await entitlements.start() } }

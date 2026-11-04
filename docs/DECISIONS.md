@@ -2,6 +2,15 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-04 (M10 onboarding and launch promotion)
+
+- **Onboarding** (first launch only): three screens. (1) "Mercury's doing it again." Animated apparent motion: Mercury drifts across a starfield and loops backward; with Reduce Motion the whole path is drawn still. (2) "Less guessing. More preparing." The real Overview hero plus three features: what's coming, the cosmic calendar, the Survival Kit. (3) "No cosmic surprises." with Enable notifications / Maybe later. Back arrow and page dots on screens 2 and 3. Screens 1 and 3 build on the Figma onboarding frames (Mercury moving right to left; notification ask); the copy, screen 2 and the three-step layout follow the M10 request and aren't in Figma yet. Add them to the review page if they should be recorded there.
+- **Notification permission:** iOS is asked only when Enable notifications is tapped, and only if it has never been asked. If permission was already given or refused, the screen shows one Continue button and points to Settings › Notifications. Nothing is scheduled yet (M11).
+- **Progress** (`OnboardingProgress`, saved on the device): an interrupted onboarding resumes on the same screen; once finished it never replays, including after updates. Onboarding counts as finished *before* the paywall appears, so closing the app on the paywall never brings onboarding or the paywall back. Debug builds can replay it from Settings › Developer or with `-onboarding reset`.
+- **Paywall after onboarding:** shown once, right after onboarding, only when purchases are verified as not Premium (it waits up to 3 s for StoreKit; anyone already Premium skips it). "Continue free" always closes it; there is no repeated forced paywall. It's the existing paywall (same purchase code), Lifetime selected by default. Nothing starts a purchase or trial on its own.
+- **Lifetime launch special:** 50% off for 14 calendar days from the App Store Connect start date, done as a scheduled App Store Connect price change (see `docs/STOREKIT.md`). The badge ("LAUNCH · 50% OFF", replacing BEST VALUE while it runs), crossed-out regular price and "Launch special until <date>" appear only when an explicit configuration (`LaunchPromotion.launch`: start date, 14 days, US $19.99 → $9.99) matches StoreKit's real price and currency for the person's storefront. Outside the window, in other storefronts or on any mismatch, the plan shows StoreKit's price with no promotion. US only for now. The start date is not set yet, so the promotion is off.
+- **Yearly trial: 3 days** (was 7) for eligible new subscribers in the US and Canada. Supersedes the 7-day trial in the M9 entries below; App Store Connect must be updated to match.
+
 ## 2026-11-04 (M9c follow-up: Notification Center, preferences, legal pages)
 
 - **Two destinations:** bell → Notification Center (history); gear → Settings. Settings has a Notifications row leading to the preferences page; the toggles no longer sit in Settings itself. A pink dot on the bell marks unread notifications.

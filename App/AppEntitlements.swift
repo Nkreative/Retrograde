@@ -20,6 +20,7 @@ enum AppEntitlements {
         let defaults = UserDefaults.standard
         if let preset = defaults.string(forKey: "entitlement") ?? (defaults.bool(forKey: "premium") ? "lifetime" : nil) {
             let sim = SimulatedEntitlementSource(storage: InMemoryAccountStorage())
+            if promotionPreview { sim.lifetimePrice = Decimal(string: "9.99")! }
             apply(preset: preset, to: sim)
             simulator = sim
             return EntitlementStore(source: sim)
@@ -34,7 +35,21 @@ enum AppEntitlements {
         return EntitlementStore(source: StoreKitEntitlementSource())
     }
 
+    /// The launch promotion the paywall checks. Debug `-promotionPreview YES` runs it from yesterday
+    /// (with the simulator charging the promotional price) so it can be reviewed before launch.
+    static var promotion: LaunchPromotion {
+        #if DEBUG
+        if promotionPreview {
+            let l = LaunchPromotion.launch
+            return LaunchPromotion(plan: l.plan, start: .now - 86_400, durationDays: l.durationDays, percentOff: l.percentOff, prices: l.prices)
+        }
+        #endif
+        return .launch
+    }
+
     #if DEBUG
+    private static var promotionPreview: Bool { UserDefaults.standard.bool(forKey: "promotionPreview") }
+
     private static func apply(preset: String, to sim: SimulatedEntitlementSource) {
         let buyYearly = { Task { _ = try? await sim.purchase(.yearly) } }
         switch preset {

@@ -8,7 +8,8 @@
 | Type | Non-consumable | Auto-renewable subscription, 1 year |
 | Group | — | Retrograde Premium |
 | US base price | $19.99 | $9.99 |
-| Intro offer | none | 7-day free trial, eligible new subscribers |
+| Launch promotion | US $9.99 (50% off) for 14 days after launch, then $19.99 | — |
+| Intro offer | none | 3-day free trial, eligible new subscribers (US and Canada) |
 | Family Sharing | off | off |
 
 App bundle ID: `com.nkreative.retrograde`. Both products unlock the same Premium features. Prices, currencies and offer eligibility always come from StoreKit; the app never hardcodes them. `StoreKit/Retrograde.storekit` mirrors these products for local testing — keep it in sync with App Store Connect.
@@ -53,18 +54,34 @@ Nothing — `StoreKit/Retrograde.storekit` is in the project and the Retrograde 
 | Apple Developer enrollment | Individual |
 | Paid Apps Agreement | Active |
 | Bundle ID `com.nkreative.retrograde` | Registered |
-| Yearly `com.nkreative.retrograde.premium.yearly` | Created — US $9.99/year; 7-day free trial configured for the **US and Canada** |
+| Yearly `com.nkreative.retrograde.premium.yearly` | Created — US $9.99/year; free trial configured for the **US and Canada** — currently 7 days, **change to 3 days** (see below) |
 | Lifetime `com.nkreative.retrograde.premium.lifetime` | Created — US $19.99 |
 | Submission | Both products created, **not yet submitted** for review (they go with the first app version) |
 
 Because the trial is configured only for the US and Canada, customers in other countries see the Yearly price without trial wording — the app shows the trial only when StoreKit returns an introductory offer for the person's storefront *and* confirms they're eligible. The local test file (`StoreKit/Retrograde.storekit`) has no territory restriction, so local tests always see the trial for new subscribers.
+
+### Launch configuration (M10)
+
+**1. Yearly trial: 7 days → 3 days.** In App Store Connect › the Yearly subscription › Subscription Prices › Introductory Offers: end (or delete, if never live) the 7-day free-trial offer and create a **Free, 3 days** offer for the United States and Canada, no end date. The local test file already uses 3 days. The app reads the trial length from StoreKit, so the wording follows whatever App Store Connect returns.
+
+**2. Lifetime launch special (50% off for 14 days).** Lifetime is a one-time purchase, so Apple's introductory offers don't apply; the launch special is a scheduled **price change** on the same product:
+1. App Store Connect › Lifetime › Price Schedule › Add Price Change: United States **$9.99**, starting on the launch date. Leave other countries at their normal price (the in-app badge is only validated for the US — see below).
+2. Add a second price change: United States back to **$19.99**, starting exactly **14 calendar days later** (App Store Connect price changes start at 12:00 a.m. Pacific).
+3. Tell me the start date. I set `LaunchPromotion.launch.start` in `Packages/RetrogradeKit/Sources/Entitlements/LaunchPromotion.swift` to that date (midnight Pacific) and ship the update. Until it's set, the app shows no badge and no crossed-out price, even if StoreKit already charges $9.99.
+
+**How the app decides to show "LAUNCH · 50% OFF" and the crossed-out $19.99** — all must be true, otherwise the plan shows StoreKit's price with no promotion:
+- the promotion has a configured start, and the current time is within its 14 days (it ends by itself; no update needed);
+- the person's storefront is one the promotion lists (US only), in the listed currency (USD);
+- StoreKit's actual Lifetime price for that storefront is exactly the configured promotional price ($9.99).
+
+The price the person pays and sees is always StoreKit's. The app never hardcodes it, and never assumes a discount just because the price happens to be $9.99. To extend the special to other countries, add each storefront's currency, regular and promotional price to `LaunchPromotion.launch.prices` and schedule the matching price change in App Store Connect.
 
 ### Before Sandbox testing (on your iPhone)
 Done: legal entity decision (individual for now), Paid Apps Agreement, bundle ID, both products.
 Still to check or do:
 1. **Billing Grace Period:** confirm it's on (16 days) and which renewals it covers.
 2. **Product metadata:** each product has an English display name and description; the group "Retrograde Premium" has a display name.
-3. **Users and Access → Sandbox → Test Accounts:** create one or two testers with unused email addresses (one US, optionally one Canada to see the trial, and one elsewhere to see no trial).
+3. **Users and Access → Sandbox → Test Accounts:** create one or two testers with unused email addresses (one US, optionally one Canada to see the trial; a US tester also sees the launch badge while the promotion is active, and one elsewhere to see no trial).
 4. **On the iPhone:** Settings › Developer › Sandbox Apple Account → sign in with a tester. Run from Xcode with your team selected, using a scheme whose StoreKit Configuration is None (a separate Sandbox scheme is planned).
 
 ### Before TestFlight

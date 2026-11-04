@@ -33,7 +33,7 @@ struct PaywallView: View {
             content(heroRatio: roomy ? 0.86 : 0.78, headlineOverlap: roomy ? 56 : 44, spacing: roomy ? 16 : 13, benefitSpacing: roomy ? 11 : 9)
         }
         .task {
-            let flow = self.flow ?? PurchaseFlow(store: entitlements)
+            let flow = self.flow ?? PurchaseFlow(store: entitlements, promotion: AppEntitlements.promotion)
             self.flow = flow
             #if DEBUG
             PaywallDebug.flow = flow
@@ -173,7 +173,8 @@ private struct PlanList: View {
             default:
                 if let flow {
                     ForEach(PremiumPlan.paywallOrder, id: \.self) { plan in
-                        PlanCard(plan: plan, offer: flow.offers[plan], selected: flow.selectedPlan == plan, enabled: !flow.isBusy && flow.offers[plan] != nil) {
+                        PlanCard(plan: plan, offer: flow.offers[plan], selected: flow.selectedPlan == plan, enabled: !flow.isBusy && flow.offers[plan] != nil,
+                                 promotion: flow.promotion(for: plan)) {
                             flow.select(plan)
                         }
                     }
@@ -188,6 +189,7 @@ private struct PlanCard: View {
     let offer: PlanOffer?
     let selected: Bool
     let enabled: Bool
+    var promotion: LaunchPromotion.Display? = nil
     let action: () -> Void
 
     var body: some View {
@@ -215,7 +217,7 @@ private struct PlanCard: View {
         .buttonStyle(.plain)
         .disabled(!enabled)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(offer.map { PaywallCopy.accessibilityLabel($0, bestValue: bestValue) } ?? "\(PaywallCopy.planName(plan)), unavailable")
+        .accessibilityLabel(offer.map { PaywallCopy.accessibilityLabel($0, bestValue: bestValue, promotion: promotion) } ?? "\(PaywallCopy.planName(plan)), unavailable")
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
     }
 
@@ -226,18 +228,35 @@ private struct PlanCard: View {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 8) {
                     name.fixedSize()
-                    if bestValue { Badge("BEST VALUE").fixedSize() }
+                    badge
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     name
-                    if bestValue { Badge("BEST VALUE").fixedSize() }
+                    badge
                 }
             }
-            Text(offer.map(PaywallCopy.planDetail) ?? "Loading price…")
+            Text(detail)
                 .retroText(.body)
                 .foregroundStyle(RetroColor.textMuted)
                 .redacted(reason: offer == nil ? .placeholder : [])
         }
+    }
+
+    /// BEST VALUE on Lifetime, or the verified launch badge while the promotion runs.
+    @ViewBuilder private var badge: some View {
+        if let promotion {
+            Badge(PaywallCopy.promotionBadge(promotion)).fixedSize()
+        } else if plan == .lifetime {
+            Badge("BEST VALUE").fixedSize()
+        }
+    }
+
+    private var detail: String {
+        guard let offer else { return "Loading price…" }
+        if let promotion {
+            return PaywallCopy.promotionDetail(ends: promotion.endsAt.formatted(.dateTime.month(.abbreviated).day()))
+        }
+        return PaywallCopy.planDetail(offer)
     }
 
     /// "$9.99 / yr" on one line, right-aligned, the frequency smaller and secondary. The group never
@@ -245,6 +264,12 @@ private struct PlanCard: View {
     @ViewBuilder private var price: some View {
         if let offer {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
+                if let promotion {
+                    Text(promotion.regularPrice)
+                        .font(.custom("Inter-Regular", size: 12, relativeTo: .footnote))
+                        .strikethrough()
+                        .foregroundStyle(RetroColor.textMuted)
+                }
                 Text(offer.displayPrice).retroText(.price).foregroundStyle(RetroColor.text)
                 if let unit = PaywallCopy.priceUnit(offer) {
                     Text(unit).font(.custom("Inter-Regular", size: 12, relativeTo: .footnote)).foregroundStyle(RetroColor.textMuted)

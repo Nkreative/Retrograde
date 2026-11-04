@@ -91,6 +91,7 @@ public actor StoreKitEntitlementSource: EntitlementSource {
 
     public func offers() async throws -> [PlanOffer] {
         var result: [PlanOffer] = []
+        let storefront = await Storefront.current?.countryCode
         for plan in PremiumPlan.allCases {
             guard let product = try? await product(for: plan) else { continue }
             var trial: BillingPeriod?
@@ -101,7 +102,8 @@ public actor StoreKitEntitlementSource: EntitlementSource {
             }
             result.append(PlanOffer(
                 plan: plan, displayPrice: product.displayPrice,
-                billingPeriod: product.subscription.map { BillingPeriod($0.subscriptionPeriod) }, freeTrial: trial
+                billingPeriod: product.subscription.map { BillingPeriod($0.subscriptionPeriod) }, freeTrial: trial,
+                price: product.price, priceFormat: product.priceFormatStyle, storefront: storefront
             ))
         }
         guard !result.isEmpty else { throw StoreError.productUnavailable(.lifetime) }

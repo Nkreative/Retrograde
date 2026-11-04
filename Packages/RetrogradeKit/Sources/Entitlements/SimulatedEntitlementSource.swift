@@ -75,6 +75,8 @@ public final class SimulatedEntitlementSource: EntitlementSource, @unchecked Sen
 
     // Debug knobs for reviewing paywall states.
     public var failOffers = false
+    /// Lifetime's simulated price (set to the launch price to preview the promotion).
+    public var lifetimePrice = Decimal(string: "19.99")!
     public var offersDelay: Duration = .zero
     public var nextPurchase: PurchaseOutcome?
     public var failPurchases = false
@@ -84,10 +86,12 @@ public final class SimulatedEntitlementSource: EntitlementSource, @unchecked Sen
         try await Task.sleep(for: offersDelay)
         if failOffers { throw URLError(.notConnectedToInternet) }
         let trialEligible = account.yearly == nil
+        let usd = Decimal.FormatStyle.Currency(code: "USD", locale: Locale(identifier: "en_US"))
+        let yearly = Decimal(string: "9.99")!
         return [
-            PlanOffer(plan: .lifetime, displayPrice: "$19.99"),
-            PlanOffer(plan: .yearly, displayPrice: "$9.99", billingPeriod: .init(value: 1, unit: .year),
-                      freeTrial: trialEligible ? .init(value: 1, unit: .week) : nil),
+            PlanOffer(plan: .lifetime, displayPrice: lifetimePrice.formatted(usd), price: lifetimePrice, priceFormat: usd, storefront: "USA"),
+            PlanOffer(plan: .yearly, displayPrice: yearly.formatted(usd), billingPeriod: .init(value: 1, unit: .year),
+                      freeTrial: trialEligible ? .init(value: 3, unit: .day) : nil, price: yearly, priceFormat: usd, storefront: "USA"),
         ]
     }
 

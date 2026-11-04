@@ -1,5 +1,6 @@
 import DesignSystem
 import Entitlements
+import Persistence
 import StoreKit
 import SwiftUI
 
@@ -31,6 +32,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(EntitlementStore.self) private var entitlements
     @Environment(PaywallPresenter.self) private var paywall
+    @Environment(OnboardingProgress.self) private var onboarding
     @State private var path: [SettingsRoute] = Self.initialPath
 
     var body: some View {
@@ -55,6 +57,11 @@ struct SettingsView: View {
                 #if DEBUG
                 Section {
                     row(.premiumSimulator, "Premium simulator")
+                    Button("Replay onboarding") {
+                        onboarding.reset()
+                        dismiss()
+                    }
+                    .frame(minHeight: 44)
                 } header: {
                     SectionHeader("Developer (debug builds only)")
                 }

@@ -125,13 +125,25 @@ public struct PlanOffer: Equatable, Sendable {
     public let billingPeriod: BillingPeriod?
     /// Only when the storefront offers a free trial *and* StoreKit says this person is eligible.
     public let freeTrial: BillingPeriod?
+    /// The exact amount StoreKit will charge, in `priceFormat`'s currency.
+    public let price: Decimal?
+    /// StoreKit's currency format for this storefront (formats other amounts the same way).
+    public let priceFormat: Decimal.FormatStyle.Currency?
+    /// The App Store storefront, as StoreKit reports it (ISO 3166-1 alpha-3, e.g. "USA").
+    public let storefront: String?
 
-    public init(plan: PremiumPlan, displayPrice: String, billingPeriod: BillingPeriod? = nil, freeTrial: BillingPeriod? = nil) {
+    public init(plan: PremiumPlan, displayPrice: String, billingPeriod: BillingPeriod? = nil, freeTrial: BillingPeriod? = nil,
+                price: Decimal? = nil, priceFormat: Decimal.FormatStyle.Currency? = nil, storefront: String? = nil) {
         self.plan = plan
         self.displayPrice = displayPrice
         self.billingPeriod = billingPeriod
         self.freeTrial = freeTrial
+        self.price = price
+        self.priceFormat = priceFormat
+        self.storefront = storefront
     }
+
+    public var currencyCode: String? { priceFormat?.currencyCode }
 }
 
 public enum PurchaseOutcome: Equatable, Sendable {

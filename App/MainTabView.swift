@@ -1,5 +1,7 @@
 import DesignSystem
+import Entitlements
 import Notifications
+import Persistence
 import SwiftUI
 
 enum AppTab: String, CaseIterable {
@@ -20,6 +22,8 @@ struct MainTabView: View {
     @State private var router: AppRouter
     @State private var paywall: PaywallPresenter
     @Environment(NotificationHistory.self) private var history
+    @Environment(OnboardingProgress.self) private var onboarding
+    @Environment(EntitlementStore.self) private var entitlements
     /// Debug-only clock override for reviewing other cycle stages.
     private let now: Date?
 
@@ -61,8 +65,24 @@ struct MainTabView: View {
         .environment(paywall)
         .environment(router)
         .fullScreenCover(isPresented: $paywall.isPresented) { PaywallView() }
+        .background {
+            // A separate host so the onboarding and paywall covers never compete.
+            Color.clear.fullScreenCover(isPresented: Binding(get: { !onboarding.isComplete }, set: { _ in })) {
+                OnboardingView(onFinished: showLaunchOffer)
+                    .environment(onboarding)
+            }
+        }
         .sheet(isPresented: $router.showsSettings) { SettingsView().environment(paywall) }
         .sheet(isPresented: $router.showsNotificationCenter) { NotificationCenterView().environment(router) }
+    }
+
+    /// After onboarding: the Premium offer, unless purchases are already verified as Premium.
+    private func showLaunchOffer() {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(600)) // let the onboarding cover close
+            for _ in 0..<30 where !entitlements.hasLoaded { try? await Task.sleep(for: .milliseconds(100)) }
+            if !entitlements.isPremium { paywall.present() }
+        }
     }
 
     @ViewBuilder

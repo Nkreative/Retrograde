@@ -50,10 +50,24 @@ public enum PaywallCopy {
         return "\(offer.displayPrice) \(period.perFrequency), charged to your Apple Account at confirmation. Renews automatically \(period.adverb) unless cancelled at least 24 hours before the current period ends. \(manage)"
     }
 
+    /// Badge text for a verified promotion, e.g. "LAUNCH · 50% OFF".
+    public static func promotionBadge(_ promotion: LaunchPromotion.Display) -> String {
+        "LAUNCH · \(promotion.percentOff)% OFF"
+    }
+
+    /// Plan line during a promotion; `ends` is the end date formatted for the person's locale.
+    public static func promotionDetail(ends: String) -> String {
+        "Launch special until \(ends). One-time purchase."
+    }
+
     /// VoiceOver label for a plan card: name, Best value (Lifetime only), full price and frequency, trial.
-    public static func accessibilityLabel(_ offer: PlanOffer, bestValue: Bool) -> String {
+    public static func accessibilityLabel(_ offer: PlanOffer, bestValue: Bool, promotion: LaunchPromotion.Display? = nil) -> String {
         var parts = [planName(offer.plan)]
-        if bestValue { parts.append("Best value") }
+        if let promotion {
+            parts.append("Launch special, \(promotion.percentOff)% off, regular price \(promotion.regularPrice)")
+        } else if bestValue {
+            parts.append("Best value")
+        }
         if let period = offer.billingPeriod {
             parts.append("\(offer.displayPrice) \(period.perFrequency)")
             if let trial = offer.freeTrial { parts.append("\(trial.compactLength) free trial") }

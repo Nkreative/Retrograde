@@ -93,7 +93,7 @@ import Testing
         #expect(lifetime.type == .nonConsumable)
         let offer = try #require(yearly.subscription?.introductoryOffer)
         #expect(offer.paymentMode == .freeTrial)
-        #expect(offer.period.unit == .week && offer.period.value == 1)
+        #expect(offer.period.unit == .day && offer.period.value == 3)
         let period = try #require(yearly.subscription?.subscriptionPeriod)
         #expect(period.unit == .year && period.value == 1)
     }
@@ -210,14 +210,27 @@ import Testing
 
     // MARK: Paywall offers and purchase flow (M9b)
 
-    @Test func offersShowLocalizedPricesAndTheTrialForNewSubscribers() async throws {
+    @Test func offersShowLocalizedPricesAndTheThreeDayTrialForNewSubscribers() async throws {
         let offers = Dictionary(uniqueKeysWithValues: try await store.offers().map { ($0.plan, $0) })
-        #expect(offers[.lifetime] == PlanOffer(plan: .lifetime, displayPrice: "$19.99"))
+        let lifetime = try #require(offers[.lifetime])
+        #expect(lifetime.displayPrice == "$19.99" && lifetime.price == Decimal(string: "19.99"))
+        #expect(lifetime.currencyCode == "USD" && lifetime.storefront == "USA")
+        // The configured launch promotion isn't active (no start date), so nothing is labelled.
+        #expect(LaunchPromotion.launch.status(for: lifetime, at: .now) == .notConfigured)
         let yearly = try #require(offers[.yearly])
         #expect(yearly.displayPrice == "$9.99")
         #expect(yearly.billingPeriod == BillingPeriod(value: 1, unit: .year))
-        #expect(yearly.freeTrial == BillingPeriod(value: 1, unit: .week))
-        #expect(PaywallCopy.planDetail(yearly) == "7 days free, then $9.99/year")
+        #expect(yearly.freeTrial == BillingPeriod(value: 3, unit: .day))
+        #expect(PaywallCopy.planDetail(yearly) == "3 days free, then $9.99/year")
+        #expect(PaywallCopy.buttonTitle(.yearly, offer: yearly) == "Start 3-day free trial")
+    }
+
+    @Test func launchBadgeNeverAppearsWhileStoreKitChargesTheRegularPrice() async throws {
+        let active = LaunchPromotion(plan: .lifetime, start: .now - 3_600, durationDays: 14, percentOff: 50, prices: LaunchPromotion.launch.prices)
+        let flow = PurchaseFlow(store: store, promotion: active)
+        await flow.load()
+        #expect(flow.offers[.lifetime]?.displayPrice == "$19.99")
+        #expect(flow.promotion(for: .lifetime) == nil) // StoreKit says $19.99, so no "50% off"
     }
 
     @Test func noTrialForSomeoneWhoAlreadySubscribed() async throws {

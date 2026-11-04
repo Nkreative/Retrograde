@@ -86,6 +86,9 @@ public enum NotificationAuthorization: Equatable, Sendable {
     /// Allowed (including provisional / ephemeral).
     case allowed
 
+    /// Only ask iOS when it has never asked: a person who declined is never prompted again.
+    public var shouldPrompt: Bool { self == .notDetermined }
+
     #if canImport(UserNotifications)
     public init(_ status: UNAuthorizationStatus) {
         switch status {

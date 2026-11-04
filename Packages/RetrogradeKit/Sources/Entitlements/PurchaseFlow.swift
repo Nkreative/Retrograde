@@ -1,3 +1,4 @@
+import Foundation
 import Observation
 
 /// The paywall's purchase logic, separate from its layout: loading offers, the selected plan,
@@ -27,9 +28,20 @@ public final class PurchaseFlow {
     public private(set) var offers: [PremiumPlan: PlanOffer] = [:]
 
     @ObservationIgnored private let store: EntitlementStore
+    @ObservationIgnored private let promotion: LaunchPromotion?
+    @ObservationIgnored private let now: () -> Date
 
-    public init(store: EntitlementStore) {
+    public init(store: EntitlementStore, promotion: LaunchPromotion? = .launch, now: @escaping () -> Date = Date.init) {
         self.store = store
+        self.promotion = promotion
+        self.now = now
+    }
+
+    /// The verified promotion to show on a plan, if any (checked against StoreKit's price each time).
+    public func promotion(for plan: PremiumPlan) -> LaunchPromotion.Display? {
+        guard let promotion, promotion.plan == plan, case let .active(display) = promotion.status(for: offers[plan], at: now())
+        else { return nil }
+        return display
     }
 
     public var selectedOffer: PlanOffer? { offers[selectedPlan] }
