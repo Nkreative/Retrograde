@@ -18,14 +18,23 @@ public enum PaywallCopy {
 
     /// Right-hand price, e.g. "$19.99" or "$9.99 / yr".
     public static func priceLabel(_ offer: PlanOffer) -> String {
-        guard let period = offer.billingPeriod else { return offer.displayPrice }
-        return "\(offer.displayPrice) / \(period.abbreviation)"
+        guard let unit = priceUnit(offer) else { return offer.displayPrice }
+        return "\(offer.displayPrice) \(unit)"
     }
 
-    public static func buttonTitle(_ plan: PremiumPlan) -> String {
+    /// The smaller frequency shown after the price ("/ yr"); nil for Lifetime.
+    public static func priceUnit(_ offer: PlanOffer) -> String? {
+        offer.billingPeriod.map { "/ \($0.abbreviation)" }
+    }
+
+    /// Lifetime: "Get lifetime access". Yearly: "Start 7-day free trial" when StoreKit offers this
+    /// person a trial, otherwise "Start Premium".
+    public static func buttonTitle(_ plan: PremiumPlan, offer: PlanOffer?) -> String {
         switch plan {
-        case .lifetime: "Get lifetime access"
-        case .yearly: "Start Premium"
+        case .lifetime: return "Get lifetime access"
+        case .yearly:
+            if let trial = offer?.freeTrial { return "Start \(trial.compactLength) free trial" }
+            return "Start Premium"
         }
     }
 
@@ -41,10 +50,17 @@ public enum PaywallCopy {
         return "\(offer.displayPrice) \(period.perFrequency), charged to your Apple Account at confirmation. Renews automatically \(period.adverb) unless cancelled at least 24 hours before the current period ends. \(manage)"
     }
 
-    /// VoiceOver label for a plan card.
+    /// VoiceOver label for a plan card: name, Best value (Lifetime only), full price and frequency, trial.
     public static func accessibilityLabel(_ offer: PlanOffer, bestValue: Bool) -> String {
-        let price = offer.billingPeriod == nil ? "\(offer.displayPrice), one-time purchase" : planDetail(offer)
-        return [planName(offer.plan), bestValue ? "Best value" : nil, price].compactMap { $0 }.joined(separator: ", ")
+        var parts = [planName(offer.plan)]
+        if bestValue { parts.append("Best value") }
+        if let period = offer.billingPeriod {
+            parts.append("\(offer.displayPrice) \(period.perFrequency)")
+            if let trial = offer.freeTrial { parts.append("\(trial.compactLength) free trial") }
+        } else {
+            parts.append("\(offer.displayPrice), one-time purchase")
+        }
+        return parts.joined(separator: ", ")
     }
 }
 
@@ -62,6 +78,12 @@ extension BillingPeriod {
     public var length: String {
         let (count, name) = unit == .week ? (value * 7, "day") : (value, unitName)
         return "\(count) \(name)\(count == 1 ? "" : "s")"
+    }
+
+    /// "7-day", "1-month" (for "Start 7-day free trial").
+    public var compactLength: String {
+        let (count, name) = unit == .week ? (value * 7, "day") : (value, unitName)
+        return "\(count)-\(name)"
     }
 
     /// "/year" or " every 2 years".

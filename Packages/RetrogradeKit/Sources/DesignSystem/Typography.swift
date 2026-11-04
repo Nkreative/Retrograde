@@ -56,6 +56,10 @@ public enum RetroTextStyle: CaseIterable, Sendable {
     case breathCount
     /// Space Mono 8 — captions under timers and examples ("FOR EXAMPLE").
     case monoTiny
+    /// Inter Bold 19 — paywall prices ("$19.99").
+    case price
+    /// Inter Regular 11 — purchase terms under the paywall button.
+    case disclosure
     /// Space Mono 11 — countdown label, step numbers.
     case monoLarge
     /// Space Mono 10 — tab labels, eyebrows.
@@ -68,9 +72,9 @@ public enum RetroTextStyle: CaseIterable, Sendable {
     var postScriptName: String {
         switch self {
         case .display, .hero, .title, .section, .cardTitle, .breathCount: "ArchivoBlack-Regular"
-        case .button: "Inter-Bold"
+        case .button, .price: "Inter-Bold"
         case .bodyStrong: "Inter-SemiBold"
-        case .bodyLarge, .body, .finePrint, .prompt: "Inter-Regular"
+        case .bodyLarge, .body, .finePrint, .prompt, .disclosure: "Inter-Regular"
         case .bodyHeavy: "Inter-ExtraBold"
         case .monoLarge, .mono, .monoSmall, .timer, .timerCompact, .monoTiny: "SpaceMono-Regular"
         case .monoBold: "SpaceMono-Bold"
@@ -85,13 +89,13 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .timerCompact: 27
         case .breathCount: 21
         case .title: 20
-        case .section: 19
+        case .section, .price: 19
         case .cardTitle: 16
         case .button: 14
         case .prompt: 15
         case .bodyStrong, .bodyLarge: 13
         case .body, .bodyHeavy: 12
-        case .monoLarge: 11
+        case .monoLarge, .disclosure: 11
         case .mono, .monoBold, .finePrint: 10
         case .monoSmall: 9
         case .monoTiny: 8
@@ -107,13 +111,14 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .monoTiny: .caption2
         case .hero: .title
         case .title: .title2
-        case .section: .title3
+        case .section, .price: .title3
         case .cardTitle: .headline
         case .button: .body
         case .bodyStrong, .bodyLarge: .subheadline
         case .body, .bodyHeavy, .monoLarge: .footnote
         case .mono, .monoBold: .caption
         case .finePrint: .caption2
+        case .disclosure: .caption
         case .monoSmall: .caption2
         }
     }
@@ -124,6 +129,7 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .body, .bodyHeavy: 2
         case .bodyLarge: 3
         case .prompt: 4
+        case .disclosure: 3
         default: 0
         }
     }

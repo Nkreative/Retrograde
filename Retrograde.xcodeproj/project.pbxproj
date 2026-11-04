@@ -96,6 +96,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = A10000000000000000000072 /* Build configuration list for PBXNativeTarget "Retrograde" */;
 			buildPhases = (
+				A10000000000000000000054 /* Require privacy policy URL */,
 				A10000000000000000000052 /* Sources */,
 				A10000000000000000000051 /* Frameworks */,
 				A10000000000000000000053 /* Resources */,
@@ -203,6 +204,29 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A10000000000000000000054 /* Require privacy policy URL */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/App/AppLinks.swift",
+			);
+			name = "Require privacy policy URL";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Block App Store archives until the privacy policy URL is set in App/AppLinks.swift.\nif [ \"$ACTION\" = \"install\" ] && grep -q 'privacyPolicy: URL? = nil' \"$SRCROOT/App/AppLinks.swift\"; then\n  echo \"error: Set AppLinks.privacyPolicy (App/AppLinks.swift) to the published privacy policy URL before archiving.\"\n  exit 1\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A10000000000000000000052 /* Sources */ = {

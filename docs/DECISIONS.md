@@ -2,6 +2,15 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-04 (M9b refinements)
+
+- **Prices:** Inter Bold 19 pt, right-aligned; frequency ("/ yr") smaller underneath. Never truncated — at large text the price moves below the plan text, and BEST VALUE drops below "Lifetime access".
+- **Button:** Lifetime "Get lifetime access"; Yearly "Start 7-day free trial" when StoreKit confirms an eligible trial, otherwise "Start Premium".
+- **Terms under the button:** Inter 11 pt at higher contrast; full trial, price, frequency, auto-renewal and cancellation wording kept; the page scrolls rather than shrinking text.
+- **Benefits:** "No ads. No account needed." and "The cosmic details behind each day".
+- **VoiceOver:** each plan reads name, Best value (Lifetime only), full price with frequency, trial, and selection state.
+- **Privacy Policy gate:** an Xcode build step fails App Store archives while `AppLinks.privacyPolicy` is nil; normal builds are unaffected. Set the real URL (NKreative LLC legal pages) before archiving.
+
 ## 2026-11-04 (M9b paywall)
 
 - **Live StoreKit paywall:** prices, billing period and the free trial come from StoreKit for the person's storefront (`PlanOffer`); the trial appears only when the storefront has an introductory offer *and* StoreKit says the person is eligible — otherwise Yearly reads "Renews yearly. Cancel anytime." with no trial wording. Wording is generated from those values (`PaywallCopy`), never hardcoded amounts.

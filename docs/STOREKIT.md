@@ -74,7 +74,8 @@ Still to check or do:
 14. **TestFlight:** internal testing is immediate; external testers need Beta App Review and test information (feedback email, description).
 
 ### Before App Store submission
-15. **App Information:** subtitle, category (Lifestyle suggested), age rating questionnaire, copyright line, **Privacy Policy URL** and **Support URL** (both required).
+15. **Privacy policy in the app:** set `AppLinks.privacyPolicy` in `App/AppLinks.swift` — archiving is blocked until it's set.
+15b. **App Information:** subtitle, category (Lifestyle suggested), age rating questionnaire, copyright line, **Privacy Policy URL** and **Support URL** (both required).
 16. **App Privacy:** answer only after the data-flow audit (planned before submission) — don't assume "Data Not Collected".
 17. **Version page:** iPhone screenshots (6.9-inch required), description, keywords, promotional text, review notes explaining Premium and that Sandbox purchase works.
 18. **Terms of Use:** Apple's standard EULA (https://www.apple.com/legal/internet-services/itunes/dev/stdeula/); linked in the paywall and Settings, and in the description or the EULA field.

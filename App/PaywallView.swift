@@ -67,8 +67,8 @@ struct PaywallView: View {
                         VStack(alignment: .leading, spacing: benefitSpacing) {
                             benefit(RetroSymbol.firstAid, "All 27 Survival Kit tasks", "Not just the first one in each section.")
                             benefit(RetroSymbol.planning, "Every calendar day, in detail", "Plan past the next four days — weeks ahead.")
-                            benefit(RetroSymbol.moon, "The full sky behind each day", "Retrogrades, shadows and moon phases, explained.")
-                            benefit(RetroSymbol.heart, "No ads. No account. Ever.", "Your progress stays on your phone.")
+                            benefit(RetroSymbol.moon, "The cosmic details behind each day", "Retrogrades, shadows and moon phases, explained.")
+                            benefit(RetroSymbol.heart, "No ads. No account needed.", "Your progress stays on your phone.")
                         }
 
                         PlanList(flow: flow)
@@ -91,7 +91,13 @@ struct PaywallView: View {
                 }
             }
             #if DEBUG
-            .onAppear { PaywallDebug.scrollToBottom = { proxy.scrollTo(Self.bottomID, anchor: .bottom) } }
+            .onAppear {
+                PaywallDebug.scrollToBottom = { proxy.scrollTo(Self.bottomID, anchor: .bottom) }
+                // `-scrollPaywall bottom` scrolls to the plans and links, for review screenshots.
+                if UserDefaults.standard.string(forKey: "scrollPaywall") == "bottom" {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) { proxy.scrollTo(Self.bottomID, anchor: .bottom) }
+                }
+            }
             #endif
         }
         .ignoresSafeArea(edges: .top)
@@ -193,7 +199,10 @@ private struct PlanCard: View {
                     .frame(width: 20, height: 20)
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: 8) { labels(bestValue: bestValue); Spacer(minLength: 8); price }
-                    VStack(alignment: .leading, spacing: 4) { labels(bestValue: bestValue); price }
+                    VStack(alignment: .leading, spacing: 6) {
+                        labels(bestValue: bestValue)
+                        price.frame(maxWidth: .infinity, alignment: .trailing)
+                    }
                 }
             }
             .padding(.vertical, 14)
@@ -212,9 +221,17 @@ private struct PlanCard: View {
 
     private func labels(bestValue: Bool) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: 8) {
-                Text(PaywallCopy.planName(plan)).retroText(.button).foregroundStyle(RetroColor.text)
-                if bestValue { Badge("BEST VALUE") }
+            let name = Text(PaywallCopy.planName(plan)).retroText(.button).foregroundStyle(RetroColor.text)
+            // Badge beside the name where it fits; below it at large text sizes, never truncating the name.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) {
+                    name.fixedSize()
+                    if bestValue { Badge("BEST VALUE").fixedSize() }
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    name
+                    if bestValue { Badge("BEST VALUE").fixedSize() }
+                }
             }
             Text(offer.map(PaywallCopy.planDetail) ?? "Loading price…")
                 .retroText(.body)
@@ -223,9 +240,18 @@ private struct PlanCard: View {
         }
     }
 
+    /// Price large and right-aligned; the frequency ("/ yr") smaller underneath it. Never truncated:
+    /// longer localized prices push the card to the stacked layout instead.
     @ViewBuilder private var price: some View {
         if let offer {
-            Text(PaywallCopy.priceLabel(offer)).font(RetroTextStyle.monoBold.font).foregroundStyle(RetroColor.text)
+            VStack(alignment: .trailing, spacing: 1) {
+                Text(offer.displayPrice).retroText(.price).foregroundStyle(RetroColor.text)
+                if let unit = PaywallCopy.priceUnit(offer) {
+                    Text(unit).retroText(.monoSmall).foregroundStyle(RetroColor.textMuted)
+                }
+            }
+            .lineLimit(1)
+            .fixedSize()
         } else {
             ProgressView().tint(RetroColor.textMuted)
         }
@@ -286,7 +312,7 @@ private struct PurchaseButton: View {
         let enabled = flow?.canPurchase ?? false
         let plan = flow?.selectedPlan ?? .lifetime
         VStack(spacing: 8) {
-            PrimaryButton(purchasing ? "Processing…" : PaywallCopy.buttonTitle(plan)) {
+            PrimaryButton(purchasing ? "Processing…" : PaywallCopy.buttonTitle(plan, offer: flow?.selectedOffer)) {
                 Task { await action() }
             }
             .overlay(alignment: .leading) {
@@ -297,8 +323,8 @@ private struct PurchaseButton: View {
             .accessibilityHint(purchasing ? "Processing your purchase" : "")
             if let offer = flow?.selectedOffer, flow?.phase != .unavailable {
                 Text(PaywallCopy.disclosure(offer))
-                    .retroText(.finePrint)
-                    .foregroundStyle(RetroColor.textMuted)
+                    .retroText(.disclosure)
+                    .foregroundStyle(RetroColor.text.opacity(0.78))
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
             }

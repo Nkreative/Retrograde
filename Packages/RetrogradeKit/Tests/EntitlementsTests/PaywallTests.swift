@@ -44,9 +44,21 @@ import Testing
         #expect(PaywallCopy.planDetail(monthly) == "1 month free, then $1/month")
     }
 
-    @Test func buttonFollowsThePlan() {
-        #expect(PaywallCopy.buttonTitle(.lifetime) == "Get lifetime access")
-        #expect(PaywallCopy.buttonTitle(.yearly) == "Start Premium")
+    @Test func buttonFollowsThePlanAndTrialEligibility() {
+        #expect(PaywallCopy.buttonTitle(.lifetime, offer: lifetime) == "Get lifetime access")
+        #expect(PaywallCopy.buttonTitle(.yearly, offer: yearlyTrial) == "Start 7-day free trial")
+        #expect(PaywallCopy.buttonTitle(.yearly, offer: yearlyNoTrial) == "Start Premium")
+        #expect(PaywallCopy.buttonTitle(.yearly, offer: nil) == "Start Premium")
+    }
+
+    @Test func priceAndFrequencyAreSeparate() {
+        #expect(PaywallCopy.priceUnit(yearlyTrial) == "/ yr")
+        #expect(PaywallCopy.priceUnit(lifetime) == nil)
+    }
+
+    @Test func voiceOverReadsFullPriceAndFrequency() {
+        #expect(PaywallCopy.accessibilityLabel(yearlyTrial, bestValue: false) == "Yearly, $9.99 per year, 7-day free trial")
+        #expect(PaywallCopy.accessibilityLabel(yearlyNoTrial, bestValue: false) == "Yearly, $9.99 per year")
     }
 }
 
