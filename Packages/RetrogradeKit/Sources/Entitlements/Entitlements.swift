@@ -5,7 +5,7 @@ import Observation
 public enum PremiumPlan: String, Codable, CaseIterable, Sendable {
     case yearly, lifetime
 
-    /// App Store product identifiers, kept out of the UI (configured in App Store Connect in M9).
+    /// App Store product identifiers (App Store Connect; mirrored in StoreKit/Retrograde.storekit).
     public var productID: String {
         switch self {
         case .yearly: "com.nkreative.retrograde.premium.yearly"
@@ -14,157 +14,172 @@ public enum PremiumPlan: String, Codable, CaseIterable, Sendable {
     }
 }
 
-/// A purchase as the App Store reports it. Yearly has an expiry; Lifetime never expires.
-public struct PremiumTransaction: Codable, Equatable, Sendable {
-    public let plan: PremiumPlan
-    public let purchasedAt: Date
-    public var expiresAt: Date?
+/// What Apple has verified about the person's purchases, at the moment it was read.
+public struct EntitlementSnapshot: Equatable, Sendable {
+    /// A verified, non-revoked Lifetime purchase.
+    public var ownsLifetime: Bool
+    /// The Yearly subscription's latest verified state, if they ever subscribed.
+    public var yearly: YearlySubscription?
 
-    public init(plan: PremiumPlan, purchasedAt: Date, expiresAt: Date?) {
-        self.plan = plan
-        self.purchasedAt = purchasedAt
+    public init(ownsLifetime: Bool = false, yearly: YearlySubscription? = nil) {
+        self.ownsLifetime = ownsLifetime
+        self.yearly = yearly
+    }
+
+    public static let none = EntitlementSnapshot()
+}
+
+public struct YearlySubscription: Equatable, Sendable {
+    /// StoreKit's renewal states.
+    public enum State: Equatable, Sendable { case subscribed, inGracePeriod, inBillingRetry, expired, revoked }
+
+    public var state: State
+    /// From Apple's verified transaction — never computed by the app.
+    public var expiresAt: Date?
+    public var willAutoRenew: Bool
+    /// From Apple's verified renewal info, while in the billing grace period.
+    public var gracePeriodEndsAt: Date?
+
+    public init(state: State, expiresAt: Date?, willAutoRenew: Bool, gracePeriodEndsAt: Date? = nil) {
+        self.state = state
         self.expiresAt = expiresAt
+        self.willAutoRenew = willAutoRenew
+        self.gracePeriodEndsAt = gracePeriodEndsAt
     }
 }
 
 public enum PremiumStatus: Equatable, Sendable {
     case free
-    /// Active subscription; renews (or ends) on this date.
-    case yearly(renewsOn: Date)
-    case lifetime
-    /// Had Yearly; it ended on this date and there's no Lifetime.
-    case yearlyExpired(on: Date)
+    /// `yearlyStillRenewing`: they also have an auto-renewing Yearly they may want to cancel.
+    case lifetime(yearlyStillRenewing: Bool)
+    /// Active Yearly; renews (or, if auto-renew is off, ends) at `until`.
+    case yearly(until: Date?, willRenew: Bool)
+    /// Payment failed, but Apple's grace period keeps Premium until `until`.
+    case yearlyGracePeriod(until: Date?)
+    /// Payment failed and the grace period (if any) is over; Apple is still retrying.
+    case yearlyBillingIssue
+    case yearlyExpired(on: Date?)
 
     public var isPremium: Bool {
         switch self {
-        case .yearly, .lifetime: true
-        case .free, .yearlyExpired: false
+        case .lifetime, .yearly, .yearlyGracePeriod: true
+        case .free, .yearlyBillingIssue, .yearlyExpired: false
         }
     }
 }
 
-/// How transactions become a status. Lifetime wins over everything; otherwise the latest Yearly
-/// decides, active until its expiry instant.
+/// How a verified snapshot becomes a status. Lifetime always wins; otherwise the Yearly
+/// subscription's verified state and dates decide. Refunded/revoked purchases grant nothing.
 public enum EntitlementRules {
-    public static func status(of transactions: [PremiumTransaction], at now: Date) -> PremiumStatus {
-        if transactions.contains(where: { $0.plan == .lifetime }) { return .lifetime }
-        let latestExpiry = transactions.filter { $0.plan == .yearly }.compactMap(\.expiresAt).max()
-        guard let latestExpiry else { return .free }
-        return now < latestExpiry ? .yearly(renewsOn: latestExpiry) : .yearlyExpired(on: latestExpiry)
+    public static func status(of snapshot: EntitlementSnapshot, at now: Date) -> PremiumStatus {
+        let yearly = snapshot.yearly.map { yearlyStatus($0, at: now) }
+        if snapshot.ownsLifetime {
+            let renewing: Bool = switch yearly {
+            case let .yearly(_, willRenew): willRenew
+            case .yearlyGracePeriod, .yearlyBillingIssue: true
+            default: false
+            }
+            return .lifetime(yearlyStillRenewing: renewing)
+        }
+        return yearly ?? .free
+    }
+
+    private static func yearlyStatus(_ y: YearlySubscription, at now: Date) -> PremiumStatus {
+        switch y.state {
+        case .revoked:
+            return .free
+        case .subscribed:
+            // Belt and braces: never honour a verified expiry that has already passed.
+            if let expiry = y.expiresAt, now >= expiry { return .yearlyExpired(on: expiry) }
+            return .yearly(until: y.expiresAt, willRenew: y.willAutoRenew)
+        case .inGracePeriod:
+            if let end = y.gracePeriodEndsAt, now >= end { return .yearlyBillingIssue }
+            return .yearlyGracePeriod(until: y.gracePeriodEndsAt)
+        case .inBillingRetry:
+            return .yearlyBillingIssue
+        case .expired:
+            return .yearlyExpired(on: y.expiresAt)
+        }
     }
 }
 
-/// Small persistent storage for entitlement records (UserDefaults in the app, a test suite in tests).
-public protocol EntitlementPersistence: AnyObject, Sendable {
-    func load() -> [PremiumTransaction]
-    func save(_ transactions: [PremiumTransaction])
+public enum PurchaseOutcome: Equatable, Sendable {
+    case purchased
+    /// Waiting on Ask to Buy or another approval; Premium unlocks when it completes.
+    case pending
+    case cancelled
 }
 
-public final class DefaultsEntitlementPersistence: EntitlementPersistence, @unchecked Sendable {
-    private let defaults: UserDefaults
-    private let key: String
-
-    public init(defaults: UserDefaults = .standard, key: String) {
-        self.defaults = defaults
-        self.key = key
-    }
-
-    public func load() -> [PremiumTransaction] {
-        guard let data = defaults.data(forKey: key) else { return [] }
-        return (try? JSONDecoder().decode([PremiumTransaction].self, from: data)) ?? []
-    }
-
-    public func save(_ transactions: [PremiumTransaction]) {
-        defaults.set(try? JSONEncoder().encode(transactions), forKey: key)
-    }
+/// Where purchases come from: StoreKit in production, a simulator in debug builds only.
+public protocol EntitlementSource: AnyObject, Sendable {
+    /// Verified entitlements now. Throws only when the answer can't be trusted or obtained.
+    func currentSnapshot() async throws -> EntitlementSnapshot
+    /// Signals whenever purchases may have changed (renewal, refund, approval, another device).
+    func changes() -> AsyncStream<Void>
+    func purchase(_ plan: PremiumPlan) async throws -> PurchaseOutcome
+    /// Re-syncs purchases with the App Store (Restore Purchases).
+    func restore() async throws
 }
 
-public final class InMemoryEntitlementPersistence: EntitlementPersistence, @unchecked Sendable {
-    private var transactions: [PremiumTransaction]
-
-    public init(_ transactions: [PremiumTransaction] = []) {
-        self.transactions = transactions
-    }
-
-    public func load() -> [PremiumTransaction] { transactions }
-    public func save(_ transactions: [PremiumTransaction]) { self.transactions = transactions }
-}
-
-/// The single source of truth for Premium. Screens read `isPremium`; it changes immediately when
-/// a purchase, expiry or restore happens.
-///
-/// - `device` is the app's own record, read at launch.
-/// - `account` stands in for the person's App Store account: purchases go there and Restore reads
-///   from it. In M8 it's simulated (debug builds only); M9 replaces it with StoreKit. With no
-///   account (production until M9) nothing can be bought and the status is Free.
+/// The single source of truth for Premium. Screens read `isPremium`; it updates as soon as a
+/// purchase, renewal, expiry, refund or restore is verified.
 @MainActor
 @Observable
 public final class EntitlementStore {
-    public private(set) var transactions: [PremiumTransaction]
-    @ObservationIgnored private let device: EntitlementPersistence
-    @ObservationIgnored private let account: EntitlementPersistence?
+    /// The last verified snapshot. A failed refresh keeps it, so a temporary StoreKit or network
+    /// problem never takes Premium away.
+    public private(set) var snapshot: EntitlementSnapshot = .none
+    /// True once this launch has read verified entitlements at least once.
+    public private(set) var hasLoaded = false
+    /// An Ask to Buy (or similar) purchase is waiting for approval.
+    public private(set) var isPurchasePending = false
+
+    @ObservationIgnored private let source: EntitlementSource
     @ObservationIgnored private let now: () -> Date
+    @ObservationIgnored private var listener: Task<Void, Never>?
 
-    public init(device: EntitlementPersistence, account: EntitlementPersistence?, now: @escaping () -> Date = Date.init) {
-        self.device = device
-        self.account = account
+    public init(source: EntitlementSource, now: @escaping () -> Date = Date.init) {
+        self.source = source
         self.now = now
-        self.transactions = device.load()
     }
 
-    public var status: PremiumStatus { EntitlementRules.status(of: transactions, at: now()) }
+    public var status: PremiumStatus { EntitlementRules.status(of: snapshot, at: now()) }
     public var isPremium: Bool { status.isPremium }
-    public var canPurchase: Bool { account != nil }
 
-    /// Records a purchase in the account and on the device. Yearly runs one year from now.
-    public func purchase(_ plan: PremiumPlan) {
-        guard let account else { return }
-        let at = now()
-        let expiry = plan == .yearly ? Calendar(identifier: .gregorian).date(byAdding: .year, value: 1, to: at) : nil
-        var ledger = account.load()
-        ledger.append(PremiumTransaction(plan: plan, purchasedAt: at, expiresAt: expiry))
-        account.save(ledger)
-        apply(ledger)
-    }
-
-    /// Re-reads purchases from the account (e.g. after reinstalling or on a new phone).
-    public func restorePurchases() {
-        apply(account?.load() ?? [])
-    }
-
-    private func apply(_ ledger: [PremiumTransaction]) {
-        transactions = ledger
-        device.save(ledger)
-    }
-
-    // MARK: Simulation (debug builds and tests only; replaced by StoreKit in M9)
-
-    #if DEBUG
-
-    /// Ends the current Yearly subscription now (as if it lapsed without renewing).
-    public func simulateYearlyExpiry() {
-        guard let account else { return }
-        let at = now().addingTimeInterval(-1)
-        let ledger = account.load().map { t -> PremiumTransaction in
-            guard t.plan == .yearly, let expiry = t.expiresAt, expiry > at else { return t }
-            var ended = t
-            ended.expiresAt = at
-            return ended
+    /// Reads entitlements and keeps listening for changes. Safe to call more than once.
+    public func start() async {
+        if listener == nil {
+            let changes = source.changes()
+            listener = Task { [weak self] in
+                for await _ in changes { await self?.refresh() }
+            }
         }
-        account.save(ledger)
-        apply(ledger)
+        await refresh()
     }
 
-    /// Forgets the device record only, as after deleting and reinstalling the app.
-    public func simulateReinstall() {
-        transactions = []
-        device.save([])
+    /// Re-reads verified entitlements (launch, foreground, after any change).
+    public func refresh() async {
+        do {
+            snapshot = try await source.currentSnapshot()
+            hasLoaded = true
+            if isPremium { isPurchasePending = false }
+        } catch {
+            // Keep the last verified snapshot.
+        }
     }
 
-    /// Clears every simulated purchase.
-    public func simulateReset() {
-        account?.save([])
-        apply([])
+    public func purchase(_ plan: PremiumPlan) async throws -> PurchaseOutcome {
+        let outcome = try await source.purchase(plan)
+        switch outcome {
+        case .purchased: await refresh()
+        case .pending: isPurchasePending = true
+        case .cancelled: break
+        }
+        return outcome
     }
-    #endif
+
+    public func restorePurchases() async throws {
+        try await source.restore()
+        await refresh()
+    }
 }

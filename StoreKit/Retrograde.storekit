@@ -1,0 +1,76 @@
+{
+  "identifier" : "6A4E2C1B-7D3F-4E8A-9B21-5C0D8E7F1A3B",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "19.99",
+      "familyShareable" : false,
+      "internalID" : "6747000001",
+      "localizations" : [
+        {
+          "description" : "All Survival Kit tasks and every calendar day, forever.",
+          "displayName" : "Retrograde Premium – Lifetime",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.nkreative.retrograde.premium.lifetime",
+      "referenceName" : "Retrograde Premium – Lifetime",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21540001",
+      "localizations" : [
+
+      ],
+      "name" : "Retrograde Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "9.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6747000002",
+          "introductoryOffer" : {
+            "internalID" : "6747000003",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "All Survival Kit tasks and every calendar day. Renews yearly.",
+              "displayName" : "Retrograde Premium – Yearly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.nkreative.retrograde.premium.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Retrograde Premium – Yearly",
+          "subscriptionGroupID" : "21540001",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

@@ -55,20 +55,14 @@ struct PaywallView: View {
                     }
 
                     VStack(spacing: 6) {
-                        // Debug builds buy from the simulated account (M8); release builds can't buy until StoreKit (M9).
+                        // Live StoreKit prices, offers and purchase states arrive in M9b.
                         PrimaryButton(plan == .lifetime ? "Get lifetime access" : "Start Premium") {
-                            entitlements.purchase(plan == .lifetime ? .lifetime : .yearly)
-                            if entitlements.isPremium { dismiss() }
+                            Task {
+                                _ = try? await entitlements.purchase(plan == .lifetime ? .lifetime : .yearly)
+                                if entitlements.isPremium { dismiss() }
+                            }
                         }
-                        .disabled(!entitlements.canPurchase)
-                        .opacity(entitlements.canPurchase ? 1 : 0.55)
-                        Group {
-                            #if DEBUG
-                            Text("Simulated purchase (debug build). Real purchases connect in M9.")
-                            #else
-                            Text("Preview — purchases connect in the next milestone.")
-                            #endif
-                        }
+                        Text("Preview — prices and terms connect in the next step.")
                             .retroText(.finePrint)
                             .foregroundStyle(RetroColor.textMuted)
                     }
@@ -80,10 +74,11 @@ struct PaywallView: View {
                     VStack(spacing: 8) {
                         HStack(spacing: 6) {
                             Button("RESTORE PURCHASES") {
-                                entitlements.restorePurchases()
-                                if entitlements.isPremium { dismiss() }
+                                Task {
+                                    try? await entitlements.restorePurchases()
+                                    if entitlements.isPremium { dismiss() }
+                                }
                             }
-                            .disabled(!entitlements.canPurchase)
                             Text("·  TERMS  ·  PRIVACY")
                         }
                         .retroText(.monoSmall)

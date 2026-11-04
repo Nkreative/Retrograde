@@ -2,6 +2,14 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-03 (M9 decisions & M9a StoreKit)
+
+- **Products (final):** Yearly `com.nkreative.retrograde.premium.yearly` — auto-renewable, 1 year, US $9.99, 7-day free trial for eligible new subscribers; Lifetime `com.nkreative.retrograde.premium.lifetime` — non-consumable, US $19.99, no trial. Group "Retrograde Premium". Bundle ID `com.nkreative.retrograde`. International availability with Apple's localized pricing; Family Sharing off; billing grace period on (16 days); Apple's standard EULA; dedicated privacy policy and support page (URLs/email configurable placeholders until supplied; never published as placeholders). Lifetime stays the default paywall selection with BEST VALUE.
+- **Settings scope (M9c):** Premium status/plan, Restore, Manage Subscription, Request a Refund, notification preferences (stored now, scheduled in M11), methodology, data sources and credits, privacy, terms, support, version. Widgets (M12) and sharing (M13) aren't shown as active until built.
+- **Progress:** "X of 27 done" keeps counting completed Premium tasks after a downgrade; completion history is kept across entitlement changes.
+- **M9a — StoreKit is the authority:** `StoreKitEntitlementSource` reads only verified transactions (`currentEntitlements`, the Yearly product's latest transaction and its verified subscription status) into an `EntitlementSnapshot`; `EntitlementRules` map it (Lifetime first; grace period = Premium; billing retry, expired, refunded/revoked = not). Apple's dates only. Failed reads keep the last verified snapshot. No app-side cache — StoreKit's on-device signed transactions provide offline access. Unfinished and updated transactions are processed then finished. Details: [STOREKIT.md](STOREKIT.md).
+- **Simulator** moved behind an explicit debug switch (`-entitlementSource simulated` or `-entitlement <state>`); compiled out of release builds.
+
 ## 2026-11-03 (M8 entitlements)
 
 - **One source of truth:** `EntitlementStore` (Entitlements module) — every screen reads `isPremium` from it (Survival Kit, Calendar, paywall; Settings will in M9). Status is derived from purchase transactions: **Lifetime** (never expires, always wins), else **Yearly** active until its expiry instant, else **Yearly expired**, else **Free**. Both paid plans unlock the same `retrograde.premium` features. Product IDs: `com.nkreative.retrograde.premium.lifetime` / `.yearly` (placeholders until App Store Connect).

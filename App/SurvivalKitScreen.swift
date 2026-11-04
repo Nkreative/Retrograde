@@ -234,9 +234,10 @@ private struct TaskRow: View {
     @ScaledMetric(relativeTo: .footnote) private var firstLineCentre: CGFloat = 4.4
 
     private func row(checkbox: TaskCheckbox.State, textColor: Color, textOpacity: Double = 1) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
+        let centre = firstLineCentre
+        return HStack(alignment: .firstTextBaseline, spacing: 10) {
             TaskCheckbox(checkbox)
-                .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + firstLineCentre }
+                .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + centre }
             Text(task.title)
                 .retroText(.body)
                 .foregroundStyle(textColor)

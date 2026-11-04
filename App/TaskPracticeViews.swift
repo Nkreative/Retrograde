@@ -96,7 +96,7 @@ private struct TickList: View {
                 } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
                         TaskCheckbox(isTicked ? .done : .open)
-                            .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + firstLineCentre }
+                            .alignmentGuide(.firstTextBaseline) { [centre = firstLineCentre] in $0[VerticalAlignment.center] + centre }
                         Text(item).retroText(.body)
                             .foregroundStyle(isTicked ? RetroColor.textMuted : RetroColor.text)
                             .frame(maxWidth: .infinity, alignment: .leading)

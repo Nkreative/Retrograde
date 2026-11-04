@@ -3,8 +3,9 @@ import DesignSystem
 import Entitlements
 import SwiftUI
 
-/// Debug-only controls for the simulated App Store account (M8). Not compiled into release builds.
-/// Opened from the gear button until Settings arrives in M9.
+/// Debug-only view of the Premium state, with simulator controls when the debug build runs with
+/// `-entitlementSource simulated`. Not compiled into release builds. Opened from the gear button
+/// until Settings arrives (M9c).
 struct PremiumSimulatorView: View {
     @Environment(EntitlementStore.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -15,22 +16,32 @@ struct PremiumSimulatorView: View {
                 Section("Current status") {
                     LabeledContent("Status", value: store.status.debugName)
                     LabeledContent("Unlocks Premium", value: store.isPremium ? "Yes" : "No")
-                    LabeledContent("Transactions", value: "\(store.transactions.count)")
+                    LabeledContent("Source", value: AppEntitlements.simulator == nil ? "StoreKit" : "Simulator")
                 }
-                Section("Simulate") {
-                    Button("Buy Yearly") { store.purchase(.yearly) }
-                    Button("Buy Lifetime") { store.purchase(.lifetime) }
-                    Button("Expire Yearly now") { store.simulateYearlyExpiry() }
-                    Button("Reinstall (forget this device's record)") { store.simulateReinstall() }
-                    Button("Restore purchases") { store.restorePurchases() }
-                    Button("Reset to Free", role: .destructive) { store.simulateReset() }
+                if let sim = AppEntitlements.simulator {
+                    Section("Simulate") {
+                        Button("Buy Yearly") { Task { _ = try? await store.purchase(.yearly) } }
+                        Button("Buy Lifetime") { Task { _ = try? await store.purchase(.lifetime) } }
+                        Button("Turn off auto-renew") { sim.turnOffAutoRenew() }
+                        Button("Billing problem (grace period)") { sim.enterGracePeriod() }
+                        Button("Billing problem (retry, no grace)") { sim.enterBillingRetry() }
+                        Button("Expire Yearly now") { sim.expireYearly() }
+                        Button("Refund Yearly") { sim.refund(.yearly) }
+                        Button("Refund Lifetime") { sim.refund(.lifetime) }
+                        Button("Reset to Free", role: .destructive) { sim.reset() }
+                    }
+                } else {
+                    Section {
+                        Text("Using StoreKit. From Xcode, purchases run against StoreKit/Retrograde.storekit; manage them with Debug › StoreKit › Manage Transactions. Launch with -entitlementSource simulated for the simulator.")
+                            .font(.footnote)
+                    }
                 }
                 Section {
-                    Text("Simulated purchases persist across relaunches. Nothing here talks to the App Store; real purchases arrive in M9.")
-                        .font(.footnote)
+                    Button("Refresh from source") { Task { await store.refresh() } }
+                    Button("Restore purchases") { Task { try? await store.restorePurchases() } }
                 }
             }
-            .navigationTitle("Premium simulator")
+            .navigationTitle("Premium (debug)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
@@ -39,11 +50,14 @@ struct PremiumSimulatorView: View {
 
 extension PremiumStatus {
     var debugName: String {
+        func day(_ date: Date?) -> String { date?.formatted(date: .abbreviated, time: .omitted) ?? "?" }
         switch self {
-        case .free: "Free"
-        case let .yearly(renewsOn): "Yearly · renews \(renewsOn.formatted(date: .abbreviated, time: .omitted))"
-        case .lifetime: "Lifetime"
-        case let .yearlyExpired(on): "Yearly expired \(on.formatted(date: .abbreviated, time: .shortened))"
+        case .free: return "Free"
+        case let .lifetime(renewing): return renewing ? "Lifetime (Yearly still renewing)" : "Lifetime"
+        case let .yearly(until, willRenew): return willRenew ? "Yearly · renews \(day(until))" : "Yearly · ends \(day(until))"
+        case let .yearlyGracePeriod(until): return "Billing issue · grace until \(day(until))"
+        case .yearlyBillingIssue: return "Billing issue"
+        case let .yearlyExpired(on): return "Yearly ended \(day(on))"
         }
     }
 }

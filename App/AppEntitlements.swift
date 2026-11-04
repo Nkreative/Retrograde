@@ -3,76 +3,75 @@ import Foundation
 
 /// Builds the app's single `EntitlementStore`.
 ///
-/// Production (until StoreKit in M9): only the device record, no purchase account — always Free.
-/// Debug: a simulated App Store account kept in UserDefaults, so purchases, expiry and restore
-/// survive relaunches. `-entitlement free|yearly|lifetime|expiredYearly` (or the older
-/// `-premium YES`) starts in that state using throwaway in-memory storage for screenshots.
+/// Production: StoreKit 2 verified transactions only.
+/// Debug: StoreKit too — against `StoreKit/Retrograde.storekit` when run from Xcode — unless the
+/// M8 simulator is explicitly requested with `-entitlementSource simulated`, or a throwaway state
+/// with `-entitlement free|yearly|lifetime|expiredYearly|gracePeriod|billingIssue` (`-premium YES`
+/// = lifetime). The simulator is not compiled into release builds.
 @MainActor
 enum AppEntitlements {
+    #if DEBUG
+    /// The simulator, when the debug build is using it.
+    private(set) static var simulator: SimulatedEntitlementSource?
+    #endif
+
     static func make() -> EntitlementStore {
         #if DEBUG
-        if let preset = launchPreset() {
-            let store = EntitlementStore(device: InMemoryEntitlementPersistence(), account: InMemoryEntitlementPersistence())
-            switch preset {
-            case "yearly":
-                store.purchase(.yearly)
-            case "lifetime":
-                store.purchase(.lifetime)
-            case "expiredYearly":
-                store.purchase(.yearly)
-                store.simulateYearlyExpiry()
-            default:
-                break
-            }
-            return store
+        let defaults = UserDefaults.standard
+        if let preset = defaults.string(forKey: "entitlement") ?? (defaults.bool(forKey: "premium") ? "lifetime" : nil) {
+            let sim = SimulatedEntitlementSource(storage: InMemoryAccountStorage())
+            apply(preset: preset, to: sim)
+            simulator = sim
+            return EntitlementStore(source: sim)
         }
-        let store = EntitlementStore(
-            device: DefaultsEntitlementPersistence(key: "entitlements.device"),
-            account: DefaultsEntitlementPersistence(key: "debug.simulatedAppStoreAccount")
-        )
-        scheduleScriptedActions(on: store)
-        return store
-        #else
-        return EntitlementStore(device: DefaultsEntitlementPersistence(key: "entitlements.device"), account: nil)
+        if defaults.string(forKey: "entitlementSource") == "simulated" {
+            let sim = SimulatedEntitlementSource(storage: DefaultsAccountStorage(key: "debug.simulatedAppStoreAccount"))
+            simulator = sim
+            scheduleScriptedActions(on: sim)
+            return EntitlementStore(source: sim)
+        }
         #endif
+        return EntitlementStore(source: StoreKitEntitlementSource())
     }
 
     #if DEBUG
-    /// `-simulatorScript "buyLifetime@4,expireYearly@8"` runs simulator actions on the persistent
-    /// store that many seconds after launch, to demonstrate live changes without restarting.
-    /// `@0` runs immediately. Actions: buyYearly, buyLifetime, expireYearly, reinstall, restore, reset.
-    private static func scheduleScriptedActions(on store: EntitlementStore) {
+    private static func apply(preset: String, to sim: SimulatedEntitlementSource) {
+        let buyYearly = { Task { _ = try? await sim.purchase(.yearly) } }
+        switch preset {
+        case "yearly": _ = buyYearly()
+        case "lifetime": Task { _ = try? await sim.purchase(.lifetime) }
+        case "expiredYearly": Task { _ = try? await sim.purchase(.yearly); sim.expireYearly() }
+        case "gracePeriod": Task { _ = try? await sim.purchase(.yearly); sim.enterGracePeriod() }
+        case "billingIssue": Task { _ = try? await sim.purchase(.yearly); sim.enterBillingRetry() }
+        default: break
+        }
+    }
+
+    /// `-simulatorScript "buyYearly@5,expireYearly@10"` runs simulator actions that many seconds
+    /// after launch (`@0` = immediately). Actions: buyYearly, buyLifetime, expireYearly, grace,
+    /// billingRetry, cancelRenewal, refundYearly, refundLifetime, reset.
+    private static func scheduleScriptedActions(on sim: SimulatedEntitlementSource) {
         guard let script = UserDefaults.standard.string(forKey: "simulatorScript") else { return }
         for step in script.split(separator: ",") {
             let parts = step.split(separator: "@")
             let action = String(parts[0])
             let delay = parts.count > 1 ? Double(parts[1]) ?? 0 : 0
-            let run = {
+            Task { @MainActor in
+                if delay > 0 { try? await Task.sleep(for: .seconds(delay)) }
                 switch action {
-                case "buyYearly": store.purchase(.yearly)
-                case "buyLifetime": store.purchase(.lifetime)
-                case "expireYearly": store.simulateYearlyExpiry()
-                case "reinstall": store.simulateReinstall()
-                case "restore": store.restorePurchases()
-                case "reset": store.simulateReset()
+                case "buyYearly": _ = try? await sim.purchase(.yearly)
+                case "buyLifetime": _ = try? await sim.purchase(.lifetime)
+                case "expireYearly": sim.expireYearly()
+                case "grace": sim.enterGracePeriod()
+                case "billingRetry": sim.enterBillingRetry()
+                case "cancelRenewal": sim.turnOffAutoRenew()
+                case "refundYearly": sim.refund(.yearly)
+                case "refundLifetime": sim.refund(.lifetime)
+                case "reset": sim.reset()
                 default: assertionFailure("Unknown simulator action \(action)")
                 }
             }
-            if delay == 0 {
-                run()
-            } else {
-                Task { @MainActor in
-                    try? await Task.sleep(for: .seconds(delay))
-                    run()
-                }
-            }
         }
-    }
-
-    private static func launchPreset() -> String? {
-        let defaults = UserDefaults.standard
-        if let preset = defaults.string(forKey: "entitlement") { return preset }
-        return defaults.bool(forKey: "premium") ? "lifetime" : nil
     }
     #endif
 }

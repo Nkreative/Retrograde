@@ -28,7 +28,7 @@ let package = Package(
         .target(name: "SurvivalKit", dependencies: ["RetroCore"]),
         // On-device storage (SwiftData): task completion per retrograde cycle.
         .target(name: "Persistence"),
-        // Premium status: one source of truth, from purchases (simulated in M8, StoreKit in M9).
+        // Premium status: one source of truth from StoreKit 2 verified transactions (simulator in debug only).
         .target(name: "Entitlements"),
         // Colours, fonts, icons and shared SwiftUI components from the Figma design.
         .target(

@@ -7,131 +7,202 @@ import SurvivalKit
 import Testing
 @testable import Entitlements
 
-/// A movable clock so expiry can be tested without waiting a year.
-@MainActor
-final class TestClock {
-    var now = Date(timeIntervalSince1970: 1_793_750_400) // 2026-11-03 12:00 UTC
-    func advance(days: Double) { now += days * 86_400 }
-}
+private let t0 = Date(timeIntervalSince1970: 1_793_750_400) // 2026-11-03 12:00 UTC
+private let day: TimeInterval = 86_400
 
-@MainActor
-private func makeStore(clock: TestClock, device: EntitlementPersistence = InMemoryEntitlementPersistence(),
-                       account: EntitlementPersistence? = InMemoryEntitlementPersistence()) -> EntitlementStore {
-    EntitlementStore(device: device, account: account, now: { clock.now })
-}
+// MARK: - Rules (every StoreKit state)
 
 @Suite struct EntitlementRuleTests {
-    let t0 = Date(timeIntervalSince1970: 1_793_750_400)
+    private func yearly(_ state: YearlySubscription.State, expires: TimeInterval = 300 * day, renew: Bool = true, grace: TimeInterval? = nil) -> YearlySubscription {
+        YearlySubscription(state: state, expiresAt: t0 + expires, willAutoRenew: renew, gracePeriodEndsAt: grace.map { t0 + $0 })
+    }
 
-    @Test func statuses() {
-        let yearly = PremiumTransaction(plan: .yearly, purchasedAt: t0, expiresAt: t0 + 365 * 86_400)
-        let lifetime = PremiumTransaction(plan: .lifetime, purchasedAt: t0, expiresAt: nil)
-        #expect(EntitlementRules.status(of: [], at: t0) == .free)
-        #expect(EntitlementRules.status(of: [yearly], at: t0 + 10) == .yearly(renewsOn: yearly.expiresAt!))
-        #expect(EntitlementRules.status(of: [yearly], at: yearly.expiresAt!) == .yearlyExpired(on: yearly.expiresAt!))
-        #expect(EntitlementRules.status(of: [lifetime], at: t0 + 100 * 365 * 86_400) == .lifetime)
+    private func status(lifetime: Bool = false, _ y: YearlySubscription? = nil, at now: Date = t0) -> PremiumStatus {
+        EntitlementRules.status(of: EntitlementSnapshot(ownsLifetime: lifetime, yearly: y), at: now)
+    }
+
+    @Test func freeWithoutPurchases() {
+        #expect(status() == .free)
+    }
+
+    @Test func yearlyUsesAppleVerifiedDates() {
+        // The renewal date is whatever Apple verified — not purchase date + 365 days.
+        let s = status(yearly(.subscribed, expires: 17 * day))
+        #expect(s == .yearly(until: t0 + 17 * day, willRenew: true))
+        #expect(s.isPremium)
+        #expect(status(yearly(.subscribed, renew: false)) == .yearly(until: t0 + 300 * day, willRenew: false)) // cancelled, still active
+    }
+
+    @Test func neverHonoursAPassedExpiry() {
+        #expect(status(yearly(.subscribed, expires: -1)) == .yearlyExpired(on: t0 - 1))
+    }
+
+    @Test func gracePeriodKeepsPremiumUntilItEnds() {
+        let grace = yearly(.inGracePeriod, expires: -2 * day, grace: 14 * day)
+        #expect(status(grace) == .yearlyGracePeriod(until: t0 + 14 * day))
+        #expect(status(grace).isPremium)
+        #expect(status(grace, at: t0 + 15 * day) == .yearlyBillingIssue)
+    }
+
+    @Test func billingRetryExpiryAndRevocationDoNotUnlock() {
+        #expect(!status(yearly(.inBillingRetry, expires: -1)).isPremium)
+        #expect(status(yearly(.expired, expires: -1)) == .yearlyExpired(on: t0 - 1))
+        #expect(status(yearly(.revoked)) == .free) // refunded
     }
 
     @Test func lifetimeTakesPrecedence() {
-        let expired = PremiumTransaction(plan: .yearly, purchasedAt: t0, expiresAt: t0 + 10)
-        let active = PremiumTransaction(plan: .yearly, purchasedAt: t0, expiresAt: t0 + 1_000)
-        let lifetime = PremiumTransaction(plan: .lifetime, purchasedAt: t0 + 5, expiresAt: nil)
-        #expect(EntitlementRules.status(of: [expired, lifetime], at: t0 + 100) == .lifetime)
-        #expect(EntitlementRules.status(of: [active, lifetime], at: t0 + 100) == .lifetime)
+        #expect(status(lifetime: true) == .lifetime(yearlyStillRenewing: false))
+        #expect(status(lifetime: true, yearly(.subscribed)) == .lifetime(yearlyStillRenewing: true))
+        #expect(status(lifetime: true, yearly(.subscribed, renew: false)) == .lifetime(yearlyStillRenewing: false))
+        #expect(status(lifetime: true, yearly(.expired, expires: -1)) == .lifetime(yearlyStillRenewing: false))
+        #expect(status(lifetime: true, yearly(.revoked)) == .lifetime(yearlyStillRenewing: false))
+        #expect(status(lifetime: true, at: t0 + 50 * 365 * day).isPremium) // never expires
     }
 
-    @Test func bothPlansUnlockTheSameThing() {
-        #expect(PremiumStatus.yearly(renewsOn: t0).isPremium && PremiumStatus.lifetime.isPremium)
-        #expect(!PremiumStatus.free.isPremium && !PremiumStatus.yearlyExpired(on: t0).isPremium)
+    @Test func refundedLifetimeFallsBackToYearly() {
+        // A refunded Lifetime isn't in the snapshot (ownsLifetime == false); an active Yearly still counts.
+        #expect(status(lifetime: false, yearly(.subscribed)).isPremium)
     }
+}
+
+// MARK: - Store
+
+/// A source whose answers the test controls.
+private final class ScriptedSource: EntitlementSource, @unchecked Sendable {
+    var snapshot = EntitlementSnapshot.none
+    var failReads = false
+    var purchaseOutcome = PurchaseOutcome.purchased
+    var restoreCalls = 0
+    let (stream, continuation) = AsyncStream.makeStream(of: Void.self)
+
+    func currentSnapshot() async throws -> EntitlementSnapshot {
+        if failReads { throw URLError(.notConnectedToInternet) }
+        return snapshot
+    }
+
+    func changes() -> AsyncStream<Void> { stream }
+
+    func purchase(_ plan: PremiumPlan) async throws -> PurchaseOutcome {
+        if purchaseOutcome == .purchased {
+            snapshot = plan == .lifetime ? EntitlementSnapshot(ownsLifetime: true)
+                : EntitlementSnapshot(yearly: YearlySubscription(state: .subscribed, expiresAt: t0 + 365 * day, willAutoRenew: true))
+        }
+        return purchaseOutcome
+    }
+
+    func restore() async throws { restoreCalls += 1 }
+}
+
+/// Waits briefly for the store's change listener to apply an update.
+@MainActor
+private func eventually(_ condition: @MainActor () -> Bool) async -> Bool {
+    for _ in 0..<100 {
+        if condition() { return true }
+        try? await Task.sleep(for: .milliseconds(10))
+    }
+    return condition()
 }
 
 @MainActor
 @Suite struct EntitlementStoreTests {
-    @Test func freeToYearlyToExpiredToRenewed() {
-        let clock = TestClock()
-        let store = makeStore(clock: clock)
-        #expect(store.status == .free)
-        store.purchase(.yearly)
+    @Test func failedRefreshNeverRevokesVerifiedPremium() async {
+        let source = ScriptedSource()
+        let store = EntitlementStore(source: source, now: { t0 })
+        source.snapshot = EntitlementSnapshot(ownsLifetime: true)
+        await store.refresh()
         #expect(store.isPremium)
-        clock.advance(days: 364)
+        source.failReads = true // offline / StoreKit unavailable
+        source.snapshot = .none
+        await store.refresh()
         #expect(store.isPremium)
-        clock.advance(days: 2) // past the anniversary without renewing
+        source.failReads = false // back online: StoreKit's answer wins
+        await store.refresh()
         #expect(!store.isPremium)
-        guard case .yearlyExpired = store.status else { Issue.record("expected expired"); return }
-        store.purchase(.yearly) // resubscribe
-        #expect(store.isPremium)
     }
 
-    @Test func simulatedExpiryIsImmediate() {
-        let clock = TestClock()
-        let store = makeStore(clock: clock)
-        store.purchase(.yearly)
-        store.simulateYearlyExpiry()
-        #expect(!store.isPremium)
-        guard case .yearlyExpired = store.status else { Issue.record("expected expired"); return }
+    @Test func pendingPurchaseUnlocksWhenApproved() async throws {
+        let source = ScriptedSource()
+        let store = EntitlementStore(source: source, now: { t0 })
+        await store.start()
+        source.purchaseOutcome = .pending
+        #expect(try await store.purchase(.lifetime) == .pending)
+        #expect(store.isPurchasePending && !store.isPremium)
+        source.snapshot = EntitlementSnapshot(ownsLifetime: true) // parent approves
+        source.continuation.yield()
+        #expect(await eventually { store.isPremium && !store.isPurchasePending })
     }
 
-    @Test func lifetimeNeverExpiresAndOverridesExpiredYearly() {
-        let clock = TestClock()
-        let store = makeStore(clock: clock)
-        store.purchase(.yearly)
-        store.simulateYearlyExpiry()
-        store.purchase(.lifetime)
-        #expect(store.status == .lifetime)
-        clock.advance(days: 365 * 50)
-        store.simulateYearlyExpiry()
-        #expect(store.status == .lifetime)
+    @Test func cancelledPurchaseChangesNothing() async throws {
+        let source = ScriptedSource()
+        source.purchaseOutcome = .cancelled
+        let store = EntitlementStore(source: source, now: { t0 })
+        #expect(try await store.purchase(.yearly) == .cancelled)
+        #expect(!store.isPremium && !store.isPurchasePending)
     }
 
-    @Test func persistsAcrossRelaunch() throws {
-        let suite = "entitlements-test-\(UUID())"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-        let clock = TestClock()
-        let device = DefaultsEntitlementPersistence(defaults: defaults, key: "device")
-        let account = DefaultsEntitlementPersistence(defaults: defaults, key: "account")
-        makeStore(clock: clock, device: device, account: account).purchase(.yearly)
-
-        // Fresh objects, as after relaunching the app.
-        func relaunch() -> EntitlementStore {
-            makeStore(clock: clock,
-                      device: DefaultsEntitlementPersistence(defaults: defaults, key: "device"),
-                      account: DefaultsEntitlementPersistence(defaults: defaults, key: "account"))
-        }
-        #expect(relaunch().isPremium)
-        relaunch().simulateYearlyExpiry()
-        guard case .yearlyExpired = relaunch().status else { Issue.record("expiry should persist"); return }
-        relaunch().purchase(.lifetime)
-        #expect(relaunch().status == .lifetime)
+    @Test func restoreResyncsThenRereads() async throws {
+        let source = ScriptedSource()
+        let store = EntitlementStore(source: source, now: { t0 })
+        source.snapshot = EntitlementSnapshot(ownsLifetime: true) // e.g. after reinstall, before re-reading
+        try await store.restorePurchases()
+        #expect(source.restoreCalls == 1)
+        #expect(store.status == .lifetime(yearlyStillRenewing: false))
     }
 
-    @Test func restoreRecoversPurchasesAfterReinstall() {
-        let clock = TestClock()
-        let account = InMemoryEntitlementPersistence()
-        let store = makeStore(clock: clock, account: account)
-        store.purchase(.lifetime)
-        store.simulateReinstall()
-        #expect(store.status == .free)
-        store.restorePurchases()
-        #expect(store.status == .lifetime)
-    }
-
-    @Test func restoreWithNothingBoughtStaysFree() {
-        let store = makeStore(clock: TestClock())
-        store.restorePurchases()
-        #expect(store.status == .free)
-    }
-
-    @Test func productionWithoutAnAccountCannotBuy() {
-        let store = makeStore(clock: TestClock(), account: nil)
-        #expect(!store.canPurchase)
-        store.purchase(.lifetime)
-        #expect(store.status == .free)
+    @Test func listensForChangesAfterStart() async {
+        let source = ScriptedSource()
+        let store = EntitlementStore(source: source, now: { t0 })
+        await store.start()
+        source.snapshot = EntitlementSnapshot(ownsLifetime: true) // e.g. bought on another device
+        source.continuation.yield()
+        #expect(await eventually { store.isPremium })
+        source.snapshot = .none // refunded
+        source.continuation.yield()
+        #expect(await eventually { !store.isPremium })
     }
 }
 
-/// End-to-end: the one store's flag drives every access rule, with no restart in between.
+// MARK: - Debug simulator
+
+@MainActor
+@Suite struct SimulatorTests {
+    @Test func walksEveryState() async throws {
+        let sim = SimulatedEntitlementSource(storage: InMemoryAccountStorage(), now: { t0 })
+        let store = EntitlementStore(source: sim, now: { t0 })
+        _ = try await store.purchase(.yearly)
+        #expect(store.isPremium)
+        sim.turnOffAutoRenew(); await store.refresh()
+        guard case .yearly(_, willRenew: false) = store.status else { Issue.record("expected cancelled-but-active"); return }
+        sim.enterGracePeriod(); await store.refresh()
+        #expect(store.isPremium)
+        sim.enterBillingRetry(); await store.refresh()
+        #expect(store.status == .yearlyBillingIssue)
+        sim.expireYearly(); await store.refresh()
+        #expect(!store.isPremium)
+        _ = try await store.purchase(.lifetime)
+        #expect(store.status == .lifetime(yearlyStillRenewing: false))
+        sim.refund(.lifetime); await store.refresh()
+        #expect(!store.isPremium)
+    }
+
+    @Test func persistsAcrossRelaunch() async throws {
+        let suite = "entitlements-test-\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        func relaunch() async -> EntitlementStore {
+            let store = EntitlementStore(source: SimulatedEntitlementSource(storage: DefaultsAccountStorage(defaults: defaults, key: "account"), now: { t0 }), now: { t0 })
+            await store.refresh()
+            return store
+        }
+        _ = try await relaunch().purchase(.yearly)
+        #expect(await relaunch().isPremium)
+        SimulatedEntitlementSource(storage: DefaultsAccountStorage(defaults: defaults, key: "account"), now: { t0 }).expireYearly()
+        guard case .yearlyExpired = await relaunch().status else { Issue.record("expiry should persist"); return }
+    }
+}
+
+// MARK: - End to end with the access rules
+
 @MainActor
 @Suite struct EntitlementAccessTests {
     let kit = SurvivalKit.for(.mercury)!
@@ -146,52 +217,43 @@ private func makeStore(clock: TestClock, device: EntitlementPersistence = InMemo
 
     private func unlockedDays(_ premium: Bool, intensity: IntensityCalculator) -> Int {
         var count = 0
-        var day = CalendarDay(year: 2025, month: 1, day: 1)
-        while day <= CalendarDay(year: 2030, month: 12, day: 31) {
-            if case .unlocked = DayDetailContent.make(day: day, today: today, isPremium: premium, policy: .launch, intensity: intensity)!.details { count += 1 }
-            day = day.adding(days: 1)
+        var d = CalendarDay(year: 2025, month: 1, day: 1)
+        while d <= CalendarDay(year: 2030, month: 12, day: 31) {
+            if case .unlocked = DayDetailContent.make(day: d, today: today, isPremium: premium, policy: .launch, intensity: intensity)!.details { count += 1 }
+            d = d.adding(days: 1)
         }
         return count
     }
 
-    @Test func upgradeAndDowngradeFlipEveryLockImmediately() throws {
+    @Test func upgradeAndDowngradeFlipEveryLockImmediately() async throws {
         var utc = Calendar(identifier: .gregorian)
         utc.timeZone = TimeZone(identifier: "UTC")!
         let intensity = IntensityCalculator(ephemeris: try BundledEphemeris.load(), calendar: utc)
-        let store = makeStore(clock: TestClock())
+        let sim = SimulatedEntitlementSource(storage: InMemoryAccountStorage(), now: { t0 })
+        let store = EntitlementStore(source: sim, now: { t0 })
 
         #expect(unlockedTaskCount(store.isPremium) == 4)
-        #expect(unlockedDays(store.isPremium, intensity: intensity) == 4) // today + 3
-
-        store.purchase(.yearly)
+        #expect(unlockedDays(store.isPremium, intensity: intensity) == 4)
+        _ = try await store.purchase(.yearly)
         #expect(unlockedTaskCount(store.isPremium) == 27)
-        #expect(unlockedDays(store.isPremium, intensity: intensity) == 2191) // every day 2025–2030
-
-        store.simulateYearlyExpiry()
+        #expect(unlockedDays(store.isPremium, intensity: intensity) == 2191)
+        sim.expireYearly(); await store.refresh()
         #expect(unlockedTaskCount(store.isPremium) == 4)
-        #expect(unlockedDays(store.isPremium, intensity: intensity) == 4) // rolling window still works
+        #expect(unlockedDays(store.isPremium, intensity: intensity) == 4)
     }
 
-    @Test func freeWindowKeepsRollingWhilePremiumChanges() {
-        let calendarPolicy = CalendarAccessPolicy.launch
-        for isPremium in [false, true, false] {
-            let tomorrow = today.adding(days: 1)
-            #expect(calendarPolicy.detailsUnlocked(tomorrow.adding(days: 3), today: tomorrow, isPremium: isPremium))
-            #expect(calendarPolicy.detailsUnlocked(today, today: today, isPremium: isPremium))
-        }
-    }
-
-    @Test func downgradeKeepsCompletionAndHistory() throws {
+    @Test func downgradeKeepsCompletionAndTheTwentySevenCount() async throws {
         let completions = CompletionStore(container: try CompletionStore.makeContainer(inMemory: true))
-        let store = makeStore(clock: TestClock())
-        store.purchase(.yearly)
-        completions.markDone("mercury.communication.wait-ten-seconds", in: "mercury-2026-10-24") // a Premium-only task
-        completions.markDone("mercury.tech.back-up-files", in: "mercury-2026-06-29") // an earlier cycle
-        store.simulateYearlyExpiry()
+        let sim = SimulatedEntitlementSource(storage: InMemoryAccountStorage(), now: { t0 })
+        let store = EntitlementStore(source: sim, now: { t0 })
+        _ = try await store.purchase(.yearly)
+        completions.markDone("mercury.communication.wait-ten-seconds", in: "mercury-2026-10-24") // Premium-only task
+        completions.markDone("mercury.communication.breathe-first", in: "mercury-2026-10-24")
+        completions.markDone("mercury.tech.back-up-files", in: "mercury-2026-06-29") // earlier cycle
+        sim.refund(.yearly); await store.refresh()
         #expect(!store.isPremium)
-        #expect(completions.isDone("mercury.communication.wait-ten-seconds", in: "mercury-2026-10-24"))
+        // "X of 27 done" keeps counting completed Premium tasks after a downgrade.
+        #expect(completions.completedTaskIDs(in: "mercury-2026-10-24").count == 2)
         #expect(completions.completedTaskIDs(in: "mercury-2026-06-29") == ["mercury.tech.back-up-files"])
-        store.purchase(.lifetime)
-        #expect(completions.completedTaskIDs(in: "mercury-2026-10-24").count == 1)
     }
 }
