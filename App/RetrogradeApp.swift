@@ -2,6 +2,7 @@ import DesignSystem
 import Entitlements
 import Notifications
 import Persistence
+import Sharing
 import SwiftData
 import SwiftUI
 import UIKit
@@ -15,6 +16,8 @@ struct RetrogradeApp: App {
     @State private var entitlements: EntitlementStore
     @State private var notificationPreferences: NotificationPreferences
     @State private var notificationHistory: NotificationHistory
+    /// Finished shares, kept on the device (in memory while hosting tests).
+    @State private var sharingActivity = SharingActivity(defaults: RetrogradeApp.isHostingTests ? nil : .standard)
     @State private var notificationScheduler: NotificationScheduler
     @State private var onboarding = Self.makeOnboarding()
 
@@ -108,6 +111,7 @@ struct RetrogradeApp: App {
                 .environment(entitlements)
                 .environment(notificationPreferences)
                 .environment(notificationHistory)
+                .environment(sharingActivity)
                 .environment(onboarding)
                 .environment(notificationScheduler)
                 .environment(NotificationResponder.shared.routes)

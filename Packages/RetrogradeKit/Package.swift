@@ -14,6 +14,7 @@ let package = Package(
         .library(name: "Entitlements", targets: ["Entitlements"]),
         .library(name: "Notifications", targets: ["Notifications"]),
         .library(name: "HomeWidget", targets: ["HomeWidget"]),
+        .library(name: "Sharing", targets: ["Sharing"]),
     ],
     targets: [
         // Planet cycles, sky events and the cycle/day calculations. No UI, no I/O.
@@ -36,6 +37,8 @@ let package = Package(
         .target(name: "Notifications", dependencies: ["RetroCore"]),
         // What the Home Screen widget shows and when it changes, from the cycle status and Overview copy.
         .target(name: "HomeWidget", dependencies: ["RetroCore", "Editorial"]),
+        // What sharing sends (app invitation, a day's insight card) and the on-device history of finished shares.
+        .target(name: "Sharing", dependencies: ["RetroCore", "Editorial"]),
         // Colours, fonts, icons and shared SwiftUI components from the Figma design.
         .target(
             name: "DesignSystem",
@@ -48,6 +51,7 @@ let package = Package(
         .testTarget(name: "SurvivalKitTests", dependencies: ["SurvivalKit", "RetroCore", "AstroData"]),
         .testTarget(name: "PersistenceTests", dependencies: ["Persistence"]),
         .testTarget(name: "HomeWidgetTests", dependencies: ["HomeWidget", "RetroCore", "AstroData"]),
+        .testTarget(name: "SharingTests", dependencies: ["Sharing", "Editorial", "RetroCore", "AstroData"]),
         .testTarget(name: "NotificationsTests", dependencies: ["Notifications", "RetroCore", "AstroData"]),
         .testTarget(name: "EntitlementsTests", dependencies: ["Entitlements", "SurvivalKit", "Persistence", "Editorial", "RetroCore", "AstroData"]),
     ]

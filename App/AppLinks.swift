@@ -8,6 +8,10 @@ enum AppLinks {
     static let termsOfUse = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
     /// Retrograde's privacy policy — set once NKreative LLC's legal pages are published.
     static let privacyPolicy: URL? = nil
+    /// Retrograde's App Store page, shared by "Share Retrograde" — set once App Store Connect
+    /// assigns the app's Apple ID: `https://apps.apple.com/app/id<Apple ID>`. Until then sharing
+    /// sends the invitation without a link. Archiving is blocked while this is nil.
+    static let appStore: URL? = nil
     /// Retrograde's support page — set once it's published.
     static let supportPage: URL? = nil
     /// Support email — set once it's chosen.

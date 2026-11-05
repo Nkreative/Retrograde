@@ -2,6 +2,7 @@ import DesignSystem
 import Editorial
 import Entitlements
 import RetroCore
+import Sharing
 import SwiftUI
 
 /// The Calendar tab: a week strip (or the full month when expanded) with Mercury's status, moon
@@ -18,6 +19,8 @@ struct CalendarScreen: View {
     /// The day the visible week / month is built around.
     @State private var anchor: CalendarDay?
     @State private var expanded = false
+    /// The day whose card is being previewed for sharing.
+    @State private var sharing: InsightShareCard?
 
     private let policy = CalendarAccessPolicy.launch
 
@@ -59,7 +62,7 @@ struct CalendarScreen: View {
                         }
                     }
                 )
-                DayDetail(day: selectedDay, today: today, content: content, onUnlock: paywall.present)
+                DayDetail(day: selectedDay, today: today, content: content, onUnlock: paywall.present, onShare: { sharing = $0 })
                 .id(Self.detailID)
                 Text("Intensity is an astrology-inspired reflection score built from verified sky events, not a prediction.")
                     .retroText(.finePrint)
@@ -83,6 +86,7 @@ struct CalendarScreen: View {
         #endif
         }
         .retroScreenBackground()
+        .sheet(item: $sharing) { InsightSharePreview(card: $0) }
         // A tapped notification asked for a day: select it (past days need the month view).
         .onChange(of: router.calendarFocus) { _, day in
             guard let day else { return }
@@ -99,6 +103,12 @@ struct CalendarScreen: View {
                 anchor = day
             }
             if UserDefaults.standard.bool(forKey: "calendarExpanded") { expanded = true }
+            // `-shareDay YES` opens the share preview for the selected day.
+            if UserDefaults.standard.bool(forKey: "shareDay"), let intensity = SkyData.intensity() {
+                let day = selected ?? CalendarDay(now, in: .autoupdatingCurrent)
+                sharing = DayDetailContent.make(day: day, today: CalendarDay(now, in: .autoupdatingCurrent), isPremium: premium.isPremium,
+                                                policy: policy, intensity: intensity).flatMap(InsightShareCard.init)
+            }
         }
         #endif
     }
@@ -485,6 +495,7 @@ private struct DayDetail: View {
     /// Nil outside the verified data.
     let content: DayDetailContent?
     let onUnlock: () -> Void
+    let onShare: (InsightShareCard) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -513,6 +524,10 @@ private struct DayDetail: View {
                     SkyContext(rows: insight.rows)
                     HabitCard(habit: insight.habit)
                     OtherPlanets(retrogrades: others, when: day == today ? "today" : "on \(day.shortTitle)")
+                    if let card = InsightShareCard(content) {
+                        SecondaryButton("Share this day", systemImage: RetroSymbol.share) { onShare(card) }
+                            .accessibilityHint("Previews a card of \(day.spokenDate) to share")
+                    }
                 case let .locked(freeFrom, preview):
                     IntensityPanel(level: content.level, summary: nil)
                     LockedInsight(day: day, freeFrom: freeFrom, preview: preview, onUnlock: onUnlock)

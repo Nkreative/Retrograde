@@ -1,6 +1,7 @@
 import DesignSystem
 import Entitlements
 import Persistence
+import Sharing
 import StoreKit
 import SwiftUI
 
@@ -33,6 +34,7 @@ struct SettingsView: View {
     @Environment(EntitlementStore.self) private var entitlements
     @Environment(PaywallPresenter.self) private var paywall
     @Environment(OnboardingProgress.self) private var onboarding
+    @Environment(SharingActivity.self) private var sharing
     @State private var path: [SettingsRoute] = Self.initialPath
 
     var body: some View {
@@ -42,8 +44,19 @@ struct SettingsView: View {
                 PremiumSection(onUpgrade: openPaywall)
                 Section {
                     row(.notifications, "Notifications", icon: RetroSymbol.notifications)
+                    // Opens the iOS share sheet directly (the header's share button shows the invite first).
+                    Button { ShareSheet.shareApp(recordingIn: sharing) } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: RetroSymbol.share).frame(width: 22).foregroundStyle(RetroColor.pink).accessibilityHidden(true)
+                            Text("Share Retrograde").retroText(.bodyLarge).foregroundStyle(RetroColor.text)
+                            Spacer(minLength: 0)
+                        }
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                    }
+                    .accessibilityHint("Opens the share sheet")
                 } header: {
-                    SectionHeader("Alerts")
+                    SectionHeader("General")
                 }
                 .listRowBackground(RetroColor.surface)
                 Section {

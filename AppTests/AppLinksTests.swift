@@ -17,6 +17,13 @@ import Testing
         }
     }
 
+    /// Share Retrograde's link, once set, must be a real App Store app address (no made-up IDs).
+    @Test func appStoreLinkIsAnAppStoreAddress() {
+        guard let url = AppLinks.appStore else { return }
+        #expect(url.scheme == "https" && url.host() == "apps.apple.com", "\(url)")
+        #expect(url.absoluteString.range(of: #"/id\d+$"#, options: .regularExpression) != nil, "\(url)")
+    }
+
     @Test func operatorAndVersion() {
         #expect(AppLinks.appOperator == "NKreative LLC")
         #expect(AppLinks.versionDescription.range(of: #"^\d+(\.\d+)* \(\d+\)$"#, options: .regularExpression) != nil)

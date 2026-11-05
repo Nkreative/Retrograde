@@ -16,6 +16,7 @@
 		A10000000000000000000038 /* Entitlements in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000048 /* Entitlements */; };
 		A10000000000000000000039 /* Notifications in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000049 /* Notifications */; };
 		A1000000000000000000003A /* HomeWidget in Frameworks */ = {isa = PBXBuildFile; productRef = A1000000000000000000004A /* HomeWidget */; };
+		A1000000000000000000003B /* Sharing in Frameworks */ = {isa = PBXBuildFile; productRef = A1000000000000000000004B /* Sharing */; };
 		B10000000000000000000038 /* Entitlements in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000048 /* Entitlements */; };
 		C10000000000000000000001 /* RetrogradeWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C10000000000000000000011 /* RetrogradeWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C10000000000000000000031 /* RetroCore in Frameworks */ = {isa = PBXBuildFile; productRef = C10000000000000000000041 /* RetroCore */; };
@@ -106,6 +107,7 @@
 				A10000000000000000000037 /* SurvivalKit in Frameworks */,
 				A10000000000000000000036 /* Persistence in Frameworks */,
 				A1000000000000000000003A /* HomeWidget in Frameworks */,
+				A1000000000000000000003B /* Sharing in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -158,7 +160,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = A10000000000000000000072 /* Build configuration list for PBXNativeTarget "Retrograde" */;
 			buildPhases = (
-				A10000000000000000000054 /* Require privacy policy URL */,
+				A10000000000000000000054 /* Require release links */,
 				A10000000000000000000052 /* Sources */,
 				A10000000000000000000051 /* Frameworks */,
 				A10000000000000000000053 /* Resources */,
@@ -184,6 +186,7 @@
 				A10000000000000000000047 /* SurvivalKit */,
 				A10000000000000000000046 /* Persistence */,
 				A1000000000000000000004A /* HomeWidget */,
+				A1000000000000000000004B /* Sharing */,
 			);
 			productName = Retrograde;
 			productReference = A10000000000000000000011 /* Retrograde.app */;
@@ -310,7 +313,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		A10000000000000000000054 /* Require privacy policy URL */ = {
+		A10000000000000000000054 /* Require release links */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -321,14 +324,14 @@
 			inputPaths = (
 				"$(SRCROOT)/App/AppLinks.swift",
 			);
-			name = "Require privacy policy URL";
+			name = "Require release links";
 			outputFileListPaths = (
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Block App Store archives until the privacy policy URL is set in App/AppLinks.swift.\nif [ \"$ACTION\" = \"install\" ] && grep -q 'privacyPolicy: URL? = nil' \"$SRCROOT/App/AppLinks.swift\"; then\n  echo \"error: Set AppLinks.privacyPolicy (App/AppLinks.swift) to the published privacy policy URL before archiving.\"\n  exit 1\nfi\n";
+			shellScript = "# Block App Store archives until the privacy policy and App Store URLs are set in App/AppLinks.swift.\nif [ \"$ACTION\" = \"install\" ] && grep -q 'privacyPolicy: URL? = nil' \"$SRCROOT/App/AppLinks.swift\"; then\n  echo \"error: Set AppLinks.privacyPolicy (App/AppLinks.swift) to the published privacy policy URL before archiving.\"\n  exit 1\nfi\nif [ \"$ACTION\" = \"install\" ] && grep -q 'appStore: URL? = nil' \"$SRCROOT/App/AppLinks.swift\"; then\n  echo \"error: Set AppLinks.appStore (App/AppLinks.swift) to Retrograde's App Store URL before archiving, so Share Retrograde includes the link.\"\n  exit 1\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -664,6 +667,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A10000000000000000000045 /* XCLocalSwiftPackageReference "Packages/RetrogradeKit" */;
 			productName = HomeWidget;
+		};
+		A1000000000000000000004B /* Sharing */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000045 /* XCLocalSwiftPackageReference "Packages/RetrogradeKit" */;
+			productName = Sharing;
 		};
 		B10000000000000000000048 /* Entitlements */ = {
 			isa = XCSwiftPackageProductDependency;

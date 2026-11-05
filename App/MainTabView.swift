@@ -40,6 +40,8 @@ struct MainTabView: View {
         // `-openSettings YES` / `-openNotifications YES` open them on launch, for review.
         router.showsSettings = UserDefaults.standard.bool(forKey: "openSettings")
         router.showsNotificationCenter = UserDefaults.standard.bool(forKey: "openNotifications")
+        // `-openShareInvite YES` opens the header's share screen.
+        router.showsShareInvite = UserDefaults.standard.bool(forKey: "openShareInvite")
         #endif
         _router = State(initialValue: router)
         _paywall = State(initialValue: paywall)
@@ -50,7 +52,7 @@ struct MainTabView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            AppHeader(onShare: {}, onNotifications: router.openNotificationCenter, onSettings: router.openSettings,
+            AppHeader(onShare: router.openShareInvite, onNotifications: router.openNotificationCenter, onSettings: router.openSettings,
                       hasUnreadNotifications: history.unreadCount > 0)
             ZStack {
                 ForEach(AppTab.allCases, id: \.self) { tab in
@@ -91,6 +93,7 @@ struct MainTabView: View {
         }
         .sheet(isPresented: $router.showsSettings) { SettingsView().environment(paywall) }
         .sheet(isPresented: $router.showsNotificationCenter) { NotificationCenterView().environment(router) }
+        .sheet(isPresented: $router.showsShareInvite) { ShareInviteView() }
     }
 
     /// After onboarding: the Premium offer, unless purchases are already verified as Premium.
