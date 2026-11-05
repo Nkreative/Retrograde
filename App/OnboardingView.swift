@@ -161,7 +161,7 @@ private struct NotificationsOnboarding: View {
             if authorization?.shouldPrompt ?? true {
                 PrimaryButton(asking ? "Asking…" : "Turn on notifications") { Task { await enable() } }
                     .disabled(asking)
-                Button("No I will feel it no need to tell me", action: finish)
+                Button("No, I’ll feel it. No need to tell me.", action: finish)
                     .retroText(.button)
                     .foregroundStyle(RetroColor.text)
                     .multilineTextAlignment(.center)

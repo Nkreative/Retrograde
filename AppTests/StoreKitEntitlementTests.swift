@@ -29,9 +29,9 @@ import Testing
     private var lifetimeID: String { PremiumPlan.lifetime.productID }
 
     /// StoreKit's test environment applies expiries, refunds and purchases a moment after the call
-    /// returns; re-read for up to 2 s per attempt. A wrong mapping still fails once the state has settled.
-    private func settle(_ expected: @escaping (PremiumStatus) -> Bool) async -> PremiumStatus {
-        for _ in 0..<20 {
+    /// returns; re-read for up to 2 s (by default). A wrong mapping still fails once the state has settled.
+    private func settle(seconds: Int = 2, _ expected: @escaping (PremiumStatus) -> Bool) async -> PremiumStatus {
+        for _ in 0..<(seconds * 10) {
             await store.refresh()
             if expected(store.status) { break }
             try? await Task.sleep(for: .milliseconds(100))
@@ -51,19 +51,30 @@ import Testing
         fatalError("unreachable")
     }
 
-    /// The test environment occasionally ignores an expire request; repeat it until StoreKit's own
-    /// records show the subscription expired, then let the app's status settle.
+    /// Expires the Yearly subscription the test bought, then waits for the app to see it.
+    ///
+    /// Measured in repeated runs (10 repetitions each): after an expiry, StoreKit can keep returning
+    /// the pre-expiry subscription (trial, renewing) to the app for several seconds although the
+    /// test session has recorded it — 12 of 20 runs failed when re-reading for 2 s; with 10 s,
+    /// 2 of 12 and 4 of 20. Reading before expiring made it far worse (19 of 20). Asking again
+    /// doesn't help (once applied, StoreKit only answers SKInternalErrorDomain 17), so the request
+    /// is repeated only while the session hasn't recorded the expiry. A run whose app view is still
+    /// stale after 10 s fails: it's left visible, not retried away.
     private func expireYearly() async throws -> PremiumStatus {
-        for _ in 0..<5 {
+        for attempt in 1...3 where !yearlyExpiredInSession {
             do {
                 try session.expireSubscription(productIdentifier: yearlyID)
-            } catch where Self.isTransientTestEnvironmentError(error) {
-                // Known intermittent Xcode StoreKit test-environment failure; retry (max 5 attempts).
+            } catch where attempt < 3 && Self.isTransientTestEnvironmentError(error) {
+                try await Task.sleep(for: .milliseconds(300))
             }
-            let status = await settle { if case .yearlyExpired = $0 { true } else { false } }
-            if case .yearlyExpired = status { return status }
         }
-        return store.status
+        return await settle(seconds: 10) { if case .yearlyExpired = $0 { true } else { false } }
+    }
+
+    /// Whether the test session itself records the Yearly subscription as expired.
+    private var yearlyExpiredInSession: Bool {
+        guard let expiry = session.allTransactions().last(where: { $0.productIdentifier == yearlyID })?.expirationDate else { return false }
+        return expiry <= Date.now.addingTimeInterval(1)
     }
 
     /// The Xcode StoreKit test environment's intermittent internal failure: SKServiceErrorDomain 2
@@ -177,6 +188,10 @@ import Testing
     @Test func askToBuyIsPendingUntilApproved() async throws {
         session.askToBuyEnabled = true
         await store.start()
+        // Intermittent (1 in 46 repetitions): the store is clean and Free here, yet the test
+        // environment reports the Ask to Buy purchase as both pending and owned. Not retried; this
+        // check shows a recurrence isn't leftover state from an earlier test.
+        #expect(store.status == .free, "not free before the purchase: \(store.status), transactions: \(session.allTransactions().map(\.productIdentifier))")
         #expect(try await store.purchase(.lifetime) == .pending)
         #expect(store.isPurchasePending && !store.isPremium)
         try session.approveAskToBuyTransaction(identifier: transaction(lifetimeID).identifier)

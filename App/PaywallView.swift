@@ -1,4 +1,5 @@
 import DesignSystem
+import Editorial
 import Entitlements
 import Observation
 import SwiftUI
@@ -71,6 +72,10 @@ struct PaywallView: View {
                             benefit(RetroSymbol.heart, "No ads. No account needed.", "Your progress stays on your phone.")
                         }
 
+                        if let message = promotionMessage {
+                            PromotionMessage(message: message)
+                        }
+
                         PlanList(flow: flow)
                         if let message = flow.flatMap({ StatusBanner.message(for: $0.phase) }) {
                             StatusBanner(phase: flow!.phase, message: message)
@@ -123,6 +128,24 @@ struct PaywallView: View {
 
     private static let bottomID = "paywall-bottom"
 
+    /// "Mercury's clocking out" — only while StoreKit verifies the launch price *and* the sky data
+    /// says Mercury turns direct within the week. Otherwise the regular paywall copy alone.
+    private var promotionMessage: PromotionMoment.Message? {
+        guard let promotion = flow?.promotion(for: .lifetime),
+              let status = SkyData.calculator?.status(of: .mercury, at: Self.skyNow),
+              PromotionMoment.isRetrogradeEnding(status)
+        else { return nil }
+        return PromotionMoment.message(for: status.planet, percentOff: promotion.percentOff)
+    }
+
+    private static var skyNow: Date {
+        #if DEBUG
+        // `-now 2026-11-10T12:00:00Z`, as elsewhere, to review other points in the cycle.
+        if let now = UserDefaults.standard.string(forKey: "now").flatMap({ try? Date($0, strategy: .iso8601) }) { return now }
+        #endif
+        return .now
+    }
+
     private func buy() async {
         guard let flow, await flow.purchase() else { return }
         dismiss()
@@ -153,6 +176,22 @@ enum PaywallDebug {
     static var scrollToBottom: (() -> Void)?
 }
 #endif
+
+/// The launch promotion's end-of-retrograde message, compact, just above the plans.
+private struct PromotionMessage: View {
+    let message: PromotionMoment.Message
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(message.headline).retroText(.cardTitle).foregroundStyle(RetroColor.text)
+            Text(message.body).retroText(.body).foregroundStyle(RetroColor.textMuted)
+            Text(message.signOff).retroText(.bodyStrong).foregroundStyle(RetroColor.pinkSoft)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .retroCard(padding: 12)
+        .accessibilityElement(children: .combine)
+    }
+}
 
 /// Lifetime and Yearly cards with live prices; placeholders while loading; a retry when unavailable.
 private struct PlanList: View {
