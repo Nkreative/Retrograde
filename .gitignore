@@ -5,3 +5,6 @@ DerivedData/
 .build/
 .swiftpm/
 __pycache__/
+
+# Screenshots saved to the project folder (kept locally, not part of the app)
+/Screenshot*.png
