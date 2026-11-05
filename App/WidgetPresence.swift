@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import HomeWidget
 import Persistence
 import WidgetKit
@@ -15,6 +16,13 @@ enum WidgetPresence {
         if UserDefaults.standard.object(forKey: "widgetListed") != nil { return }
         #endif
         WidgetCenter.shared.getCurrentConfigurations { result in
+            #if DEBUG
+            let reading: WidgetPresenceReport.Reading = switch result {
+            case let .success(widgets): .listed(widgets.filter { $0.kind == WidgetKind.mercuryCycle }.map { "\($0.family)" }, total: widgets.count)
+            case let .failure(error): .failed(error.localizedDescription)
+            }
+            Task { @MainActor in WidgetPresenceReport.shared.record(reading) }
+            #endif
             guard case let .success(widgets) = result else { return }
             let count = widgets.filter { $0.kind == WidgetKind.mercuryCycle }.count
             #if DEBUG
@@ -30,3 +38,26 @@ enum WidgetPresence {
         }
     }
 }
+
+#if DEBUG
+/// Debug builds only: the last answer iOS gave, for Settings › Developer › Widget status. Read-only;
+/// it never changes what the Overview shows.
+@MainActor
+@Observable
+final class WidgetPresenceReport {
+    enum Reading: Equatable {
+        /// Retrograde's widgets (their sizes) and how many widgets iOS listed in all.
+        case listed([String], total: Int)
+        case failed(String)
+    }
+
+    static let shared = WidgetPresenceReport()
+    private(set) var last: Reading?
+    private(set) var checkedAt: Date?
+
+    func record(_ reading: Reading) {
+        last = reading
+        checkedAt = .now
+    }
+}
+#endif
