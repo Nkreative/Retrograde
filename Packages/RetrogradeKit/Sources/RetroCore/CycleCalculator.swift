@@ -36,6 +36,10 @@ public struct CycleStatus: Equatable, Sendable {
     public let progress: Double
 
     public var isRetrograde: Bool { stage == .retrograde }
+
+    /// The instant this stage gives way to the next: its window end, except the direct stage,
+    /// which hands over to the pre-shadow before its countdown target.
+    public var stageEnd: Date { stage == .direct ? period.preShadowStart : windowEnd }
 }
 
 /// How a calendar day is marked for a planet (Rx, Sh, D in the Calendar).

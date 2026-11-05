@@ -5,6 +5,7 @@ import Persistence
 import SwiftData
 import SwiftUI
 import UIKit
+import WidgetKit
 
 @main
 struct RetrogradeApp: App {
@@ -124,11 +125,15 @@ struct RetrogradeApp: App {
                 .onChange(of: entitlements.isPremium) { rescheduleNotifications() }
                 .onChange(of: completions.revision) { rescheduleNotifications() }
                 .onChange(of: onboarding.isComplete) { rescheduleNotifications() }
+                // The widget works out its days in the time zone it last saw; after a clock or
+                // time zone change it's redrawn now rather than at its next daily refresh.
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
                     rescheduleNotifications()
+                    WidgetCenter.shared.reloadAllTimelines()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in
                     rescheduleNotifications()
+                    WidgetCenter.shared.reloadAllTimelines()
                 }
         }
     }

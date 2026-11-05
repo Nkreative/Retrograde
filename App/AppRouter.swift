@@ -29,6 +29,13 @@ final class AppRouter {
         showsSettings = true
     }
 
+    /// The Home Screen widget was tapped: close what's on top and show the Overview.
+    func openOverview() {
+        showsNotificationCenter = false
+        showsSettings = false
+        tab = .overview
+    }
+
     /// Closes the Notification Center (and Settings) and shows where the notification points.
     func open(_ destination: NotificationDestination) {
         showsNotificationCenter = false

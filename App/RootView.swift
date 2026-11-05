@@ -27,6 +27,9 @@ struct RootView: View {
         let catalogPage = defaults.integer(forKey: "catalog")
         if catalogPage > 0 {
             DesignSystemCatalog(page: catalogPage)
+        } else if defaults.bool(forKey: "widgetPreview") {
+            // `-widgetPreview YES` shows the Home Screen widget in each phase (add `missing` for no data).
+            WidgetPreviewScreen(now: defaults.string(forKey: "now").flatMap { try? Date($0, strategy: .iso8601) } ?? .now)
         } else {
             MainTabView(
                 initialTab: defaults.string(forKey: "tab").flatMap(AppTab.init) ?? .overview,

@@ -58,6 +58,12 @@ private func calendar(_ zone: String) -> Calendar {
         #expect(auckland.day == 12) // already Nov 4 there
     }
 
+    @Test func stageEndIsWhenTheNextStageBegins() throws {
+        #expect(try #require(calc().status(of: .mercury, at: utc("2026-11-03T12:00"))).stageEnd == autumn2026.stationDirect)
+        // Direct counts down to the retrograde but gives way to the pre-shadow first.
+        #expect(try #require(calc().status(of: .mercury, at: utc("2026-12-20T00:00"))).stageEnd == winter2027.preShadowStart)
+    }
+
     @Test func lastRetrogradeDayCountsDownToZero() throws {
         let status = try #require(calc().status(of: .mercury, at: utc("2026-11-13T09:00")))
         #expect(status.stage == .retrograde)

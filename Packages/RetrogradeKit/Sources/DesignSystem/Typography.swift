@@ -60,6 +60,10 @@ public enum RetroTextStyle: CaseIterable, Sendable {
     case price
     /// Inter Regular 11 — purchase terms under the paywall button.
     case disclosure
+    /// Space Mono 13 — the widget's countdown line ("days to exhale").
+    case monoBody
+    /// Space Mono Bold 12 — the widget's phase label ("RETROGRADE").
+    case monoLabel
     /// Space Mono 11 — countdown label, step numbers.
     case monoLarge
     /// Space Mono 10 — tab labels, eyebrows.
@@ -76,8 +80,8 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .bodyStrong, .price: "Inter-SemiBold"
         case .bodyLarge, .body, .finePrint, .prompt, .disclosure: "Inter-Regular"
         case .bodyHeavy: "Inter-ExtraBold"
-        case .monoLarge, .mono, .monoSmall, .timer, .timerCompact, .monoTiny: "SpaceMono-Regular"
-        case .monoBold: "SpaceMono-Bold"
+        case .monoBody, .monoLarge, .mono, .monoSmall, .timer, .timerCompact, .monoTiny: "SpaceMono-Regular"
+        case .monoLabel, .monoBold: "SpaceMono-Bold"
         }
     }
 
@@ -93,8 +97,8 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .cardTitle, .price: 16
         case .button: 14
         case .prompt: 15
-        case .bodyStrong, .bodyLarge: 13
-        case .body, .bodyHeavy: 12
+        case .bodyStrong, .bodyLarge, .monoBody: 13
+        case .body, .bodyHeavy, .monoLabel: 12
         case .monoLarge, .disclosure: 11
         case .mono, .monoBold, .finePrint: 10
         case .monoSmall: 9
@@ -114,8 +118,8 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .section: .title3
         case .cardTitle, .price: .headline
         case .button: .body
-        case .bodyStrong, .bodyLarge: .subheadline
-        case .body, .bodyHeavy, .monoLarge: .footnote
+        case .bodyStrong, .bodyLarge, .monoBody: .subheadline
+        case .body, .bodyHeavy, .monoLarge, .monoLabel: .footnote
         case .mono, .monoBold: .caption
         case .finePrint: .caption2
         case .disclosure: .caption

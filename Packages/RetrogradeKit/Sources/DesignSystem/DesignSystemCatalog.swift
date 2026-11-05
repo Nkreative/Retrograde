@@ -47,6 +47,7 @@ private struct ColoursAndType: View {
         (.bodyStrong, "Texts get lost in translation.", "Inter SemiBold 13"),
         (.bodyLarge, "The message can wait ten seconds.", "Inter Regular 13"),
         (.body, "Reread before you hit send. Yes, even that one.", "Inter Regular 12"),
+        (.monoBody, "days to exhale", "Space Mono 13"), (.monoLabel, "RETROGRADE", "Space Mono Bold 12"),
         (.monoLarge, "days to exhale", "Space Mono 11"), (.mono, "01 / COMMUNICATION", "Space Mono 10"),
         (.monoBold, "ADD TO HOME SCREEN", "Space Mono Bold 10"), (.monoSmall, "YOUR COSMIC REALITY CHECK", "Space Mono 9"),
     ]

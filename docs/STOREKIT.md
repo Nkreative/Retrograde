@@ -40,6 +40,8 @@ Debug builds can swap in the M8 simulator (`-entitlementSource simulated`); it i
 | Device, Sandbox | Real App Store sign-in, Restore after reinstall, offline/online, renewals (sandbox yearly ≈ 1 hour) | Needs the App Store Connect setup below |
 | TestFlight | Release build end to end | Before submission |
 
+**Known unreliable step (Yearly expiry):** `expiryEndsPremium` and `lifetimeTakesOverFromAnExpiredYearly` depend on StoreKit's test environment showing an expired Yearly to the app, which it sometimes doesn't within 10 s (see `expireYearly` in `AppTests/StoreKitEntitlementTests.swift`). On 2026-11-04 (M12 validation, iPhone 18 Pro Max simulator, iOS 27.0) it failed more often than measured in M10: 5 runs of the suite had 2, 2, 2, 1 and 1 failures, always among these two tests; the approved M11 commit failed the same way in the same session. The tests and purchase code are unchanged; the other 21 StoreKit tests passed every time.
+
 Restore's sign-in dialog can't run unattended, so Restore is covered by the reinstall and failure tests plus the Sandbox check.
 
 ## App Store Connect checklist

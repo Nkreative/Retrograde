@@ -2,6 +2,18 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-04 (M12 Home Screen widget)
+
+- **One medium widget**, free for everyone, no account (Figma review page: "M12 · Home Screen widget (medium) — four phases"; replaces the earlier medium proposal with intensity + habit for this milestone; small and Lock Screen sizes are not part of M12).
+- **Shows** MERCURY, the phase (PRE-SHADOW, RETROGRADE, POST-SHADOW, DIRECT), the Overview's countdown line ("10 days to exhale", "TODAY Mercury turns direct"), the stage's progress bar, the Overview's day label ("DAY 11 / 21", "SHADOW · DAY 3 / 17") and where the bar ends. Direct has no day count (as on the Overview), so the bar's labels "DIRECT … NEXT RX" show instead. Accent per phase: mauve pre-shadow, pink retrograde, soft pink post-shadow, mint direct.
+- **No interpretation of its own:** `HomeWidget.WidgetContent` is built from `CycleCalculator`'s status and `OverviewCopy`, the same as the Overview. `CycleStatus.stageEnd` (new) says when a stage hands over; direct hands over to the pre-shadow.
+- **Timeline** (`WidgetTimeline`): entries now, at each local midnight and at each exact stage change for the next two days; iOS is asked for a new timeline after the next midnight (about once a day). The second day covers a late refresh. Calendar days come from the person's time zone when the timeline is made; daylight saving is handled by the calendar (a 25-hour day still flips at midnight).
+- **Time zone changes:** Retrograde asks iOS to redraw the widget when it sees a clock or time zone change; otherwise the widget catches up at its next daily refresh (worst case: until midnight in the old time zone).
+- **No App Group:** the widget reads its own copy of the bundled sky data (the package's resource bundle is embedded in the extension) and has no state shared with the app, so no shared container, permission or capability is needed. Works offline. If the data doesn't cover today, it shows the Overview's "WE’RE STILL MAPPING THIS STRETCH OF SKY." message.
+- **Tap** anywhere opens the Overview (`retrograde://overview` via `widgetURL`, closing Settings, the Notification Center or the paywall). The link is delivered by iOS to Retrograde directly; no URL scheme is registered, so other apps can't open it.
+- **Dynamic Type:** follows the person's text size up to XXL, then holds (a fixed-size widget can't fit more); long lines shrink slightly rather than truncate. VoiceOver reads one sentence: "Mercury retrograde. 9 days to exhale. Day 12 of 21."
+- **Not changed:** the Overview's "ADD TO HOME SCREEN" button still does nothing; its how-to sheet is awaiting review in Figma.
+
 ## 2026-11-04 (M11 local notifications)
 
 - **What's scheduled** (`NotificationPlanner`, from the bundled ephemeris and the saved choices; same 6 toggles as the approved Settings mockup — each "before" toggle covers both the 2-week and the 3-day alert, which gives exactly the requested defaults: both before-retrograde alerts on, both before-direct alerts off):

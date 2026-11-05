@@ -83,6 +83,12 @@ struct MainTabView: View {
             paywall.isPresented = false
             router.open(destination)
         }
+        // The Home Screen widget opens the Overview.
+        .onOpenURL { url in
+            guard WidgetLink.opensOverview(url) else { return }
+            paywall.isPresented = false
+            router.openOverview()
+        }
         .sheet(isPresented: $router.showsSettings) { SettingsView().environment(paywall) }
         .sheet(isPresented: $router.showsNotificationCenter) { NotificationCenterView().environment(router) }
     }
