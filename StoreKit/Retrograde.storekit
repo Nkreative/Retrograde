@@ -48,10 +48,11 @@
           "groupNumber" : 1,
           "internalID" : "6747000002",
           "introductoryOffer" : {
+            "displayPrice" : "6.99",
             "internalID" : "6747000003",
             "numberOfPeriods" : 1,
-            "paymentMode" : "free",
-            "subscriptionPeriod" : "P3D"
+            "paymentMode" : "payUpFront",
+            "subscriptionPeriod" : "P1Y"
           },
           "localizations" : [
             {

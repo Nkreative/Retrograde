@@ -1,5 +1,6 @@
 #if os(iOS)
 import Foundation
+import StoreKit
 import StoreKitTest
 import Testing
 import UIKit
@@ -43,7 +44,9 @@ final class PaywallScreenshotTour {
         presenter.isPresented = false
         await wait(0.8)
         presenter.present()
-        await wait(2.5) // artwork, then offers from StoreKit
+        // The paywall appears (slower on a cold first launch), then its offers arrive from StoreKit.
+        for _ in 0..<20 where PaywallDebug.flow?.phase != .ready { await wait(0.5) }
+        await wait(1.5) // artwork
     }
 
     private var flow: PurchaseFlow { get throws { try #require(PaywallDebug.flow) } }
@@ -52,7 +55,7 @@ final class PaywallScreenshotTour {
         try await reopenPaywall()
         try await snap("01_lifetime_default")
         try flow.select(.yearly)
-        try await snap("02_yearly_trial")
+        try await snap("02_yearly_first_year")
         PaywallDebug.scrollToBottom?()
         try await snap("03_yearly_terms_and_links")
         try flow.select(.lifetime)
@@ -76,7 +79,7 @@ final class PaywallScreenshotTour {
         try flow.debugShow(.nothingToRestore)
         try await snap("10_nothing_to_restore")
 
-        // Someone who already had Yearly: no trial language.
+        // Someone who already had Yearly: the regular price, no first-year offer.
         session.clearTransactions()
         PaywallPresenter.current?.isPresented = false
         await wait(1)
@@ -90,11 +93,22 @@ final class PaywallScreenshotTour {
             if case let .verified(t)? = await Transaction.latest(for: PremiumPlan.yearly.productID),
                let expiry = t.expirationDate, expiry < .now { break }
         }
+        // StoreKit's test environment can take a moment to stop offering the first year; the shot
+        // waits for its answer (and fails rather than show a stale one).
+        let yearly = try #require(try await Product.products(for: [PremiumPlan.yearly.productID]).first?.subscription)
+        var eligible = true
+        for _ in 0..<10 {
+            eligible = await yearly.isEligibleForIntroOffer
+            if !eligible { break }
+            await wait(1)
+        }
+        #expect(!eligible, "StoreKit still offers the first year after a Yearly purchase")
         try await reopenPaywall()
         try flow.select(.yearly)
-        try await snap("11_yearly_no_trial")
+        #expect(try flow.offers[.yearly]?.introOffer == nil)
+        try await snap("11_yearly_regular")
         PaywallDebug.scrollToBottom?()
-        try await snap("12_yearly_no_trial_terms")
+        try await snap("12_yearly_regular_terms")
         PaywallPresenter.current?.isPresented = false
     }
 }

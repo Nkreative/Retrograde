@@ -81,7 +81,7 @@ import Testing
         #expect(PaywallCopy.promotionDetail(d, locale: Locale(identifier: "en_US")).hasPrefix("Launch special through "))
         #expect(PaywallCopy.accessibilityLabel(lifetime("9.99"), bestValue: true, promotion: d)
             == "Lifetime access, Launch special, 50% off, regular price $19.99, $9.99, one-time purchase")
-        #expect(PaywallCopy.buttonTitle(.yearly, offer: PlanOffer(plan: .yearly, displayPrice: "$9.99", billingPeriod: .init(value: 1, unit: .year), freeTrial: .init(value: 3, unit: .day))) == "Start 3-day free trial")
+        #expect(PaywallCopy.buttonTitle(.yearly, offer: PlanOffer(plan: .yearly, displayPrice: "$9.99", billingPeriod: .init(value: 1, unit: .year), introOffer: .freeTrial(.init(value: 3, unit: .day)))) == "Start 3-day free trial")
     }
 }
 

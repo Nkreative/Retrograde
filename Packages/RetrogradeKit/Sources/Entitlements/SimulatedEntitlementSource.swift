@@ -85,13 +85,16 @@ public final class SimulatedEntitlementSource: EntitlementSource, @unchecked Sen
     public func offers() async throws -> [PlanOffer] {
         try await Task.sleep(for: offersDelay)
         if failOffers { throw URLError(.notConnectedToInternet) }
-        let trialEligible = account.yearly == nil
+        // One introductory offer per subscriber, ever: the v1.0 plan's first year at $6.99.
+        let introEligible = account.yearly == nil
         let usd = Decimal.FormatStyle.Currency(code: "USD", locale: Locale(identifier: "en_US"))
         let yearly = Decimal(string: "9.99")!
+        let firstYear = Decimal(string: "6.99")!
+        let intro = IntroOffer(payment: .payUpFront, displayPrice: firstYear.formatted(usd), price: firstYear, period: .init(value: 1, unit: .year))
         return [
             PlanOffer(plan: .lifetime, displayPrice: lifetimePrice.formatted(usd), price: lifetimePrice, priceFormat: usd, storefront: "USA"),
             PlanOffer(plan: .yearly, displayPrice: yearly.formatted(usd), billingPeriod: .init(value: 1, unit: .year),
-                      freeTrial: trialEligible ? .init(value: 3, unit: .day) : nil, price: yearly, priceFormat: usd, storefront: "USA"),
+                      introOffer: introEligible ? intro : nil, price: yearly, priceFormat: usd, storefront: "USA"),
         ]
     }
 

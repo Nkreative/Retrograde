@@ -4,7 +4,7 @@ import Testing
 
 @Suite struct PaywallCopyTests {
     let lifetime = PlanOffer(plan: .lifetime, displayPrice: "$19.99")
-    let yearlyTrial = PlanOffer(plan: .yearly, displayPrice: "$9.99", billingPeriod: .init(value: 1, unit: .year), freeTrial: .init(value: 1, unit: .week))
+    let yearlyTrial = PlanOffer(plan: .yearly, displayPrice: "$9.99", billingPeriod: .init(value: 1, unit: .year), introOffer: .freeTrial(.init(value: 1, unit: .week)))
     let yearlyNoTrial = PlanOffer(plan: .yearly, displayPrice: "$9.99", billingPeriod: .init(value: 1, unit: .year))
 
     @Test func eligibleYearlyShowsTheTrialThenThePrice() {
@@ -40,7 +40,7 @@ import Testing
         #expect(BillingPeriod(value: 1, unit: .week).length == "7 days")
         #expect(BillingPeriod(value: 3, unit: .day).length == "3 days")
         #expect(BillingPeriod(value: 1, unit: .month).length == "1 month")
-        let monthly = PlanOffer(plan: .yearly, displayPrice: "$1", billingPeriod: .init(value: 1, unit: .month), freeTrial: .init(value: 1, unit: .month))
+        let monthly = PlanOffer(plan: .yearly, displayPrice: "$1", billingPeriod: .init(value: 1, unit: .month), introOffer: .freeTrial(.init(value: 1, unit: .month)))
         #expect(PaywallCopy.planDetail(monthly) == "1 month free, then $1/month")
     }
 
@@ -54,6 +54,69 @@ import Testing
     @Test func priceAndFrequencyAreSeparate() {
         #expect(PaywallCopy.priceUnit(yearlyTrial) == "/ yr")
         #expect(PaywallCopy.priceUnit(lifetime) == nil)
+    }
+
+    // MARK: Paid introductory offers (v1.0: $6.99 for the first year, then $9.99/year)
+
+    let usd = Decimal.FormatStyle.Currency(code: "USD", locale: Locale(identifier: "en_US"))
+    var firstYear: PlanOffer {
+        PlanOffer(plan: .yearly, displayPrice: "$9.99", billingPeriod: .init(value: 1, unit: .year),
+                  introOffer: IntroOffer(payment: .payUpFront, displayPrice: "$6.99", price: Decimal(string: "6.99")!, period: .init(value: 1, unit: .year)),
+                  price: Decimal(string: "9.99")!, priceFormat: usd, storefront: "USA")
+    }
+
+    @Test func payUpFrontShowsTheFirstYearThenTheRenewal() {
+        let offer = firstYear
+        #expect(PaywallCopy.planDetail(offer) == "$6.99 for the first year, then $9.99/year")
+        #expect(PaywallCopy.price(offer) == "$6.99")
+        #expect(PaywallCopy.priceUnit(offer) == "first yr")
+        #expect(PaywallCopy.priceLabel(offer) == "$6.99 first yr")
+        #expect(PaywallCopy.buttonTitle(.yearly, offer: offer) == "Start Premium")
+        #expect(PaywallCopy.disclosure(offer) == "$6.99 for the first year, charged to your Apple Account at confirmation. Then $9.99 per year. Renews automatically unless cancelled at least 24 hours before the current period ends. Manage or cancel anytime in Settings › Apple Account › Subscriptions.")
+        for text in [PaywallCopy.planDetail(offer), PaywallCopy.disclosure(offer), PaywallCopy.accessibilityLabel(offer, bestValue: false)] {
+            #expect(!text.localizedCaseInsensitiveContains("trial"), "\(text)")
+        }
+    }
+
+    @Test func discountComesOnlyFromStoreKitsTwoPrices() {
+        // (9.99 − 6.99) / 9.99 = 30.03 %, rounded down so it's never overstated.
+        #expect(firstYear.introPercentOff == 30)
+        #expect(PaywallCopy.introBadge(firstYear) == "FIRST YEAR · 30% OFF")
+        #expect(PaywallCopy.regularPriceStruck(firstYear) == "$9.99")
+        #expect(PaywallCopy.accessibilityLabel(firstYear, bestValue: false) == "Yearly, 30% off the first year, $6.99 for the first year, then $9.99 per year")
+        // No regular price from StoreKit to compare with: no badge, nothing crossed out.
+        let unverified = PlanOffer(plan: .yearly, displayPrice: "$9.99", billingPeriod: .init(value: 1, unit: .year), introOffer: firstYear.introOffer)
+        #expect(unverified.introPercentOff == nil && PaywallCopy.introBadge(unverified) == nil && PaywallCopy.regularPriceStruck(unverified) == nil)
+        // A trial isn't a discount badge.
+        #expect(yearlyTrial.introPercentOff == nil && PaywallCopy.introBadge(yearlyTrial) == nil)
+    }
+
+    @Test func introThatIsntCheaperOrSpansOtherPeriodsGetsNoBadge() {
+        let same = PlanOffer(plan: .yearly, displayPrice: "$9.99", billingPeriod: .init(value: 1, unit: .year),
+                             introOffer: IntroOffer(payment: .payUpFront, displayPrice: "$9.99", price: Decimal(string: "9.99")!, period: .init(value: 1, unit: .year)),
+                             price: Decimal(string: "9.99")!, priceFormat: usd)
+        #expect(same.introPercentOff == nil)
+        let sixMonths = PlanOffer(plan: .yearly, displayPrice: "$9.99", billingPeriod: .init(value: 1, unit: .year),
+                                  introOffer: IntroOffer(payment: .payUpFront, displayPrice: "$2.99", price: Decimal(string: "2.99")!, period: .init(value: 6, unit: .month)),
+                                  price: Decimal(string: "9.99")!, priceFormat: usd)
+        #expect(sixMonths.introPercentOff == nil)
+        #expect(PaywallCopy.planDetail(sixMonths) == "$2.99 for the first 6 months, then $9.99/year")
+    }
+
+    @Test func payAsYouGoShowsThePerPeriodPrice() {
+        let offer = PlanOffer(plan: .yearly, displayPrice: "$9.99", billingPeriod: .init(value: 1, unit: .year),
+                              introOffer: IntroOffer(payment: .payAsYouGo, displayPrice: "$0.99", price: Decimal(string: "0.99")!, period: .init(value: 1, unit: .month), periodCount: 3),
+                              price: Decimal(string: "9.99")!, priceFormat: usd)
+        #expect(PaywallCopy.planDetail(offer) == "$0.99/month for the first 3 months, then $9.99/year")
+        #expect(PaywallCopy.priceLabel(offer) == "$0.99 / mo")
+        #expect(PaywallCopy.disclosure(offer).hasPrefix("$0.99/month for the first 3 months, charged to your Apple Account at confirmation and at the start of each period. Then $9.99 per year."))
+        #expect(offer.introPercentOff == nil)
+    }
+
+    @Test func ineligibleSubscribersSeeTheRegularPrice() {
+        // StoreKit's eligibility check leaves `introOffer` empty for them.
+        #expect(PaywallCopy.priceLabel(yearlyNoTrial) == "$9.99 / yr")
+        #expect(PaywallCopy.introBadge(yearlyNoTrial) == nil)
     }
 
     @Test func voiceOverReadsFullPriceAndFrequency() {

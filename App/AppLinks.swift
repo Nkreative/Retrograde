@@ -2,16 +2,15 @@ import Foundation
 
 /// Outbound links, contact details and legal identity in one place. A nil value hides its link
 /// entirely — placeholders are never shown to customers. Archiving is blocked while
-/// `privacyPolicy` is nil (build phase "Require privacy policy URL").
+/// `privacyPolicy` or `appStore` is nil (build phase "Require release links").
 enum AppLinks {
     /// Apple's standard licensed-application EULA (approved as Retrograde's Terms of Use).
     static let termsOfUse = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
     /// Retrograde's privacy policy — set once NKreative LLC's legal pages are published.
     static let privacyPolicy: URL? = nil
-    /// Retrograde's App Store page, shared by "Share Retrograde" — set once App Store Connect
-    /// assigns the app's Apple ID: `https://apps.apple.com/app/id<Apple ID>`. Until then sharing
-    /// sends the invitation without a link. Archiving is blocked while this is nil.
-    static let appStore: URL? = nil
+    /// Retrograde's App Store page (Apple ID 6830406388), shared by "Share Retrograde" and with a
+    /// day's card. Archiving is blocked if this is ever nil.
+    static let appStore: URL? = URL(string: "https://apps.apple.com/app/id6830406388")
     /// Retrograde's support page — set once it's published.
     static let supportPage: URL? = nil
     /// Support email — set once it's chosen.

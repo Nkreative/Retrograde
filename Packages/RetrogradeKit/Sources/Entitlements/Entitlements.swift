@@ -116,15 +116,50 @@ public struct BillingPeriod: Equatable, Sendable {
     }
 }
 
+/// A subscription's introductory offer for new subscribers, exactly as StoreKit describes it for
+/// the person's storefront (configured in App Store Connect, never in the app).
+public struct IntroOffer: Equatable, Sendable {
+    public enum Payment: Equatable, Sendable {
+        case freeTrial
+        /// One payment of `displayPrice` for the whole introductory stretch.
+        case payUpFront
+        /// `displayPrice` every `period`, `periodCount` times.
+        case payAsYouGo
+    }
+
+    public let payment: Payment
+    /// Localized, e.g. "$6.99"; StoreKit's own string (free trials: "$0.00").
+    public let displayPrice: String
+    public let price: Decimal
+    public let period: BillingPeriod
+    public let periodCount: Int
+
+    public init(payment: Payment, displayPrice: String, price: Decimal, period: BillingPeriod, periodCount: Int = 1) {
+        self.payment = payment
+        self.displayPrice = displayPrice
+        self.price = price
+        self.period = period
+        self.periodCount = periodCount
+    }
+
+    public static func freeTrial(_ period: BillingPeriod) -> IntroOffer {
+        IntroOffer(payment: .freeTrial, displayPrice: "", price: 0, period: period)
+    }
+
+    /// The whole introductory stretch ("1 year", "3 months").
+    public var duration: BillingPeriod { BillingPeriod(value: period.value * periodCount, unit: period.unit) }
+}
+
 /// What the paywall shows for a plan, straight from StoreKit for the person's storefront.
 public struct PlanOffer: Equatable, Sendable {
     public let plan: PremiumPlan
-    /// Localized, e.g. "$9.99" or "9,99 €".
+    /// The regular price, localized, e.g. "$9.99" or "9,99 €".
     public let displayPrice: String
     /// Yearly's billing period; nil for Lifetime.
     public let billingPeriod: BillingPeriod?
-    /// Only when the storefront offers a free trial *and* StoreKit says this person is eligible.
-    public let freeTrial: BillingPeriod?
+    /// Only when the storefront has an introductory offer *and* StoreKit says this person is
+    /// eligible; everyone else sees the regular price.
+    public let introOffer: IntroOffer?
     /// The exact amount StoreKit will charge, in `priceFormat`'s currency.
     public let price: Decimal?
     /// StoreKit's currency format for this storefront (formats other amounts the same way).
@@ -132,18 +167,43 @@ public struct PlanOffer: Equatable, Sendable {
     /// The App Store storefront, as StoreKit reports it (ISO 3166-1 alpha-3, e.g. "USA").
     public let storefront: String?
 
-    public init(plan: PremiumPlan, displayPrice: String, billingPeriod: BillingPeriod? = nil, freeTrial: BillingPeriod? = nil,
+    public init(plan: PremiumPlan, displayPrice: String, billingPeriod: BillingPeriod? = nil, introOffer: IntroOffer? = nil,
                 price: Decimal? = nil, priceFormat: Decimal.FormatStyle.Currency? = nil, storefront: String? = nil) {
         self.plan = plan
         self.displayPrice = displayPrice
         self.billingPeriod = billingPeriod
-        self.freeTrial = freeTrial
+        self.introOffer = introOffer
         self.price = price
         self.priceFormat = priceFormat
         self.storefront = storefront
     }
 
     public var currencyCode: String? { priceFormat?.currencyCode }
+
+    /// The free trial, if that's the introductory offer.
+    public var freeTrial: BillingPeriod? {
+        guard let introOffer, introOffer.payment == .freeTrial else { return nil }
+        return introOffer.duration
+    }
+
+    /// A paid introductory offer (pay up front or pay as you go), if that's what StoreKit offers.
+    public var paidIntro: IntroOffer? {
+        guard let introOffer, introOffer.payment != .freeTrial else { return nil }
+        return introOffer
+    }
+
+    /// How much less the introductory price is than the regular price, rounded down so it's never
+    /// overstated. Only for a pay-up-front offer covering exactly one billing period (e.g. $6.99
+    /// for the first year vs $9.99 a year → 30), where both prices are StoreKit's and comparable.
+    public var introPercentOff: Int? {
+        guard let intro = paidIntro, intro.payment == .payUpFront, intro.duration == billingPeriod,
+              let price, price > 0, intro.price < price else { return nil }
+        var fraction = (price - intro.price) / price * 100
+        var percent = Decimal()
+        NSDecimalRound(&percent, &fraction, 0, .down)
+        let value = NSDecimalNumber(decimal: percent).intValue
+        return value > 0 ? value : nil
+    }
 }
 
 public enum PurchaseOutcome: Equatable, Sendable {

@@ -281,10 +281,13 @@ private struct PlanCard: View {
         }
     }
 
-    /// BEST VALUE on Lifetime, or the verified launch badge while the promotion runs.
+    /// BEST VALUE on Lifetime, the verified launch badge while the promotion runs, or a discounted
+    /// first year that StoreKit's own prices confirm.
     @ViewBuilder private var badge: some View {
         if let promotion {
             Badge(PaywallCopy.promotionBadge(promotion)).fixedSize()
+        } else if let intro = offer.flatMap(PaywallCopy.introBadge) {
+            Badge(intro).fixedSize()
         } else if plan == .lifetime {
             Badge("BEST VALUE").fixedSize()
         }
@@ -304,14 +307,14 @@ private struct PlanCard: View {
         if let offer {
             // The crossed-out regular price sits clearly apart from the price being charged.
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                if let promotion {
-                    Text(promotion.regularPrice)
+                if let regular = promotion?.regularPrice ?? PaywallCopy.regularPriceStruck(offer) {
+                    Text(regular)
                         .retroText(.body)
                         .strikethrough(color: RetroColor.textMuted)
                         .foregroundStyle(RetroColor.textMuted)
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(offer.displayPrice).retroText(.price).foregroundStyle(RetroColor.text)
+                    Text(PaywallCopy.price(offer)).retroText(.price).foregroundStyle(RetroColor.text)
                     if let unit = PaywallCopy.priceUnit(offer) {
                         Text(unit).retroText(.finePrint).foregroundStyle(RetroColor.textMuted)
                     }

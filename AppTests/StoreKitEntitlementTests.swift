@@ -54,7 +54,7 @@ import Testing
     /// Expires the Yearly subscription the test bought, then waits for the app to see it.
     ///
     /// Measured in repeated runs (10 repetitions each): after an expiry, StoreKit can keep returning
-    /// the pre-expiry subscription (trial, renewing) to the app for several seconds although the
+    /// the pre-expiry subscription (first period, renewing) to the app for several seconds although the
     /// test session has recorded it — 12 of 20 runs failed when re-reading for 2 s; with 10 s,
     /// 2 of 12 and 4 of 20. Reading before expiring made it far worse (19 of 20). Asking again
     /// doesn't help (once applied, StoreKit only answers SKInternalErrorDomain 17), so the request
@@ -96,15 +96,16 @@ import Testing
         #expect(store.status == .free)
     }
 
-    @Test func productsLoadWithLocalizedPricesAndTrial() async throws {
+    @Test func productsLoadWithLocalizedPricesAndTheFirstYearOffer() async throws {
         let yearly = try await source.product(for: .yearly)
         let lifetime = try await source.product(for: .lifetime)
         #expect(yearly.displayPrice == "$9.99")
         #expect(lifetime.displayPrice == "$19.99")
         #expect(lifetime.type == .nonConsumable)
         let offer = try #require(yearly.subscription?.introductoryOffer)
-        #expect(offer.paymentMode == .freeTrial)
-        #expect(offer.period.unit == .day && offer.period.value == 3)
+        #expect(offer.paymentMode == .payUpFront)
+        #expect(offer.displayPrice == "$6.99" && offer.price == Decimal(string: "6.99"))
+        #expect(offer.period.unit == .year && offer.period.value == 1)
         let period = try #require(yearly.subscription?.subscriptionPeriod)
         #expect(period.unit == .year && period.value == 1)
     }
@@ -118,9 +119,9 @@ import Testing
         #expect(try await store.purchase(.yearly) == .purchased)
         let expiry = try #require(transaction(yearlyID).expirationDate)
         guard case let .yearly(until, willRenew) = store.status, let until else { Issue.record("\(store.status)"); return }
-        // Apple's verified expiry — the end of the 7-day free trial here — not a computed year.
+        // Apple's verified expiry (the end of the $6.99 first year here), not one the app works out.
         #expect(abs(until.timeIntervalSince(expiry)) < 1)
-        #expect(until.timeIntervalSinceNow < 8 * 86_400)
+        #expect(until.timeIntervalSinceNow > 360 * 86_400 && until.timeIntervalSinceNow < 367 * 86_400)
         #expect(willRenew)
     }
 
@@ -225,7 +226,7 @@ import Testing
 
     // MARK: Paywall offers and purchase flow (M9b)
 
-    @Test func offersShowLocalizedPricesAndTheThreeDayTrialForNewSubscribers() async throws {
+    @Test func offersShowLocalizedPricesAndTheFirstYearOfferForNewSubscribers() async throws {
         let offers = Dictionary(uniqueKeysWithValues: try await store.offers().map { ($0.plan, $0) })
         let lifetime = try #require(offers[.lifetime])
         #expect(lifetime.displayPrice == "$19.99" && lifetime.price == Decimal(string: "19.99"))
@@ -235,9 +236,12 @@ import Testing
         let yearly = try #require(offers[.yearly])
         #expect(yearly.displayPrice == "$9.99")
         #expect(yearly.billingPeriod == BillingPeriod(value: 1, unit: .year))
-        #expect(yearly.freeTrial == BillingPeriod(value: 3, unit: .day))
-        #expect(PaywallCopy.planDetail(yearly) == "3 days free, then $9.99/year")
-        #expect(PaywallCopy.buttonTitle(.yearly, offer: yearly) == "Start 3-day free trial")
+        #expect(yearly.freeTrial == nil)
+        #expect(yearly.paidIntro?.payment == .payUpFront && yearly.paidIntro?.displayPrice == "$6.99")
+        #expect(PaywallCopy.planDetail(yearly) == "$6.99 for the first year, then $9.99/year")
+        // The badge comes from StoreKit's two prices, not from the app.
+        #expect(PaywallCopy.introBadge(yearly) == "FIRST YEAR · 30% OFF")
+        #expect(PaywallCopy.buttonTitle(.yearly, offer: yearly) == "Start Premium")
     }
 
     @Test func launchBadgeNeverAppearsWhileStoreKitChargesTheRegularPrice() async throws {
@@ -248,12 +252,13 @@ import Testing
         #expect(flow.promotion(for: .lifetime) == nil) // StoreKit says $19.99, so no "50% off"
     }
 
-    @Test func noTrialForSomeoneWhoAlreadySubscribed() async throws {
+    @Test func noFirstYearOfferForSomeoneWhoAlreadySubscribed() async throws {
         try await buy(yearlyID)
         _ = try await expireYearly()
         let yearly = try #require(try await store.offers().first { $0.plan == .yearly })
-        #expect(yearly.freeTrial == nil)
-        #expect(!PaywallCopy.planDetail(yearly).localizedCaseInsensitiveContains("free"))
+        #expect(yearly.introOffer == nil)
+        #expect(PaywallCopy.priceLabel(yearly) == "$9.99 / yr" && PaywallCopy.introBadge(yearly) == nil)
+        #expect(!PaywallCopy.planDetail(yearly).contains("$6.99"))
     }
 
     @Test func purchaseFlowEndToEnd() async throws {

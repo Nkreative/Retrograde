@@ -2,6 +2,15 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-05 (M14 technical fixes and launch pricing)
+
+- **v1.0 pricing:** Free unchanged. Yearly $9.99/year; launch offer **$6.99 for the first year** for eligible new subscribers, then $9.99/year; **no free trial** during the launch offer. Lifetime $19.99 one-time; launch price $9.99. Both promotions are meant for the first 14 days after public launch; no dates are set yet, in the app or App Store Connect.
+- **Yearly offer = Apple introductory offer, pay up front.** Supersedes the 3-day trial (M10). Apple allows one introductory offer per person per subscription group, so the trial and the first-year price can't be combined. The app now reads any introductory offer StoreKit returns (free trial, pay up front, pay as you go) with its price, length and the person's eligibility, and describes it in those terms; not eligible → regular price. It starts and stops with App Store Connect's offer dates, with no app update. Steps: docs/STOREKIT.md › Launch configuration.
+- **Discount badge on Yearly** ("FIRST YEAR · 30% OFF", same badge style as Lifetime's): only when StoreKit's own regular and introductory prices for the storefront show a discount over exactly one billing period; rounded down. The regular price is then shown crossed out beside "$6.99 first yr". Lifetime keeps "BEST VALUE" and its launch badge rules (unchanged: start date in `LaunchPromotion.launch`, StoreKit's price must be $9.99 in the US).
+- **App Store link:** `https://apps.apple.com/app/id6830406388` (Apple ID 6830406388) in `AppLinks.appStore`; Share Retrograde (header invite and Settings) and shared day cards include it.
+- **Privacy manifest** (`App/PrivacyInfo.xcprivacy`, app target): no tracking, no tracking domains, no collected data types (the app makes no network connections of its own; everything stays on the iPhone), and UserDefaults with reason CA92.1 (its own settings only). The widget extension uses none of the required-reason APIs, so it has no manifest.
+- **Export compliance:** `ITSAppUsesNonExemptEncryption = NO` (build setting): no networking or cryptography of its own; StoreKit and the operating system's own encryption are exempt.
+
 ## 2026-11-05 (M13.1 personalized Overview)
 
 - **Two states** (Figma review page, "4 · M13.1 Personalized Overview", approved with changes): before the Survival Kit is started the Overview keeps the countdown, bar, Add to Home Screen pill, artwork and headline, then one Survival Kit card ("Small moves. You’ll get it done.", what it helps with, Messages / Tech / Plans / Journal, **Start Survival Kit**). The "So, what does it mean?" explanation and the three tips are gone. After, it's the dashboard: compact Mercury card → Your Survival Kit → Today → Your sharing → widget tip.

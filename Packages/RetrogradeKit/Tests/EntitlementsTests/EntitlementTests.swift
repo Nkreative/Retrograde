@@ -100,7 +100,7 @@ final class ScriptedSource: EntitlementSource, @unchecked Sendable {
 
     var offerList: [PlanOffer] = [
         PlanOffer(plan: .lifetime, displayPrice: "$19.99"),
-        PlanOffer(plan: .yearly, displayPrice: "$9.99", billingPeriod: .init(value: 1, unit: .year), freeTrial: .init(value: 1, unit: .week)),
+        PlanOffer(plan: .yearly, displayPrice: "$9.99", billingPeriod: .init(value: 1, unit: .year), introOffer: .freeTrial(.init(value: 1, unit: .week))),
     ]
     var failOffers = false
     var failPurchase = false

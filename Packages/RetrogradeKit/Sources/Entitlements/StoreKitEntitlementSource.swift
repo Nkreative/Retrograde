@@ -94,15 +94,16 @@ public actor StoreKitEntitlementSource: EntitlementSource {
         let storefront = await Storefront.current?.countryCode
         for plan in PremiumPlan.allCases {
             guard let product = try? await product(for: plan) else { continue }
-            var trial: BillingPeriod?
-            if let subscription = product.subscription,
-               let intro = subscription.introductoryOffer, intro.paymentMode == .freeTrial,
+            // The introductory offer only for someone StoreKit says is eligible (one per subscription
+            // group, ever); everyone else is shown the regular price.
+            var intro: IntroOffer?
+            if let subscription = product.subscription, let offer = subscription.introductoryOffer,
                await subscription.isEligibleForIntroOffer {
-                trial = BillingPeriod(intro.period)
+                intro = IntroOffer(offer)
             }
             result.append(PlanOffer(
                 plan: plan, displayPrice: product.displayPrice,
-                billingPeriod: product.subscription.map { BillingPeriod($0.subscriptionPeriod) }, freeTrial: trial,
+                billingPeriod: product.subscription.map { BillingPeriod($0.subscriptionPeriod) }, introOffer: intro,
                 price: product.price, priceFormat: product.priceFormatStyle, storefront: storefront
             ))
         }
@@ -119,6 +120,20 @@ public actor StoreKitEntitlementSource: EntitlementSource {
         }
         guard let product = products[plan] else { throw StoreError.productUnavailable(plan) }
         return product
+    }
+}
+
+extension IntroOffer {
+    /// Nil for a payment mode this version doesn't know, so it's never described wrongly.
+    init?(_ offer: Product.SubscriptionOffer) {
+        let payment: Payment
+        switch offer.paymentMode {
+        case .freeTrial: payment = .freeTrial
+        case .payUpFront: payment = .payUpFront
+        case .payAsYouGo: payment = .payAsYouGo
+        default: return nil
+        }
+        self.init(payment: payment, displayPrice: offer.displayPrice, price: offer.price, period: BillingPeriod(offer.period), periodCount: offer.periodCount)
     }
 }
 
