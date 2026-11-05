@@ -10,10 +10,11 @@ import WidgetKit
 /// records nothing.
 @MainActor
 enum WidgetPresence {
-    static func check(into prompt: WidgetPrompt) {
+    /// `finished` (debug diagnostic only) runs on the main actor once iOS has answered.
+    static func check(into prompt: WidgetPrompt, finished: (@MainActor () -> Void)? = nil) {
         #if DEBUG
         // `-widgetListed YES|NO` fixes the answer for review screenshots; iOS isn't asked.
-        if UserDefaults.standard.object(forKey: "widgetListed") != nil { return }
+        if UserDefaults.standard.object(forKey: "widgetListed") != nil { finished?(); return }
         #endif
         WidgetCenter.shared.getCurrentConfigurations { result in
             #if DEBUG
@@ -21,7 +22,10 @@ enum WidgetPresence {
             case let .success(widgets): .listed(widgets.filter { $0.kind == WidgetKind.mercuryCycle }.map { "\($0.family)" }, total: widgets.count)
             case let .failure(error): .failed(error.localizedDescription)
             }
-            Task { @MainActor in WidgetPresenceReport.shared.record(reading) }
+            Task { @MainActor in
+                WidgetPresenceReport.shared.record(reading)
+                finished?()
+            }
             #endif
             guard case let .success(widgets) = result else { return }
             let count = widgets.filter { $0.kind == WidgetKind.mercuryCycle }.count
@@ -54,10 +58,20 @@ final class WidgetPresenceReport {
     static let shared = WidgetPresenceReport()
     private(set) var last: Reading?
     private(set) var checkedAt: Date?
+    /// Answers received this launch, so a repeated identical answer is still visibly new.
+    private(set) var checkCount = 0
 
     func record(_ reading: Reading) {
         last = reading
         checkedAt = .now
+        checkCount += 1
+    }
+
+    /// iOS didn't call back in time; the last answer (and the saved state) stay as they were.
+    func recordTimeout(after seconds: Int) {
+        last = .failed("No answer from iOS after \(seconds) seconds.")
+        checkedAt = .now
+        checkCount += 1
     }
 }
 #endif
