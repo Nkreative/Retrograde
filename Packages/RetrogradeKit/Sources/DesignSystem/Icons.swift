@@ -20,6 +20,10 @@ public enum RetroSymbol {
     public static let star = "star.fill"
     public static let copy = "doc.on.doc"
     public static let externalLink = "arrow.up.right.square"
+    /// The Home Screen widget (Settings, Overview).
+    public static let widget = "iphone"
+    /// A new retrograde cycle's fresh kit.
+    public static let newCycle = "arrow.triangle.2.circlepath"
     public static let play = "play.fill"
     public static let pause = "pause.fill"
     public static let restart = "arrow.counterclockwise"

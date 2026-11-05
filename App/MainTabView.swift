@@ -42,6 +42,8 @@ struct MainTabView: View {
         router.showsNotificationCenter = UserDefaults.standard.bool(forKey: "openNotifications")
         // `-openShareInvite YES` opens the header's share screen.
         router.showsShareInvite = UserDefaults.standard.bool(forKey: "openShareInvite")
+        // `-openWidgetHowTo YES` opens the widget how-to.
+        router.showsWidgetHowTo = UserDefaults.standard.bool(forKey: "openWidgetHowTo")
         #endif
         _router = State(initialValue: router)
         _paywall = State(initialValue: paywall)
@@ -94,6 +96,7 @@ struct MainTabView: View {
         .sheet(isPresented: $router.showsSettings) { SettingsView().environment(paywall) }
         .sheet(isPresented: $router.showsNotificationCenter) { NotificationCenterView().environment(router) }
         .sheet(isPresented: $router.showsShareInvite) { ShareInviteView() }
+        .sheet(isPresented: $router.showsWidgetHowTo) { WidgetHowToSheet() }
     }
 
     /// After onboarding: the Premium offer, unless purchases are already verified as Premium.
@@ -108,7 +111,7 @@ struct MainTabView: View {
     @ViewBuilder
     private func screen(for tab: AppTab) -> some View {
         switch tab {
-        case .overview: OverviewScreen(now: now, onOpenSurvivalKit: { router.tab = .survivalKit })
+        case .overview: OverviewScreen(now: now)
         case .survivalKit: SurvivalKitTab(now: now)
         case .calendar:
             TimelineView(.everyMinute) { context in

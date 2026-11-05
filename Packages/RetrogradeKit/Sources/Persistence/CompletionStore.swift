@@ -47,6 +47,14 @@ public final class CompletionStore {
         return ids
     }
 
+    /// Whether any task was ever marked done in a cycle other than `cycleID` (nil: in any cycle).
+    public func hasCompletions(outside cycleID: String? = nil) -> Bool {
+        let other = cycleID ?? ""
+        var descriptor = FetchDescriptor<TaskCompletion>(predicate: #Predicate { $0.cycleID != other })
+        descriptor.fetchLimit = 1
+        return ((try? context.fetchCount(descriptor)) ?? 0) > 0
+    }
+
     public func isDone(_ taskID: String, in cycleID: String) -> Bool {
         completedTaskIDs(in: cycleID).contains(taskID)
     }

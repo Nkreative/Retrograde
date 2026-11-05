@@ -593,34 +593,46 @@ private struct OtherPlanets: View {
     }
 }
 
-/// "Elevated  03 / 04", the four-step scale, and (when unlocked) the day's summary.
-private struct IntensityPanel: View {
+/// "Elevated  03 / 04", the four-step scale, and (when unlocked) the day's summary. Also on the
+/// Overview's Today card, unframed and with the bars alone (`framed: false`).
+struct IntensityPanel: View {
     let level: IntensityLevel
     let summary: String?
+    var framed = true
 
     private static let stepColors = [RetroColor.calm, RetroColor.mauve, RetroColor.pinkSoft, RetroColor.pink]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(DailyInsightCopy.levelName(level)).retroText(.breathCount).foregroundStyle(RetroColor.text)
-                Spacer()
-                Text(String(format: "%02d / 04", level.rawValue)).retroText(.monoLarge).foregroundStyle(RetroColor.pink)
+            let name = Text(DailyInsightCopy.levelName(level)).retroText(.breathCount).foregroundStyle(RetroColor.text)
+            let position = Text(String(format: "%02d / 04", level.rawValue)).retroText(.monoLarge).foregroundStyle(RetroColor.pink)
+            // Side by side where they fit; with large text the position goes under the name, never splitting it.
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline) {
+                    name
+                    Spacer()
+                    position
+                }
+                .lineLimit(1)
+                VStack(alignment: .leading, spacing: 4) {
+                    name
+                    position
+                }
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Daily intensity: \(DailyInsightCopy.levelName(level)), \(level.rawValue) of 4")
             // The scale's names where they fit; with large text the bars alone (the level is named above).
             ViewThatFits(in: .horizontal) {
-                scale(labelled: true)
+                if framed { scale(labelled: true) }
                 scale(labelled: false)
             }
             .accessibilityHidden(true)
             if let summary {
-                Text(summary).retroText(.body).foregroundStyle(RetroColor.textMuted)
+                Text(summary).retroText(.body).foregroundStyle(framed ? RetroColor.textMuted : RetroColor.text)
             }
         }
-        .padding(14)
-        .background(RetroColor.background, in: RoundedRectangle(cornerRadius: 10))
+        .padding(framed ? 14 : 0)
+        .background(framed ? RetroColor.background : .clear, in: RoundedRectangle(cornerRadius: 10))
     }
 
     private func scale(labelled: Bool) -> some View {
@@ -689,7 +701,8 @@ private struct SkyContext: View {
     }
 }
 
-private struct HabitCard: View {
+/// The day's good habit (Calendar day detail, Overview's Today card).
+struct HabitCard: View {
     let habit: DailyInsight.Habit
 
     var body: some View {
@@ -788,6 +801,8 @@ extension CalendarDay {
     var monthName: String { date.formatted(.dateTime.month(.wide)) }
     /// "Nov 7"
     var shortTitle: String { date.formatted(.dateTime.month(.abbreviated).day()) }
+    /// "Sat, Nov 7"
+    var mediumTitle: String { date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()) }
     /// "Saturday, Nov 7"
     var longTitle: String { date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()) }
     /// "Saturday 7 November 2026" (VoiceOver)

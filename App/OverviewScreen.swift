@@ -1,31 +1,54 @@
 import DesignSystem
 import Editorial
+import Entitlements
+import Persistence
 import RetroCore
 import SwiftUI
 
-/// Mercury dashboard: countdown and progress for the current cycle stage, then what it means
-/// and three practical tips. Everything date-related comes from the verified ephemeris.
+/// The Overview. Until the person starts the Survival Kit it introduces the kit under the Mercury
+/// countdown and artwork (State A); after that it's their dashboard (State B, `OverviewDashboard`),
+/// for good, new cycles included. Everything date-related comes from the verified ephemeris.
 struct OverviewScreen: View {
     /// Debug-only clock override for reviewing other cycle stages; nil uses the real time.
     var now: Date?
-    var onOpenSurvivalKit: () -> Void = {}
-    var onAddToHomeScreen: () -> Void = {}
+    @Environment(SurvivalKitActivation.self) private var activation
+    @Environment(EntitlementStore.self) private var premium
+    @Environment(AppRouter.self) private var router
 
     var body: some View {
         TimelineView(.everyMinute) { context in
             let date = now ?? context.date
-            ScrollView {
-                if let status = SkyData.calculator?.status(of: .mercury, at: date),
-                   let copy = OverviewCopy.for(.mercury, status.stage) {
-                    content(status, copy)
-                } else {
-                    MissingSkyData()
+            let status = SkyData.calculator?.status(of: .mercury, at: date)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    Group {
+                        if activation.isStarted {
+                            OverviewDashboard(now: date, status: status)
+                        } else if let status, let copy = OverviewCopy.for(.mercury, status.stage) {
+                            introduction(status, copy)
+                        } else {
+                            MissingSkyData()
+                        }
+                    }
+                    .id(Self.bottomID)
                 }
+                #if DEBUG
+                .onAppear {
+                    // `-scrollOverview kit|today|sharing|bottom` opens it scrolled there, for review screenshots.
+                    if let target = UserDefaults.standard.string(forKey: "scrollOverview") {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                            if target == Self.bottomID { proxy.scrollTo(target, anchor: .bottom) } else { proxy.scrollTo(target, anchor: .top) }
+                        }
+                    }
+                }
+                #endif
             }
         }
     }
 
-    private func content(_ status: CycleStatus, _ copy: OverviewCopy) -> some View {
+    private static let bottomID = "bottom"
+
+    private func introduction(_ status: CycleStatus, _ copy: OverviewCopy) -> some View {
         // Progress group, then the headline + artwork group close beneath it (tightened ~50 pt
         // after review so the hero reads as part of the same story).
         VStack(alignment: .leading, spacing: 16) {
@@ -34,7 +57,8 @@ struct OverviewScreen: View {
                 LabeledProgress(progress: status.progress, start: copy.barStart, current: "YOU ARE HERE", end: copy.barEnd)
                 HStack {
                     Spacer()
-                    PillButton("ADD TO HOME SCREEN", systemImage: RetroSymbol.add, action: onAddToHomeScreen)
+                    PillButton("ADD TO HOME SCREEN", systemImage: RetroSymbol.add, action: router.openWidgetHowTo)
+                        .accessibilityHint("Shows how to add the widget")
                 }
                 .padding(.top, -6) // sits just under the bar labels
             }
@@ -42,24 +66,85 @@ struct OverviewScreen: View {
 
             VStack(alignment: .leading, spacing: RetroMetrics.sectionSpacing) {
                 HeroCard(headline: copy.heroHeadline)
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(copy.sectionTitle)
-                        .retroText(.section)
-                        .foregroundStyle(RetroColor.text)
-                        .accessibilityAddTraits(.isHeader)
-                    (Text(status.planet.displayName).font(RetroTextStyle.bodyHeavy.font)
-                        + Text(" " + copy.explanation).font(RetroTextStyle.body.font))
-                        .lineSpacing(2)
-                        .foregroundStyle(RetroColor.textMuted)
-                }
-                VStack(alignment: .leading, spacing: 13) {
-                    ForEach(copy.tips, id: \.title) { TipRow(tip: $0) }
-                }
-                PrimaryButton(copy.callToAction, systemImage: RetroSymbol.firstAid, layout: .leading, showsArrow: true, action: onOpenSurvivalKit)
+                KitIntroCard(
+                    introduction: copy.kitIntroduction(daysUntilTarget: status.daysUntilTarget),
+                    isPremium: premium.isPremium,
+                    onStart: {
+                        activation.start()
+                        router.openKit()
+                    }
+                )
             }
             .padding(.bottom, 18)
         }
         .padding(.horizontal, RetroMetrics.screenPadding)
+    }
+}
+
+/// State A's Survival Kit card (approved M13.1 Figma): what the kit is for, its four sections, and
+/// the one main action.
+private struct KitIntroCard: View {
+    let introduction: String
+    let isPremium: Bool
+    let onStart: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("YOUR SURVIVAL KIT").retroText(.monoSmall).foregroundStyle(RetroColor.pink)
+                Text("SMALL MOVES. YOU’LL GET IT DONE.")
+                    .retroText(.section)
+                    .foregroundStyle(RetroColor.text)
+                    .accessibilityAddTraits(.isHeader)
+                Text(introduction).retroText(.body).foregroundStyle(RetroColor.textMuted)
+            }
+            TopicChips()
+            VStack(spacing: 12) {
+                PrimaryButton("Start Survival Kit", systemImage: RetroSymbol.firstAid, layout: .leading, showsArrow: true, action: onStart)
+                    .accessibilityHint("Opens the Survival Kit")
+                Text(isPremium ? "Premium: every task is unlocked." : "Free: the first task in every section. No account needed.")
+                    .retroText(.finePrint)
+                    .foregroundStyle(RetroColor.textMuted)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .retroCard(fill: RetroColor.surfaceRaised)
+    }
+}
+
+/// MESSAGES · TECH · PLANS · JOURNAL, in one row where it fits, else two, else one per line.
+/// Decorative: the introduction above says the same in words.
+private struct TopicChips: View {
+    private static let topics: [(symbol: String, title: String)] = [
+        (RetroSymbol.communication, "MESSAGES"), (RetroSymbol.techBackup, "TECH"),
+        (RetroSymbol.planning, "PLANS"), (RetroSymbol.journal, "JOURNAL"),
+    ]
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 5) { chips(Self.topics) }
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 5) { chips(Array(Self.topics.prefix(2))) }
+                HStack(spacing: 5) { chips(Array(Self.topics.suffix(2))) }
+            }
+            VStack(alignment: .leading, spacing: 6) { chips(Self.topics) }
+        }
+        .accessibilityHidden(true)
+    }
+
+    private func chips(_ topics: [(symbol: String, title: String)]) -> some View {
+        ForEach(topics, id: \.title) { topic in
+            HStack(spacing: 4) {
+                Image(systemName: topic.symbol).font(.system(size: 11, weight: .medium)).foregroundStyle(RetroColor.pink)
+                Text(topic.title).retroText(.monoSmall).foregroundStyle(RetroColor.text)
+            }
+            .lineLimit(1)
+            .fixedSize()
+            .padding(.vertical, 7)
+            .padding(.horizontal, 8)
+            .background(RetroColor.chip, in: Capsule())
+        }
     }
 }
 
@@ -158,24 +243,11 @@ private struct HeroCard: View {
     }
 }
 
-private struct TipRow: View {
-    let tip: OverviewCopy.Tip
-
-    var body: some View {
-        HStack(spacing: 12) {
-            IconChip(systemImage: tip.topic.symbol)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(tip.title).retroText(.bodyStrong).foregroundStyle(RetroColor.text)
-                Text(tip.action).retroText(.body).foregroundStyle(RetroColor.textMuted)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .accessibilityElement(children: .combine)
-    }
-}
-
 /// Shown if the date is outside the bundled data (it covers 2025–2030).
-private struct MissingSkyData: View {
+struct MissingSkyData: View {
+    /// False inside a screen that already has margins (the dashboard).
+    var padded = true
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("WE’RE STILL MAPPING THIS STRETCH OF SKY.")
@@ -186,25 +258,7 @@ private struct MissingSkyData: View {
                 .foregroundStyle(RetroColor.textMuted)
         }
         .retroCard()
-        .padding(.horizontal, RetroMetrics.screenPadding)
-        .padding(.top, 6)
+        .padding(.horizontal, padded ? RetroMetrics.screenPadding : 0)
+        .padding(.top, padded ? 6 : 0)
     }
-}
-
-private extension OverviewCopy.Topic {
-    var symbol: String {
-        switch self {
-        case .communication: RetroSymbol.communication
-        case .techBackup: RetroSymbol.techBackup
-        case .planning: RetroSymbol.planning
-        }
-    }
-}
-
-extension Planet {
-    var displayName: String { rawValue.capitalized }
-}
-
-#Preview {
-    OverviewScreen().onAppear(perform: RetroFonts.register).retroScreenBackground()
 }

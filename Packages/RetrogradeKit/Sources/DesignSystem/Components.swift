@@ -318,14 +318,15 @@ public struct Badge: View {
 
 // MARK: - Progress
 
-/// Thin progress track with a filled portion and a round marker ("you are here").
+/// Thin progress track with a filled portion and a round marker ("you are here"). Without a
+/// marker (`marker: nil`) it's a plain bar, and an empty one shows no fill.
 public struct CycleProgressBar: View {
     let progress: Double
     let fill: Color
-    let marker: Color
+    let marker: Color?
     let markerSize: CGFloat
 
-    public init(progress: Double, fill: Color = RetroColor.pink, marker: Color = RetroColor.yellow, markerSize: CGFloat = 11) {
+    public init(progress: Double, fill: Color = RetroColor.pink, marker: Color? = RetroColor.yellow, markerSize: CGFloat = 11) {
         self.progress = min(max(progress, 0), 1)
         self.fill = fill
         self.marker = marker
@@ -333,20 +334,25 @@ public struct CycleProgressBar: View {
     }
 
     public var body: some View {
+        let height = marker == nil ? 5 : markerSize
         GeometryReader { geo in
             let x = geo.size.width * progress
             ZStack(alignment: .leading) {
                 Capsule().fill(RetroColor.line).frame(height: 5)
-                Capsule().fill(fill).frame(width: max(x, 5), height: 5)
-                Circle()
-                    .fill(marker)
-                    .overlay(Circle().strokeBorder(RetroColor.background, lineWidth: markerSize > 9 ? 2 : 1.5))
-                    .frame(width: markerSize, height: markerSize)
-                    .offset(x: min(max(x - markerSize / 2, 0), geo.size.width - markerSize))
+                if let marker {
+                    Capsule().fill(fill).frame(width: max(x, 5), height: 5)
+                    Circle()
+                        .fill(marker)
+                        .overlay(Circle().strokeBorder(RetroColor.background, lineWidth: markerSize > 9 ? 2 : 1.5))
+                        .frame(width: markerSize, height: markerSize)
+                        .offset(x: min(max(x - markerSize / 2, 0), geo.size.width - markerSize))
+                } else if progress > 0 {
+                    Capsule().fill(fill).frame(width: max(x, 5), height: 5)
+                }
             }
         }
-        .frame(height: markerSize)
-        .padding(.vertical, -(markerSize - 5) / 2) // the track is 5 pt; the marker overhangs it
+        .frame(height: height)
+        .padding(.vertical, -(height - 5) / 2) // the track is 5 pt; the marker overhangs it
         .accessibilityElement()
         .accessibilityValue(Text("\(Int((progress * 100).rounded())) percent"))
     }

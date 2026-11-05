@@ -10,6 +10,7 @@ struct TaskDetailScreen: View {
     let task: KitTask
     let now: Date
     @Environment(CompletionStore.self) private var completions
+    @Environment(SurvivalKitActivation.self) private var activation
     @Environment(\.dismiss) private var dismiss
     @State private var copiedAt: Date?
 
@@ -64,6 +65,7 @@ struct TaskDetailScreen: View {
                     } else {
                         PrimaryButton("Mark as done", systemImage: RetroSymbol.checkCircle) {
                             completions.markDone(task.id, in: cycleID)
+                            activation.start() // the Overview becomes the dashboard
                             dismiss()
                         }
                     }

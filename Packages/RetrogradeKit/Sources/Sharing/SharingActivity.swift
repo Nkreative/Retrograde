@@ -26,7 +26,7 @@ public struct ShareRecord: Codable, Equatable, Sendable {
     }
 }
 
-/// The person's sharing history, kept on the device for a future Overview section. A share is
+/// The person’s sharing history, kept on the device and listed on the Overview. A share is
 /// recorded only when iOS reports the share sheet's action as completed (sent, posted, copied or
 /// saved); a cancelled or failed one is not. iOS doesn't say who received anything or whether it
 /// arrived, so neither is claimed, and nothing about the destination app or recipients is kept.
@@ -55,6 +55,11 @@ public final class SharingActivity {
         records.append(ShareRecord(item: item, sharedAt: date))
         if records.count > Self.limit { records.removeFirst(records.count - Self.limit) }
         persist()
+    }
+
+    /// The latest finished shares, newest first.
+    public func recent(_ count: Int) -> [ShareRecord] {
+        Array(records.suffix(count).reversed())
     }
 
     public var appShareCount: Int { records.filter { $0.item == .app }.count }

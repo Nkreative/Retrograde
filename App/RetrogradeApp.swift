@@ -17,7 +17,8 @@ struct RetrogradeApp: App {
     @State private var notificationPreferences: NotificationPreferences
     @State private var notificationHistory: NotificationHistory
     /// Finished shares, kept on the device (in memory while hosting tests).
-    @State private var sharingActivity = SharingActivity(defaults: RetrogradeApp.isHostingTests ? nil : .standard)
+    @State private var sharingActivity = RetrogradeApp.makeSharingActivity()
+    @State private var kitActivation: SurvivalKitActivation
     @State private var notificationScheduler: NotificationScheduler
     @State private var onboarding = Self.makeOnboarding()
 
@@ -42,6 +43,7 @@ struct RetrogradeApp: App {
         let history = Self.makeHistory()
         NotificationResponder.shared.history = history
         _completions = State(initialValue: store)
+        _kitActivation = State(initialValue: Self.makeKitActivation(hasCompletedTasks: store.hasCompletions()))
         _entitlements = State(initialValue: entitlements)
         _notificationPreferences = State(initialValue: preferences)
         _notificationHistory = State(initialValue: history)
@@ -69,6 +71,39 @@ struct RetrogradeApp: App {
         }
         #endif
         return NotificationHistory()
+    }
+
+    /// Whether the Overview shows the kit introduction or the dashboard. People updating with tasks
+    /// already done start on the dashboard. Debug: `-kitStarted YES|NO` sets it for this launch only.
+    private static func makeKitActivation(hasCompletedTasks: Bool) -> SurvivalKitActivation {
+        if isHostingTests { return SurvivalKitActivation(defaults: nil) }
+        #if DEBUG
+        if UserDefaults.standard.object(forKey: "kitStarted") != nil {
+            let activation = SurvivalKitActivation(defaults: nil)
+            if UserDefaults.standard.bool(forKey: "kitStarted") { activation.start() }
+            return activation
+        }
+        #endif
+        return SurvivalKitActivation(hasCompletedTasks: hasCompletedTasks)
+    }
+
+    /// Finished shares. Debug builds launched with `-sampleShares YES` use an in-memory history with
+    /// sample entries (`empty`: none), for screenshots only.
+    private static func makeSharingActivity() -> SharingActivity {
+        if isHostingTests { return SharingActivity(defaults: nil) }
+        #if DEBUG
+        if let sample = UserDefaults.standard.string(forKey: "sampleShares"), ["YES", "empty"].contains(sample) {
+            let activity = SharingActivity(defaults: nil)
+            if sample == "YES" {
+                let now = Date.now
+                activity.shareSheetFinished(.app, completed: true, at: now.addingTimeInterval(-8 * 86_400))
+                activity.shareSheetFinished(.dailyInsight(day: "2026-11-01"), completed: true, at: now.addingTimeInterval(-4 * 86_400))
+                activity.shareSheetFinished(.dailyInsight(day: "2026-11-06"), completed: true, at: now.addingTimeInterval(-600))
+            }
+            return activity
+        }
+        #endif
+        return SharingActivity()
     }
 
     /// Saved onboarding progress. While hosting tests it's in memory and already complete.
@@ -112,6 +147,7 @@ struct RetrogradeApp: App {
                 .environment(notificationPreferences)
                 .environment(notificationHistory)
                 .environment(sharingActivity)
+                .environment(kitActivation)
                 .environment(onboarding)
                 .environment(notificationScheduler)
                 .environment(NotificationResponder.shared.routes)

@@ -67,3 +67,46 @@ import Testing
         }
     }
 }
+
+@Suite struct KitProgressSummaryTests {
+    let kit = SurvivalKit.for(.mercury)!
+
+    private func firsts(_ count: Int) -> Set<String> {
+        Set(kit.sections.prefix(count).map { $0.tasks[0].id })
+    }
+
+    @Test func freshCycleStartsWithTheFirstTask() {
+        let p = KitProgressSummary(kit: kit, done: [], isPremium: false)
+        #expect(p.done == 0 && p.total == 27 && p.percent == 0)
+        #expect(p.nextTask?.id == "mercury.communication.breathe-first")
+        #expect(p.freeTasksLeft == 4 && p.lockedCount == 23 && p.state == .inProgress)
+    }
+
+    @Test func nextUpSkipsDoneAndLockedTasks() {
+        let p = KitProgressSummary(kit: kit, done: firsts(3), isPremium: false)
+        #expect(p.done == 3 && p.percent == 11)
+        #expect(p.nextTask?.id == "mercury.journal.name-the-feeling")
+        #expect(p.nextSection?.category == "JOURNAL")
+        #expect(p.freeTasksLeft == 1)
+    }
+
+    @Test func freeWithEveryFreeTaskDone() {
+        let p = KitProgressSummary(kit: kit, done: firsts(4), isPremium: false)
+        #expect(p.state == .freeTasksDone && p.nextTask == nil && p.lockedCount == 23 && p.percent == 15)
+    }
+
+    @Test func premiumContinuesInKitOrder() {
+        let p = KitProgressSummary(kit: kit, done: firsts(4), isPremium: true)
+        #expect(p.nextTask?.id == "mercury.communication.ask-for-clarity")
+        #expect(p.freeTasksLeft == 0 && p.lockedCount == 0 && p.state == .inProgress)
+    }
+
+    @Test func premiumAllDone() {
+        let p = KitProgressSummary(kit: kit, done: Set(kit.tasks.map(\.id)), isPremium: true)
+        #expect(p.state == .allDone && p.done == 27 && p.percent == 100)
+    }
+
+    @Test func ignoresUnknownTaskIDs() {
+        #expect(KitProgressSummary(kit: kit, done: ["mercury.retired-task"], isPremium: false).done == 0)
+    }
+}

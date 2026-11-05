@@ -4,16 +4,6 @@ import RetroCore
 /// reflection prompt, never a prediction. Retrograde and direct copy is from the approved
 /// Figma screens; the shadow-stage copy follows the same voice.
 public struct OverviewCopy: Equatable, Sendable {
-    public enum Topic: CaseIterable, Sendable {
-        case communication, techBackup, planning
-    }
-
-    public struct Tip: Equatable, Sendable {
-        public let topic: Topic
-        public let title: String
-        public let action: String
-    }
-
     /// Small label after the countdown number ("days to exhale").
     public let countdownUnit: String
     /// Singular form ("day to exhale").
@@ -25,11 +15,11 @@ public struct OverviewCopy: Equatable, Sendable {
     public let barStart: String
     public let barEnd: String
     public let heroHeadline: String
-    public let sectionTitle: String
-    /// The emphasised planet name is drawn in heavier type; this is the rest of the sentence.
-    public let explanation: String
-    public let tips: [Tip]
-    public let callToAction: String
+    /// When the Survival Kit helps, in the kit introduction ("for the next {days}"); `{days}` is
+    /// the countdown ("9 days").
+    let kitTiming: String
+    /// Used instead on the countdown's last day.
+    let kitTimingToday: String
 
     public func countdownUnit(for days: Int) -> String {
         days == 1 ? countdownUnitSingular : countdownUnit
@@ -37,6 +27,13 @@ public struct OverviewCopy: Equatable, Sendable {
 
     public func dayLabel(day: Int, of total: Int) -> String? {
         dayLabel?.replacingOccurrences(of: "{day}", with: "\(day)").replacingOccurrences(of: "{total}", with: "\(total)")
+    }
+
+    /// The Overview's Survival Kit introduction (approved M13.1 Figma), timed to the stage.
+    public func kitIntroduction(daysUntilTarget days: Int) -> String {
+        let timing = days == 0 ? kitTimingToday
+            : kitTiming.replacingOccurrences(of: "{days}", with: days == 1 ? "1 day" : "\(days) days")
+        return "Quick, practical tasks \(timing): slow down your messages, back up what matters, pad your plans and write it out. Tick them off as you go."
     }
 
     /// Copy for a planet's stage; nil for planets without launch copy.
@@ -58,14 +55,8 @@ public struct OverviewCopy: Equatable, Sendable {
         barStart: "RETROGRADE",
         barEnd: "DIRECT",
         heroHeadline: "A LITTLE CHAOS.\nA LOT OF BACKUP.",
-        sectionTitle: "SO, WHAT DOES IT MEAN?",
-        explanation: "appears to move backward. In astrology, that’s your cue to slow down, not spiral.",
-        tips: [
-            Tip(topic: .communication, title: "Texts get lost in translation.", action: "Reread before you hit send. Yes, even that one."),
-            Tip(topic: .techBackup, title: "Tech picks a dramatic moment.", action: "Save your work. Back up the important stuff."),
-            Tip(topic: .planning, title: "Plans need a little wiggle room.", action: "Double-check details. Leave a little earlier."),
-        ],
-        callToAction: "Go to my survival kit"
+        kitTiming: "for the next {days}",
+        kitTimingToday: "for the rest of this retrograde"
     )
 
     static let mercuryPostShadow = OverviewCopy(
@@ -76,14 +67,8 @@ public struct OverviewCopy: Equatable, Sendable {
         barStart: "POST-SHADOW",
         barEnd: "ALL CLEAR",
         heroHeadline: "BACK ON TRACK.\nMOSTLY.",
-        sectionTitle: "STILL RETRACING ITS STEPS.",
-        explanation: "is moving forward again, back over the ground it covered in retrograde. Loose ends are easier to tie up now.",
-        tips: [
-            Tip(topic: .communication, title: "Revisit, then release.", action: "Reply to what got lost in the noise."),
-            Tip(topic: .techBackup, title: "Check the fixes.", action: "Make sure restored files actually open."),
-            Tip(topic: .planning, title: "Ease back in.", action: "Reschedule what you postponed, one at a time."),
-        ],
-        callToAction: "Go to my survival kit"
+        kitTiming: "while Mercury retraces its steps",
+        kitTimingToday: "while Mercury retraces its steps"
     )
 
     static let mercuryDirect = OverviewCopy(
@@ -96,14 +81,8 @@ public struct OverviewCopy: Equatable, Sendable {
         barStart: "DIRECT",
         barEnd: "NEXT RX",
         heroHeadline: "ALL CLEAR.\nFOR NOW.",
-        sectionTitle: "MERCURY IS DIRECT.",
-        explanation: "is moving forward again. A good window to launch, sign and send, and to restock your backup for next time.",
-        tips: [
-            Tip(topic: .communication, title: "Say the thing.", action: "Send the message you’ve been drafting."),
-            Tip(topic: .techBackup, title: "Do the tech chores.", action: "Updates, backups, the files you put off."),
-            Tip(topic: .planning, title: "Lock in plans.", action: "Book, sign, confirm. Fewer plot twists now."),
-        ],
-        callToAction: "Prep my survival kit"
+        kitTiming: "to get ready for the next retrograde",
+        kitTimingToday: "to get ready for the next retrograde"
     )
 
     static let mercuryPreShadow = OverviewCopy(
@@ -114,13 +93,7 @@ public struct OverviewCopy: Equatable, Sendable {
         barStart: "PRE-SHADOW",
         barEnd: "RETROGRADE",
         heroHeadline: "WARM-UP LAP.\nBACK IT UP.",
-        sectionTitle: "MERCURY IS IN ITS SHADOW.",
-        explanation: "is still moving forward, over ground it’s about to retrace. Wrap things up and get your backup ready before it turns.",
-        tips: [
-            Tip(topic: .communication, title: "Finish the conversation.", action: "Close loops now, not mid-retrograde."),
-            Tip(topic: .techBackup, title: "Back up while it’s easy.", action: "Save copies before anything gets dramatic."),
-            Tip(topic: .planning, title: "Pad the calendar.", action: "Leave buffers around plans in the weeks ahead."),
-        ],
-        callToAction: "Prep my survival kit"
+        kitTiming: "before Mercury turns",
+        kitTimingToday: "before Mercury turns today"
     )
 }

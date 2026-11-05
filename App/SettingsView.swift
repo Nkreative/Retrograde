@@ -35,6 +35,8 @@ struct SettingsView: View {
     @Environment(PaywallPresenter.self) private var paywall
     @Environment(OnboardingProgress.self) private var onboarding
     @Environment(SharingActivity.self) private var sharing
+    @Environment(SurvivalKitActivation.self) private var kitActivation
+    @State private var showsWidgetHowTo = false
     @State private var path: [SettingsRoute] = Self.initialPath
 
     var body: some View {
@@ -55,6 +57,17 @@ struct SettingsView: View {
                         .contentShape(Rectangle())
                     }
                     .accessibilityHint("Opens the share sheet")
+                    // How to add the widget; Retrograde can't tell whether one is installed.
+                    Button { showsWidgetHowTo = true } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: RetroSymbol.widget).frame(width: 22).foregroundStyle(RetroColor.pink).accessibilityHidden(true)
+                            Text("Add the widget to your Home Screen").retroText(.bodyLarge).foregroundStyle(RetroColor.text)
+                            Spacer(minLength: 0)
+                        }
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                    }
+                    .accessibilityHint("Shows how to add it")
                 } header: {
                     SectionHeader("General")
                 }
@@ -74,6 +87,7 @@ struct SettingsView: View {
                         .frame(minHeight: 44)
                     Button("Replay onboarding") {
                         onboarding.reset()
+                        kitActivation.reset()
                         dismiss()
                     }
                     .frame(minHeight: 44)
@@ -104,6 +118,7 @@ struct SettingsView: View {
         }
         .tint(RetroColor.pink)
         .preferredColorScheme(.dark)
+        .sheet(isPresented: $showsWidgetHowTo) { WidgetHowToSheet() }
     }
 
     private func row(_ route: SettingsRoute, _ title: String, icon: String? = nil) -> some View {

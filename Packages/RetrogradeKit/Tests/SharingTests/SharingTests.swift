@@ -110,6 +110,13 @@ private let enUS = Locale(identifier: "en_US")
         #expect(activity.records.map(\.item.insightDay) == [nil, nov6, nov4, nov6])
     }
 
+    @Test func recentListsTheLatestFirst() {
+        let activity = SharingActivity(defaults: nil)
+        #expect(activity.recent(3).isEmpty)
+        for i in 0..<5 { activity.shareSheetFinished(.app, completed: true, at: at + Double(i)) }
+        #expect(activity.recent(3).map(\.sharedAt) == [at + 4, at + 3, at + 2])
+    }
+
     @Test func historySurvivesARelaunch() throws {
         let defaults = try #require(UserDefaults(suiteName: "SharingActivityTests.\(UUID())"))
         let day = CalendarDay(year: 2026, month: 11, day: 7)

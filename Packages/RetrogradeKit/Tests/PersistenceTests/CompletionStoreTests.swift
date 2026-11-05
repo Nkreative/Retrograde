@@ -35,3 +35,15 @@ import Testing
         #expect(CompletionStore(container: reopened).isDone("a", in: "mercury-2026-10-24"))
     }
 }
+
+@MainActor
+@Suite struct CompletionHistoryTests {
+    @Test func knowsAboutEarlierCycles() throws {
+        let store = CompletionStore(container: try CompletionStore.makeContainer(inMemory: true))
+        #expect(!store.hasCompletions())
+        store.markDone("a", in: "mercury-2026-10-24")
+        #expect(store.hasCompletions())
+        #expect(!store.hasCompletions(outside: "mercury-2026-10-24"))
+        #expect(store.hasCompletions(outside: "mercury-2027-02-09")) // the next cycle sees this one
+    }
+}

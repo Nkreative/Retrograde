@@ -28,6 +28,12 @@ struct SurvivalKitTab: View {
         }
         // Back to the list when a notification points at a section.
         .onChange(of: router.kitFocus) { _, id in if id != nil { path = [] } }
+        // The Overview asked for a task: show it over the list.
+        .onChange(of: router.kitTask) { _, task in
+            guard let task else { return }
+            path = [task]
+            router.kitTask = nil
+        }
         #if DEBUG
         .onAppear {
             // `-openTask <task id>` opens a task directly, for review screenshots.
