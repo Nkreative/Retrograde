@@ -2,6 +2,13 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-05 (M14.4 app icon)
+
+- **Icon A, pink tile** (approved; Figma review page "5 · M14.4 App icon", node 353:5): the header brand mark (Figma 249:13) with its white mark at exactly the size and offset it has inside the pink disc, on a full `#FF2D87` square. Same vectors, scaled, stroke scaled in proportion; the stretched splash logo isn't used. iOS adds the rounded corners.
+- **Dark and tinted versions** (iOS 18 and later, shown when the person picks those Home Screen styles; earlier iOS and the default style use the standard icon): dark = the same mark in `#FF2D87` on `#0B0716`; tinted = the white mark on black, recoloured by iOS.
+- **Files:** `AppIcon.png`, `AppIcon-Dark.png`, `AppIcon-Tinted.png`, 1024 × 1024 sRGB PNGs with no alpha channel (Figma's renders were redrawn into opaque images; no pixel was transparent).
+- **Origin of the mark: not documented.** In Figma it sits in layers named "Generated icon" with groups "retrograde-orbit", "planet" and "orbital-dot"; the file holds no component, library or plugin record of what made it. It entered the code from those Figma vectors in M3 (2026-11-03), the first day of this repository. It was likely made with Figma AI or Claude; neither ownership nor exclusivity is assumed. Before relying on it as a protected brand asset, confirm its origin and the tool's terms, and consider a trademark clearance search for the mark and the name "Retrograde".
+
 ## 2026-11-05 (M14 technical fixes and launch pricing)
 
 - **v1.0 pricing:** Free unchanged. Yearly $9.99/year; launch offer **$6.99 for the first year** for eligible new subscribers, then $9.99/year; **no free trial** during the launch offer. Lifetime $19.99 one-time; launch price $9.99. Both promotions are meant for the first 14 days after public launch; no dates are set yet, in the app or App Store Connect.

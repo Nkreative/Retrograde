@@ -99,7 +99,7 @@ Still to check or do:
 4. **On the iPhone:** Settings › Developer › Sandbox Apple Account → sign in with a tester. Run from Xcode with your team selected, using a scheme whose StoreKit Configuration is None (a separate Sandbox scheme is planned).
 
 ### Before TestFlight
-11. **App icon:** a 1024×1024 icon is required to upload — none exists yet.
+11. **App icon:** done in M14.4 (`App/Assets.xcassets/AppIcon.appiconset`, 1024 × 1024, opaque, with dark and tinted versions).
 11a. **Privacy manifest:** done in M14 (`App/PrivacyInfo.xcprivacy`): no tracking, no data collected, and the one required-reason API the app uses, UserDefaults, for its own settings (reason CA92.1).
 12. **Export compliance:** done in M14: `ITSAppUsesNonExemptEncryption = NO` (the app makes no network connections of its own and uses no encryption beyond Apple's operating system).
 13. **Archive and upload** from Xcode (Product › Archive › Distribute › App Store Connect).
