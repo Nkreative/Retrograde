@@ -187,40 +187,86 @@ private struct NotificationsOnboarding: View {
     }
 }
 
-/// Mercury crossing the upper part of the screen from right to left, as in the three Figma
-/// frames (x 361 → 187 → −34 pt on the 430 pt frame). With Reduce Motion it fades in at the
-/// middle position instead.
+/// Mercury entering from the upper right along the Figma path (x 361 pt on the 430 pt frame),
+/// slowing gradually and stopping at the centre of the screen, with a soft trail that traces the
+/// last stretch of its path and fades away once it stops. With Reduce Motion it simply appears,
+/// still, in its final position.
 private struct MercuryDrift: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var arrived = false
-    @State private var visible = false
+    @State private var start: Date?
+    /// Set once the animation is over (or held for review): drawn still at that moment.
+    @State private var stillAt: Double?
+
+    private static let delay = 0.5       // after the screen has faded in
+    private static let travel = 3.4      // seconds from entry to stop
+    private static let trailLag = 0.8    // the trail shows where Mercury was this long ago
+    private static let trailFade = 0.9   // seconds for the trail to disappear after the stop
+    private static var total: Double { delay + travel + trailFade }
 
     var body: some View {
         GeometryReader { geo in
             let w = geo.size.width
-            MercuryArtwork()
-                .offset(x: w * (reduceMotion ? 187 : arrived ? -34 : 361) / 430)
-                .opacity(reduceMotion && !visible ? 0 : 1)
+            if reduceMotion {
+                frame(elapsed: Self.total, width: w)
+            } else if let stillAt {
+                frame(elapsed: stillAt, width: w)
+            } else {
+                // Redraws every frame only while moving, then replaced by the still final frame.
+                TimelineView(.animation(paused: start == nil)) { context in
+                    frame(elapsed: start.map { context.date.timeIntervalSince($0) } ?? 0, width: w)
+                }
+            }
         }
         .frame(height: MercuryArtwork.size.height)
-        .onAppear(perform: start)
+        .task { await run() }
         .accessibilityHidden(true)
     }
 
-    private func start() {
+    /// Mercury and its trail at a moment of the animation.
+    private func frame(elapsed: Double, width w: CGFloat) -> some View {
+        let x = position(at: elapsed, width: w)
+        let tail = position(at: elapsed - Self.trailLag, width: w)
+        let fade = 1 - min(max((elapsed - Self.delay - Self.travel) / Self.trailFade, 0), 1)
+        let center = MercuryArtwork.size.width / 2
+        let trailHeight: CGFloat = 26
+        return ZStack(alignment: .topLeading) {
+            // A soft glow from Mercury's centre back along the path it just travelled; it shortens
+            // as Mercury slows and fades out after it stops. It stays within Mercury's band of the
+            // screen, well above the text.
+            Capsule()
+                .fill(LinearGradient(colors: [RetroColor.pinkSoft.opacity(0.6), RetroColor.pink.opacity(0.22), RetroColor.pink.opacity(0)],
+                                     startPoint: .leading, endPoint: .trailing))
+                .frame(width: max(tail - x, 0) + trailHeight, height: trailHeight)
+                .blur(radius: 8)
+                .offset(x: x + center - trailHeight / 2, y: (MercuryArtwork.size.height - trailHeight) / 2)
+                .opacity(fade)
+            MercuryArtwork().offset(x: x)
+        }
+    }
+
+    /// Left edge of Mercury: enters at the Figma start, eases out to rest centred.
+    private func position(at elapsed: Double, width w: CGFloat) -> CGFloat {
+        let from = w * 361 / 430
+        let to = (w - MercuryArtwork.size.width) / 2
+        let u = min(max((elapsed - Self.delay) / Self.travel, 0), 1)
+        let eased = 1 - pow(1 - u, 3) // gradual slow-down to a stop
+        return from + (to - from) * eased
+    }
+
+    private func run() async {
         #if DEBUG
-        // `-mercuryAt start|end` holds Mercury still, for review screenshots.
+        // `-mercuryAt start|middle|end` holds the animation at that moment, for review screenshots.
         switch UserDefaults.standard.string(forKey: "mercuryAt") {
-        case "start": visible = true; return
-        case "end": arrived = true; visible = true; return
+        case "start": stillAt = 0; return
+        case "middle": stillAt = Self.delay + 0.7; return
+        case "end": stillAt = Self.total; return
         default: break
         }
         #endif
-        if reduceMotion {
-            withAnimation(.easeOut(duration: 0.4)) { visible = true }
-        } else {
-            withAnimation(.easeInOut(duration: 5).delay(0.3)) { arrived = true }
-        }
+        guard !reduceMotion else { return }
+        start = .now
+        try? await Task.sleep(for: .seconds(Self.total + 0.1))
+        stillAt = Self.total // trail fully gone: draw the final still frame and stop redrawing
     }
 }
 
