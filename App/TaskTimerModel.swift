@@ -73,7 +73,7 @@ struct TimerControls: View {
     private func pill(_ title: String, _ icon: String, filled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 7) {
-                Image(systemName: icon).font(.system(size: 11, weight: .semibold))
+                Image(systemName: icon).font(.system(size: 13, weight: .semibold))
                 Text(title).retroText(.bodyStrong)
             }
             .foregroundStyle(RetroColor.text)

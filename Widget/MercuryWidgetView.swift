@@ -81,7 +81,7 @@ private struct CycleCard: View {
                 Spacer(minLength: 8)
                 Text(content.trailing)
             }
-            .retroText(.monoLarge)
+            .retroText(.widgetCaption)
             .foregroundStyle(RetroColor.textMuted)
             .lineLimit(1)
             .minimumScaleFactor(0.8)
@@ -127,7 +127,7 @@ private struct MissingSkyCard: View {
                 .retroText(.cardTitle)
                 .foregroundStyle(RetroColor.text)
             Text("Update the app to see the latest cycles.")
-                .retroText(.body)
+                .retroText(.widgetNote)
                 .foregroundStyle(RetroColor.textMuted)
         }
         .minimumScaleFactor(0.8)

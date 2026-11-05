@@ -2,6 +2,15 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-04 (M12.1 readability)
+
+- **Type scale raised** after testing on an iPhone (headings, numbers and buttons keep Figma's sizes): body copy 12 → 15 pt (Inter, ~135 % line height), row titles 13 → 15, task instructions 13 → 16, eyebrows/tab labels 10 → 12, small labels 9 → 11, pill and badge labels 8–10 → 11, countdown label 11 → 13, fine print and purchase terms 10–11 → 12, the smallest captions 8 → 10. Nothing in the app is under 10 pt. Every screen uses the shared styles (no raw font names left).
+- **Calendar:** day numbers 13 → 16 pt, Rx/Sh/D 8 → 10, lock 6 → 8, Moon 7 → 9, intensity bars 6×3 → 7×4; arrows 44 × 44 tap areas. Cells stop growing past XXXL text (seven must share a row); VoiceOver reads each day in full.
+- **Day details:** "What's shaping the day" text 11 → 15 pt (titles 12 → 15), other planets 11–12 → 15, the good habit's title 11 → 16 and its text 11 → 16 in full-strength colour (muted text on the wine card was the weakest contrast). The intensity scale's names give way to the bars alone when large text can't fit them.
+- **Survival Kit:** task text 12 → 15 pt, checkbox 13 → 16, every task row at least 44 pt tall to tap; progress labels move onto two lines at large text.
+- **Overview:** at accessibility text sizes the headline sits above the artwork instead of over it.
+- **Widget unchanged:** it has its own pinned styles (`monoBody`, `monoLabel`, `widgetCaption`, `widgetNote`); a test holds its sizes.
+
 ## 2026-11-04 (M12 Home Screen widget)
 
 - **One medium widget**, free for everyone, no account (Figma review page: "M12 · Home Screen widget (medium) — four phases"; replaces the earlier medium proposal with intensity + habit for this milestone; small and Lock Screen sizes are not part of M12).

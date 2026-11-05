@@ -306,14 +306,14 @@ private struct PlanCard: View {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 if let promotion {
                     Text(promotion.regularPrice)
-                        .retroText(.bodyLarge)
+                        .retroText(.body)
                         .strikethrough(color: RetroColor.textMuted)
                         .foregroundStyle(RetroColor.textMuted)
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(offer.displayPrice).retroText(.price).foregroundStyle(RetroColor.text)
                     if let unit = PaywallCopy.priceUnit(offer) {
-                        Text(unit).font(.custom("Inter-Regular", size: 12, relativeTo: .footnote)).foregroundStyle(RetroColor.textMuted)
+                        Text(unit).retroText(.finePrint).foregroundStyle(RetroColor.textMuted)
                     }
                 }
             }

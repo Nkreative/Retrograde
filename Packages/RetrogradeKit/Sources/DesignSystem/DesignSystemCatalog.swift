@@ -44,12 +44,12 @@ private struct ColoursAndType: View {
         (.display, "10", "Archivo Black 32"), (.hero, "A LITTLE CHAOS.", "Archivo Black 30"),
         (.title, "RETROGRADE", "Archivo Black 20"), (.section, "SO, WHAT DOES IT MEAN?", "Archivo Black 19"),
         (.cardTitle, "TAKE YOUR TIME TO MESSAGE.", "Archivo Black 16"), (.button, "Go to my survival kit", "Inter Bold 14"),
-        (.bodyStrong, "Texts get lost in translation.", "Inter SemiBold 13"),
-        (.bodyLarge, "The message can wait ten seconds.", "Inter Regular 13"),
-        (.body, "Reread before you hit send. Yes, even that one.", "Inter Regular 12"),
-        (.monoBody, "days to exhale", "Space Mono 13"), (.monoLabel, "RETROGRADE", "Space Mono Bold 12"),
-        (.monoLarge, "days to exhale", "Space Mono 11"), (.mono, "01 / COMMUNICATION", "Space Mono 10"),
-        (.monoBold, "ADD TO HOME SCREEN", "Space Mono Bold 10"), (.monoSmall, "YOUR COSMIC REALITY CHECK", "Space Mono 9"),
+        (.bodyStrong, "Texts get lost in translation.", "Inter SemiBold 15"),
+        (.bodyLarge, "The message can wait ten seconds.", "Inter Regular 16"),
+        (.body, "Reread before you hit send. Yes, even that one.", "Inter Regular 15"),
+        (.monoNumber, "14", "Space Mono 16"), (.monoLarge, "days to exhale", "Space Mono 13"),
+        (.mono, "01 / COMMUNICATION", "Space Mono 12"),
+        (.monoBold, "ADD TO HOME SCREEN", "Space Mono Bold 11"), (.monoSmall, "YOUR COSMIC REALITY CHECK", "Space Mono 11"),
     ]
 
     var body: some View {

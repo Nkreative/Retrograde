@@ -207,7 +207,7 @@ private struct CalendarCard: View {
                 .retroText(.monoSmall)
                 .foregroundStyle(RetroColor.pink)
         }
-        let arrows = HStack(spacing: 4) {
+        let arrows = HStack(spacing: 0) {
             arrow(RetroSymbol.back, label: model.expanded ? "Previous month" : "Previous week", enabled: canGoBack) { onStep(-1) }
             arrow(RetroSymbol.forward, label: model.expanded ? "Next month" : "Next week", enabled: canGoForward) { onStep(1) }
         }
@@ -224,11 +224,11 @@ private struct CalendarCard: View {
     private func arrow(_ symbol: String, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(RetroColor.text)
-                .frame(width: 30, height: 30)
+                .frame(width: 32, height: 32)
                 .overlay(Circle().strokeBorder(RetroColor.line, lineWidth: 1))
-                .frame(width: 36, height: 44)
+                .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -278,6 +278,7 @@ private struct FreeWindowMarker: View {
     let first: Int
     let last: Int
     let showsLabel: Bool
+    @ScaledMetric(relativeTo: .caption2) private var labelHeight: CGFloat = 19
 
     var body: some View {
         GeometryReader { geo in
@@ -292,7 +293,7 @@ private struct FreeWindowMarker: View {
             }
             .offset(x: x)
         }
-        .frame(height: showsLabel ? 16 : 4)
+        .frame(height: showsLabel ? labelHeight : 4)
         .accessibilityHidden(true)
     }
 }
@@ -313,37 +314,40 @@ private struct DayCell: View {
             VStack(spacing: 4) {
                 HStack(spacing: 2) {
                     Text("\(day.day)")
-                        .font(.custom(isSelected ? "SpaceMono-Bold" : "SpaceMono-Regular", size: 13, relativeTo: .footnote))
+                        .retroText(isSelected ? .monoNumberBold : .monoNumber)
                         .foregroundStyle(RetroColor.text)
                     if isToday {
-                        Circle().fill(RetroColor.yellow).frame(width: 5, height: 5)
+                        Circle().fill(RetroColor.yellow).frame(width: 6, height: 6)
                     }
                 }
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
                 Text(marker?.short ?? " ")
-                    .font(RetroTextStyle.monoTiny.font)
+                    .retroText(.monoTiny)
                     .foregroundStyle(marker?.color ?? .clear)
                 IntensityBars(level: reading?.level, highlighted: isSelected)
             }
             .padding(.vertical, 8)
+            .frame(minHeight: 44)
             .frame(maxWidth: .infinity)
             .background(isSelected ? RetroColor.wine : RetroColor.cell, in: RoundedRectangle(cornerRadius: RetroMetrics.Radius.cell))
             .overlay(RoundedRectangle(cornerRadius: RetroMetrics.Radius.cell).strokeBorder(isSelected ? RetroColor.pink : RetroColor.line, lineWidth: isSelected ? 2 : 0.5))
             .overlay(alignment: .topTrailing) {
                 if isLocked, reading != nil {
-                    Image(systemName: RetroSymbol.lock).font(.system(size: 6)).foregroundStyle(RetroColor.textMuted.opacity(0.8)).padding(4)
+                    Image(systemName: RetroSymbol.lock).font(.system(size: 8, weight: .medium)).foregroundStyle(RetroColor.textMuted).padding(3)
                 }
             }
             .overlay(alignment: .topLeading) {
                 if let moon {
-                    MoonIcon(phase: moon, size: 7).padding(4)
+                    MoonIcon(phase: moon, size: 9).padding(3)
                 }
             }
             .opacity(inMonth ? 1 : 0.35)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        // Seven cells share the row: past this size they'd overlap, so they hold (VoiceOver reads each in full).
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityText(reading: reading, marker: marker, moon: moon))
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
@@ -360,7 +364,7 @@ private struct DayCell: View {
     }
 }
 
-/// Four 6×3 bars; filled up to the level (Figma's cell indicator).
+/// Four 7×4 bars; filled up to the level (Figma's cell indicator, slightly enlarged).
 private struct IntensityBars: View {
     let level: IntensityLevel?
     let highlighted: Bool
@@ -370,7 +374,7 @@ private struct IntensityBars: View {
             ForEach(1...4, id: \.self) { step in
                 RoundedRectangle(cornerRadius: 1)
                     .fill(level.map { step <= $0.rawValue } == true ? (highlighted ? RetroColor.pink : RetroColor.pinkSoft) : RetroColor.dim)
-                    .frame(width: 6, height: 3)
+                    .frame(width: 7, height: 4)
             }
         }
         .opacity(level == nil ? 0 : 1)
@@ -424,7 +428,7 @@ private struct CalendarKey: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 14) {
                 HStack(spacing: 5) {
-                    Circle().fill(RetroColor.yellow).frame(width: 5, height: 5)
+                    Circle().fill(RetroColor.yellow).frame(width: 6, height: 6)
                     Text("Today · \(model.today.day)")
                 }
                 HStack(spacing: 5) {
@@ -434,7 +438,7 @@ private struct CalendarKey: View {
                 Spacer(minLength: 0)
                 if !isPremium {
                     HStack(spacing: 4) {
-                        Image(systemName: RetroSymbol.lock).font(.system(size: 7))
+                        Image(systemName: RetroSymbol.lock).font(.system(size: 10))
                         Text("Premium")
                     }
                 } else {
@@ -457,7 +461,7 @@ private struct CalendarKey: View {
                 HStack(spacing: 12) {
                     ForEach(MoonPhase.allCases, id: \.self) { phase in
                         HStack(spacing: 4) {
-                            MoonIcon(phase: phase, size: 9)
+                            MoonIcon(phase: phase, size: 11)
                             Text(phase.shortName)
                         }
                     }
@@ -554,12 +558,12 @@ private struct OtherPlanets: View {
             Text("OTHER PLANETS IN RETROGRADE").retroText(.mono).foregroundStyle(RetroColor.text).padding(.bottom, 6)
             if retrogrades.isEmpty {
                 Text("No other planets are retrograde \(when).")
-                    .font(.custom("Inter-Regular", size: 11, relativeTo: .caption)).foregroundStyle(RetroColor.textMuted)
+                    .retroText(.body).foregroundStyle(RetroColor.textMuted)
                     .padding(.vertical, 10)
             }
             ForEach(retrogrades, id: \.planet) { r in
                 HStack(alignment: .firstTextBaseline) {
-                    Text("\(r.planet.name) Rx").font(.custom("Inter-SemiBold", size: 12, relativeTo: .footnote)).foregroundStyle(RetroColor.text)
+                    Text("\(r.planet.name) Rx").retroText(.bodyStrong).foregroundStyle(RetroColor.text)
                     Spacer(minLength: 8)
                     Text("\(r.from.shortTitle) – \(r.to.shortTitle)\(r.to.year != r.from.year ? ", \(String(r.to.year))" : "")")
                         .retroText(.monoSmall).foregroundStyle(RetroColor.textMuted)
@@ -588,19 +592,10 @@ private struct IntensityPanel: View {
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Daily intensity: \(DailyInsightCopy.levelName(level)), \(level.rawValue) of 4")
-            HStack(spacing: 5) {
-                ForEach(IntensityLevel.allCases, id: \.self) { step in
-                    VStack(alignment: .leading, spacing: 7) {
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(step <= level ? Self.stepColors[step.rawValue - 1] : RetroColor.dim)
-                            .frame(height: 8)
-                        Text(DailyInsightCopy.levelName(step))
-                            .font(RetroTextStyle.monoTiny.font)
-                            .foregroundStyle(step == level ? RetroColor.pink : RetroColor.textMuted)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                }
+            // The scale's names where they fit; with large text the bars alone (the level is named above).
+            ViewThatFits(in: .horizontal) {
+                scale(labelled: true)
+                scale(labelled: false)
             }
             .accessibilityHidden(true)
             if let summary {
@@ -609,6 +604,26 @@ private struct IntensityPanel: View {
         }
         .padding(14)
         .background(RetroColor.background, in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func scale(labelled: Bool) -> some View {
+        HStack(spacing: 5) {
+            ForEach(IntensityLevel.allCases, id: \.self) { step in
+                VStack(alignment: .leading, spacing: 7) {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(step <= level ? Self.stepColors[step.rawValue - 1] : RetroColor.dim)
+                        .frame(height: 8)
+                    if labelled {
+                        Text(DailyInsightCopy.levelName(step))
+                            .retroText(.monoTiny)
+                            .foregroundStyle(step == level ? RetroColor.pink : RetroColor.textMuted)
+                            .lineLimit(1)
+                            .fixedSize()
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
     }
 }
 
@@ -639,16 +654,16 @@ private struct SkyContext: View {
             VStack(alignment: .leading, spacing: 5) {
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(title).font(.custom("Inter-SemiBold", size: 12, relativeTo: .footnote)).foregroundStyle(RetroColor.text)
+                        Text(title).retroText(.bodyStrong).foregroundStyle(RetroColor.text)
                         Spacer(minLength: 8)
                         if let tag { Text(tag).retroText(.monoSmall).foregroundStyle(RetroColor.pinkSoft) }
                     }
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(title).font(.custom("Inter-SemiBold", size: 12, relativeTo: .footnote)).foregroundStyle(RetroColor.text)
+                        Text(title).retroText(.bodyStrong).foregroundStyle(RetroColor.text)
                         if let tag { Text(tag).retroText(.monoSmall).foregroundStyle(RetroColor.pinkSoft) }
                     }
                 }
-                Text(text).font(.custom("Inter-Regular", size: 11, relativeTo: .caption)).foregroundStyle(RetroColor.textMuted)
+                Text(text).retroText(.body).foregroundStyle(RetroColor.textMuted)
             }
         }
         .padding(.vertical, 14)
@@ -661,11 +676,12 @@ private struct HabitCard: View {
     let habit: DailyInsight.Habit
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            Text("Good habit for this day").font(.custom("ArchivoBlack-Regular", size: 11, relativeTo: .caption)).foregroundStyle(RetroColor.text)
-            Text(habit.text).font(.custom("Inter-Regular", size: 11, relativeTo: .caption)).foregroundStyle(RetroColor.textMuted)
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Good habit for this day").retroText(.cardTitle).foregroundStyle(RetroColor.text)
+            // Full-strength text: muted text on the wine card was the weakest contrast in the app.
+            Text(habit.text).retroText(.bodyLarge).foregroundStyle(RetroColor.text)
         }
-        .padding(12)
+        .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RetroColor.wine, in: RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(RetroColor.line, lineWidth: 1))

@@ -249,11 +249,11 @@ private struct CopyLink: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 6) {
-                Image(systemName: RetroSymbol.copy).font(.system(size: 11, weight: .semibold))
-                Text(title).font(RetroTextStyle.bodyStrong.font)
+                Image(systemName: RetroSymbol.copy).font(.system(size: 13, weight: .semibold))
+                Text(title).retroText(.bodyStrong)
             }
             .foregroundStyle(RetroColor.pink)
-            .frame(minHeight: 32)
+            .frame(minHeight: 44)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

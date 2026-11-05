@@ -192,10 +192,14 @@ private struct SectionCard: View {
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
             Text(section.guidance).retroText(.body).foregroundStyle(RetroColor.textMuted)
-            ForEach(Array(section.tasks.prefix(shown).enumerated()), id: \.element.id) { index, task in
-                TaskRow(task: task, visibility: policy.visibility(ofTaskAt: index, isPremium: isPremium), isDone: done.contains(task.id), onLocked: onLocked)
-                    .transition(.opacity)
+            // Rows meet edge to edge, each at least 44 pt tall to tap.
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(Array(section.tasks.prefix(shown).enumerated()), id: \.element.id) { index, task in
+                    TaskRow(task: task, visibility: policy.visibility(ofTaskAt: index, isPremium: isPremium), isDone: done.contains(task.id), onLocked: onLocked)
+                        .transition(.opacity)
+                }
             }
+            .padding(.vertical, -6)
             if section.tasks.count > Self.collapsedCount {
                 ExpandCollapseButton(isExpanded: isExpanded, hiddenCount: hiddenCount, action: onToggle)
                     .frame(maxWidth: .infinity)
@@ -242,8 +246,8 @@ private struct TaskRow: View {
         }
     }
 
-    /// Half the cap height of 12 pt Inter: centres the checkbox on the first line of text.
-    @ScaledMetric(relativeTo: .footnote) private var firstLineCentre: CGFloat = 4.4
+    /// Half the cap height of 15 pt Inter: centres the checkbox on the first line of text.
+    @ScaledMetric(relativeTo: .subheadline) private var firstLineCentre: CGFloat = 5.5
 
     private func row(checkbox: TaskCheckbox.State, textColor: Color, textOpacity: Double = 1) -> some View {
         let centre = firstLineCentre
@@ -256,10 +260,10 @@ private struct TaskRow: View {
                 .opacity(textOpacity)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-        // Tappable across the full width and half the gap above and below, so rows meet edge to edge.
-        .padding(.vertical, 6)
+        // Tappable across the full width, at least 44 pt tall.
+        .padding(.vertical, 10)
+        .frame(minHeight: 44)
         .contentShape(Rectangle())
-        .padding(.vertical, -6)
         .accessibilityElement(children: .combine)
     }
 }

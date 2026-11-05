@@ -40,6 +40,7 @@ public struct AppHeader: View {
                 Text("YOUR COSMIC REALITY CHECK")
                     .retroText(.monoSmall)
                     .foregroundStyle(RetroColor.textMuted)
+                    .minimumScaleFactor(0.6) // shrinks rather than cuts off at larger text sizes
             }
             .lineLimit(1)
             .minimumScaleFactor(0.7)
@@ -209,13 +210,13 @@ public struct ExpandCollapseButton: View {
                 Text(isExpanded ? "Collapse" : hiddenCount.map { "Expand · \($0) more" } ?? "Expand")
                     .retroText(.monoSmall)
                 Image(systemName: isExpanded ? RetroSymbol.chevronUp : RetroSymbol.chevronDown)
-                    .font(.system(size: 8, weight: .semibold))
+                    .font(.system(size: 10, weight: .semibold))
             }
             .foregroundStyle(RetroColor.text)
-            .padding(.vertical, 7)
-            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .padding(.horizontal, 14)
             .overlay(Capsule().strokeBorder(RetroColor.textMuted, lineWidth: 1))
-            .frame(minHeight: 44)
+            .frame(minWidth: 44, minHeight: 44)
             .contentShape(Rectangle())
         }
         .buttonStyle(PressFeedbackStyle())
@@ -238,14 +239,16 @@ public struct PillButton: View {
     public var body: some View {
         Button(action: action) {
             HStack(spacing: 6) {
-                if let systemImage { Image(systemName: systemImage).font(.system(size: 9, weight: .bold)) }
+                if let systemImage { Image(systemName: systemImage).font(.system(size: 10, weight: .bold)) }
                 Text(title).retroText(.monoBold)
             }
             .foregroundStyle(.white)
-            .padding(.vertical, 6)
-            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .padding(.horizontal, 12)
             .overlay(Capsule().strokeBorder(.white, lineWidth: 1))
-            .contentShape(Capsule())
+            // The capsule stays compact; the tappable area is 44 pt tall.
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(PressFeedbackStyle())
     }
@@ -305,7 +308,7 @@ public struct Badge: View {
 
     public var body: some View {
         Text(title)
-            .font(.custom("SpaceMono-Bold", size: 8, relativeTo: .caption2))
+            .retroText(.monoBold)
             .foregroundStyle(RetroColor.background)
             .padding(.vertical, 3)
             .padding(.horizontal, 8)
@@ -404,12 +407,26 @@ public struct MarkerLabels: View {
         if followsMarker {
             following
         } else {
-            HStack {
-                Text(start).foregroundStyle(RetroColor.textMuted)
-                Spacer(minLength: 8)
-                Text(current).foregroundStyle(currentColor)
-                Spacer(minLength: 8)
-                Text(end).foregroundStyle(RetroColor.textMuted)
+            // One row where it fits; with large text, the count on its own line above the ends.
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    Text(start).foregroundStyle(RetroColor.textMuted)
+                    Spacer(minLength: 8)
+                    Text(current).foregroundStyle(currentColor)
+                    Spacer(minLength: 8)
+                    Text(end).foregroundStyle(RetroColor.textMuted)
+                }
+                .fixedSize(horizontal: true, vertical: false)
+                VStack(spacing: 4) {
+                    Text(current).foregroundStyle(currentColor)
+                    HStack {
+                        Text(start)
+                        Spacer(minLength: 8)
+                        Text(end)
+                    }
+                    .foregroundStyle(RetroColor.textMuted)
+                    .minimumScaleFactor(0.7)
+                }
             }
             .retroText(.monoSmall)
             .lineLimit(1)
@@ -462,24 +479,24 @@ public struct TaskCheckbox: View {
     }
 
     public var body: some View {
-        // All three states share a 16 pt slot and read at the same size: a 13 pt box, or a lock
+        // All three states share an 18 pt slot and read at the same size: a 16 pt box, or a lock
         // glyph of the same visible height.
         ZStack {
             switch state {
             case .open:
                 RoundedRectangle(cornerRadius: RetroMetrics.Radius.checkbox)
                     .strokeBorder(RetroColor.textMuted, lineWidth: 1.25)
-                    .frame(width: 13, height: 13)
+                    .frame(width: 16, height: 16)
             case .done:
                 RoundedRectangle(cornerRadius: RetroMetrics.Radius.checkbox)
                     .fill(RetroColor.pink)
-                    .frame(width: 13, height: 13)
-                Image(systemName: RetroSymbol.check).font(.system(size: 8, weight: .heavy)).foregroundStyle(RetroColor.text)
+                    .frame(width: 16, height: 16)
+                Image(systemName: RetroSymbol.check).font(.system(size: 10, weight: .heavy)).foregroundStyle(RetroColor.text)
             case .locked:
-                Image(systemName: RetroSymbol.lock).font(.system(size: 13, weight: .medium)).foregroundStyle(RetroColor.textMuted)
+                Image(systemName: RetroSymbol.lock).font(.system(size: 15, weight: .medium)).foregroundStyle(RetroColor.textMuted)
             }
         }
-        .frame(width: 16, height: 16)
+        .frame(width: 18, height: 18)
         .accessibilityHidden(true)
     }
 }

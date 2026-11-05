@@ -28,7 +28,7 @@ struct TaskDetailScreen: View {
                         Text("Survival kit").retroText(.body)
                     }
                     .foregroundStyle(RetroColor.textMuted)
-                    .frame(minHeight: 32)
+                    .frame(minHeight: 44)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -104,7 +104,7 @@ private struct WriteElsewhere: View {
                 VStack(spacing: 10) { buttons }
             }
             HStack(spacing: 6) {
-                Image(systemName: RetroSymbol.lock).font(.system(size: 9))
+                Image(systemName: RetroSymbol.lock).font(.system(size: 11))
                 Text("Your words stay in your own app. Retrograde never sees them.").retroText(.finePrint)
             }
             .foregroundStyle(RetroColor.textMuted)

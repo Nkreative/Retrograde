@@ -19,6 +19,27 @@ import Testing
     }
 }
 
+/// The M12.1 readability floor, and the widget's sizes held where M12 approved them.
+@Suite struct TypeScaleTests {
+    static let widgetStyles: [RetroTextStyle: CGFloat] = [.section: 19, .cardTitle: 16, .display: 32, .monoBody: 13, .monoLabel: 12, .widgetCaption: 11, .widgetNote: 12]
+
+    @Test func nothingIsTooSmallToRead() {
+        for style in RetroTextStyle.allCases {
+            #expect(style.size >= 10, "\(style)")
+        }
+        for style in [RetroTextStyle.body, .bodyStrong, .bodyHeavy] {
+            #expect(style.size >= 15, "\(style)")
+        }
+        #expect(RetroTextStyle.bodyLarge.size == 16)
+    }
+
+    @Test func widgetStylesAreUnchanged() {
+        for (style, size) in Self.widgetStyles {
+            #expect(style.size == size, "\(style)")
+        }
+    }
+}
+
 @Suite struct SVGPathTests {
     @Test(arguments: RetroGlyph.allCases)
     func glyphFillsItsViewBox(_ glyph: RetroGlyph) {

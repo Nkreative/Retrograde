@@ -115,28 +115,46 @@ private struct HeroCard: View {
     let headline: String
     /// Height of the dark band above the artwork; the headline dips just into the sky below it.
     @ScaledMetric(relativeTo: .title) private var band: CGFloat = 60
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
+        if typeSize.isAccessibilitySize {
+            // Large text wraps the headline onto more lines than the band holds: put it above.
+            VStack(alignment: .leading, spacing: 8) {
+                headlineText
+                artwork
+            }
+        } else {
+            banded
+        }
+    }
+
+    private var headlineText: some View {
+        Text(headline)
+            .retroText(.hero)
+            .foregroundStyle(RetroColor.text)
+            .shadow(color: .black.opacity(0.5), radius: 8)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    private var artwork: some View {
+        Image("OverviewHero")
+            .resizable()
+            .aspectRatio(2, contentMode: .fit)
+            .frame(maxWidth: .infinity)
+            .accessibilityHidden(true)
+    }
+
+    private var banded: some View {
         VStack(spacing: 0) {
             Color.clear.frame(height: band)
-            Image("OverviewHero")
-                .resizable()
-                .aspectRatio(2, contentMode: .fit)
-                .frame(maxWidth: .infinity)
-                .overlay(alignment: .top) {
-                    // The artwork's top rows are already near the background colour; this removes the seam.
-                    LinearGradient(colors: [RetroColor.background, RetroColor.background.opacity(0)], startPoint: .top, endPoint: .bottom)
-                        .frame(height: 24)
-                }
-                .accessibilityHidden(true)
+            artwork.overlay(alignment: .top) {
+                // The artwork's top rows are already near the background colour; this removes the seam.
+                LinearGradient(colors: [RetroColor.background, RetroColor.background.opacity(0)], startPoint: .top, endPoint: .bottom)
+                    .frame(height: 24)
+            }
         }
-        .overlay(alignment: .topLeading) {
-            Text(headline)
-                .retroText(.hero)
-                .foregroundStyle(RetroColor.text)
-                .shadow(color: .black.opacity(0.5), radius: 8)
-                .accessibilityAddTraits(.isHeader)
-        }
+        .overlay(alignment: .topLeading) { headlineText }
     }
 }
 
