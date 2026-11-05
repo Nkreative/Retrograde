@@ -14,6 +14,7 @@ struct OverviewScreen: View {
     @Environment(SurvivalKitActivation.self) private var activation
     @Environment(EntitlementStore.self) private var premium
     @Environment(AppRouter.self) private var router
+    @Environment(WidgetPrompt.self) private var widgetPrompt
 
     var body: some View {
         TimelineView(.everyMinute) { context in
@@ -55,12 +56,14 @@ struct OverviewScreen: View {
             VStack(alignment: .leading, spacing: 12) {
                 CountdownRow(status: status, copy: copy)
                 LabeledProgress(progress: status.progress, start: copy.barStart, current: "YOU ARE HERE", end: copy.barEnd)
-                HStack {
-                    Spacer()
-                    PillButton("ADD TO HOME SCREEN", systemImage: RetroSymbol.add, action: router.openWidgetHowTo)
-                        .accessibilityHint("Shows how to add the widget")
+                if widgetPrompt.offersWidget {
+                    HStack {
+                        Spacer()
+                        PillButton("ADD TO HOME SCREEN", systemImage: RetroSymbol.add, action: router.openWidgetHowTo)
+                            .accessibilityHint("Shows how to add the widget")
+                    }
+                    .padding(.top, -6) // sits just under the bar labels
                 }
-                .padding(.top, -6) // sits just under the bar labels
             }
             .padding(.top, 6)
 

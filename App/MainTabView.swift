@@ -24,6 +24,7 @@ struct MainTabView: View {
     @Environment(NotificationHistory.self) private var history
     @Environment(EntitlementStore.self) private var entitlements
     @Environment(NotificationRoutes.self) private var notificationRoutes
+    @Environment(WidgetPrompt.self) private var widgetPrompt
     /// Debug-only clock override for reviewing other cycle stages.
     private let now: Date?
     /// Set when onboarding has just finished: Premium is offered once, then this is cleared.
@@ -96,7 +97,7 @@ struct MainTabView: View {
         .sheet(isPresented: $router.showsSettings) { SettingsView().environment(paywall) }
         .sheet(isPresented: $router.showsNotificationCenter) { NotificationCenterView().environment(router) }
         .sheet(isPresented: $router.showsShareInvite) { ShareInviteView() }
-        .sheet(isPresented: $router.showsWidgetHowTo) { WidgetHowToSheet() }
+        .sheet(isPresented: $router.showsWidgetHowTo, onDismiss: { WidgetPresence.check(into: widgetPrompt) }) { WidgetHowToSheet() }
     }
 
     /// After onboarding: the Premium offer, unless purchases are already verified as Premium.

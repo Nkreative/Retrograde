@@ -2,6 +2,7 @@ import DesignSystem
 import HomeWidget
 import RetroCore
 import SwiftUI
+import WidgetKit
 
 /// "Keep the countdown close." (Figma "Add to Home Screen — how-to sheet"): the widget as it looks
 /// today and the three iOS steps to add it. Opened from the Overview and Settings. iOS doesn't tell
@@ -14,7 +15,7 @@ struct WidgetHowToSheet: View {
     private static let steps = [
         "Touch and hold an empty spot on your Home Screen until the apps jiggle.",
         "Tap Edit in the top-left corner, then Add Widget.",
-        "Search “Retrograde”, then tap Add Widget.",
+        "Search “Retrograde”, pick Small or Medium, then tap Add Widget.",
     ]
 
     var body: some View {
@@ -58,7 +59,7 @@ struct WidgetHowToSheet: View {
     /// The real medium widget, at iOS's medium size, with today's countdown.
     private var preview: some View {
         let content = SkyData.calculator?.status(of: .mercury, at: .now).flatMap(WidgetContent.init(status:))
-        return MercuryWidgetView(content: content)
+        return MercuryWidgetView(content: content, family: .systemMedium)
             .padding(16)
             .frame(maxWidth: 338)
             .frame(height: 158)

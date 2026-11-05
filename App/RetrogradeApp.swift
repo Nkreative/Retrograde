@@ -19,6 +19,7 @@ struct RetrogradeApp: App {
     /// Finished shares, kept on the device (in memory while hosting tests).
     @State private var sharingActivity = RetrogradeApp.makeSharingActivity()
     @State private var kitActivation: SurvivalKitActivation
+    @State private var widgetPrompt = RetrogradeApp.makeWidgetPrompt()
     @State private var notificationScheduler: NotificationScheduler
     @State private var onboarding = Self.makeOnboarding()
 
@@ -87,6 +88,20 @@ struct RetrogradeApp: App {
         return SurvivalKitActivation(hasCompletedTasks: hasCompletedTasks)
     }
 
+    /// Whether the Overview offers the widget, from what iOS last reported (in memory while hosting
+    /// tests). Debug: `-widgetListed YES|NO` fixes the answer for this launch.
+    private static func makeWidgetPrompt() -> WidgetPrompt {
+        if isHostingTests { return WidgetPrompt(defaults: nil) }
+        #if DEBUG
+        if UserDefaults.standard.object(forKey: "widgetListed") != nil {
+            let prompt = WidgetPrompt(defaults: nil)
+            prompt.record(widgetCount: UserDefaults.standard.bool(forKey: "widgetListed") ? 1 : 0)
+            return prompt
+        }
+        #endif
+        return WidgetPrompt()
+    }
+
     /// Finished shares. Debug builds launched with `-sampleShares YES` use an in-memory history with
     /// sample entries (`empty`: none), for screenshots only.
     private static func makeSharingActivity() -> SharingActivity {
@@ -148,6 +163,7 @@ struct RetrogradeApp: App {
                 .environment(notificationHistory)
                 .environment(sharingActivity)
                 .environment(kitActivation)
+                .environment(widgetPrompt)
                 .environment(onboarding)
                 .environment(notificationScheduler)
                 .environment(NotificationResponder.shared.routes)
@@ -163,6 +179,9 @@ struct RetrogradeApp: App {
                 // saving, midnight).
                 .task { rescheduleNotifications() }
                 .onChange(of: scenePhase) { _, phase in if phase == .active { rescheduleNotifications() } }
+                // Which widgets iOS lists: at launch and on every return (one may have been added or removed).
+                .task { if !Self.isHostingTests { WidgetPresence.check(into: widgetPrompt) } }
+                .onChange(of: scenePhase) { _, phase in if phase == .active, !Self.isHostingTests { WidgetPresence.check(into: widgetPrompt) } }
                 .onChange(of: notificationPreferences.enabled) { rescheduleNotifications() }
                 .onChange(of: entitlements.isPremium) { rescheduleNotifications() }
                 .onChange(of: completions.revision) { rescheduleNotifications() }

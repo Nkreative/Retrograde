@@ -19,9 +19,12 @@ import Testing
     }
 }
 
-/// The M12.1 readability floor, and the widget's sizes held where M12 approved them.
+/// The M12.1 readability floor, and the widget's sizes held where M14.5 approved them.
 @Suite struct TypeScaleTests {
-    static let widgetStyles: [RetroTextStyle: CGFloat] = [.section: 19, .cardTitle: 16, .display: 32, .monoBody: 13, .monoLabel: 12, .widgetCaption: 11, .widgetNote: 12]
+    static let widgetStyles: [RetroTextStyle: CGFloat] = [
+        .widgetTitle: 17, .widgetTitleSmall: 13, .widgetPhase: 11, .widgetPhaseSmall: 10, .widgetCountdown: 32, .widgetCountdownSmall: 34,
+        .widgetUnit: 12, .widgetCaption: 11, .widgetLabel: 10, .widgetNote: 12,
+    ]
 
     @Test func nothingIsTooSmallToRead() {
         for style in RetroTextStyle.allCases {

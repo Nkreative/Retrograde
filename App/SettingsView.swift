@@ -13,6 +13,7 @@ enum SettingsRoute: Hashable {
     case sources
     case legal(LegalPage)
     case support
+    case widgets
     #if DEBUG
     case premiumSimulator
     #endif
@@ -36,7 +37,6 @@ struct SettingsView: View {
     @Environment(OnboardingProgress.self) private var onboarding
     @Environment(SharingActivity.self) private var sharing
     @Environment(SurvivalKitActivation.self) private var kitActivation
-    @State private var showsWidgetHowTo = false
     @State private var path: [SettingsRoute] = Self.initialPath
 
     var body: some View {
@@ -57,17 +57,17 @@ struct SettingsView: View {
                         .contentShape(Rectangle())
                     }
                     .accessibilityHint("Opens the share sheet")
-                    // How to add the widget; Retrograde can't tell whether one is installed.
-                    Button { showsWidgetHowTo = true } label: {
+                    // Sizes, adding and removing; always here, whatever iOS reports about placed widgets.
+                    NavigationLink(value: SettingsRoute.widgets) {
                         HStack(spacing: 12) {
                             Image(systemName: RetroSymbol.widget).frame(width: 22).foregroundStyle(RetroColor.pink).accessibilityHidden(true)
-                            Text("Add the widget to your Home Screen").retroText(.bodyLarge).foregroundStyle(RetroColor.text)
-                            Spacer(minLength: 0)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Widgets").retroText(.bodyLarge).foregroundStyle(RetroColor.text)
+                                Text("Small and Medium. Free, no account.").retroText(.body).foregroundStyle(RetroColor.textMuted)
+                            }
                         }
                         .frame(minHeight: 44)
-                        .contentShape(Rectangle())
                     }
-                    .accessibilityHint("Shows how to add it")
                 } header: {
                     SectionHeader("General")
                 }
@@ -118,7 +118,6 @@ struct SettingsView: View {
         }
         .tint(RetroColor.pink)
         .preferredColorScheme(.dark)
-        .sheet(isPresented: $showsWidgetHowTo) { WidgetHowToSheet() }
     }
 
     private func row(_ route: SettingsRoute, _ title: String, icon: String? = nil) -> some View {
@@ -139,6 +138,7 @@ struct SettingsView: View {
         case let .legal(page):
             if let url = page.url { WebPageView(title: page.title, url: url) }
         case .support: SupportView(contact: .configured)
+        case .widgets: WidgetsSettingsView()
         #if DEBUG
         case .premiumSimulator: PremiumSimulatorView()
         #endif
@@ -147,12 +147,13 @@ struct SettingsView: View {
 
     private static var initialPath: [SettingsRoute] {
         #if DEBUG
-        // `-settingsPath notifications|terms|privacy|support` opens a page directly, for review.
+        // `-settingsPath notifications|terms|privacy|support|widgets` opens a page directly, for review.
         switch UserDefaults.standard.string(forKey: "settingsPath") {
         case "notifications": return [.notifications]
         case "terms": return [.legal(.terms)]
         case "privacy": return [.legal(.privacy)]
         case "support": return [.support]
+        case "widgets": return [.widgets]
         default: return []
         }
         #else

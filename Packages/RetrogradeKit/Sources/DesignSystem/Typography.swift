@@ -75,61 +75,71 @@ public enum RetroTextStyle: CaseIterable, Sendable {
     case monoBold
     /// Space Mono 11 — tagline, phase labels, category labels.
     case monoSmall
-    /// Widget only — Space Mono 13, the countdown line ("days to exhale").
-    case monoBody
-    /// Widget only — Space Mono Bold 12, the phase label ("RETROGRADE").
+    /// Space Mono Bold 12 — small bold labels (the share card's phase line).
     case monoLabel
-    /// Widget only — Space Mono 11, the labels under the bar.
+    /// Widget only — Archivo Black 17 / 13, "MERCURY" on the medium / small widget.
+    case widgetTitle, widgetTitleSmall
+    /// Widget only — Space Mono Bold 11 / 10, the phase ("RETROGRADE").
+    case widgetPhase, widgetPhaseSmall
+    /// Widget only — Archivo Black 32 / 34, the countdown number.
+    case widgetCountdown, widgetCountdownSmall
+    /// Widget only — Space Mono 12, the countdown words on the medium widget ("days to exhale").
+    case widgetUnit
+    /// Widget only — Space Mono 11, the countdown words on the small widget.
     case widgetCaption
+    /// Widget only — Space Mono 10, the labels under the bar.
+    case widgetLabel
     /// Widget only — Inter Regular 12, the no-data note.
     case widgetNote
 
     var postScriptName: String {
         switch self {
-        case .display, .hero, .title, .section, .cardTitle, .breathCount: "ArchivoBlack-Regular"
+        case .display, .hero, .title, .section, .cardTitle, .breathCount, .widgetTitle, .widgetTitleSmall, .widgetCountdown, .widgetCountdownSmall: "ArchivoBlack-Regular"
         case .button: "Inter-Bold"
         case .bodyStrong, .price: "Inter-SemiBold"
         case .bodyLarge, .body, .finePrint, .prompt, .disclosure, .widgetNote: "Inter-Regular"
         case .bodyHeavy: "Inter-ExtraBold"
-        case .monoBody, .monoLarge, .mono, .monoSmall, .timer, .timerCompact, .monoTiny, .monoNumber, .widgetCaption: "SpaceMono-Regular"
-        case .monoLabel, .monoBold, .monoNumberBold: "SpaceMono-Bold"
+        case .monoLarge, .mono, .monoSmall, .timer, .timerCompact, .monoTiny, .monoNumber, .widgetUnit, .widgetCaption, .widgetLabel: "SpaceMono-Regular"
+        case .monoLabel, .monoBold, .monoNumberBold, .widgetPhase, .widgetPhaseSmall: "SpaceMono-Bold"
         }
     }
 
     public var size: CGFloat {
         switch self {
         case .timer: 36
-        case .display: 32
+        case .widgetCountdownSmall: 34
+        case .display, .widgetCountdown: 32
         case .hero: 30
         case .timerCompact: 27
         case .breathCount: 21
+        case .widgetTitle: 17
         case .title: 20
         case .section: 19
         case .cardTitle, .price, .bodyLarge, .monoNumber, .monoNumberBold: 16
         case .bodyStrong, .body, .bodyHeavy, .prompt: 15
         case .button: 14
-        case .monoLarge, .monoBody: 13
-        case .mono, .monoLabel, .finePrint, .disclosure, .widgetNote: 12
-        case .monoBold, .monoSmall, .widgetCaption: 11
-        case .monoTiny: 10
+        case .monoLarge, .widgetTitleSmall: 13
+        case .mono, .monoLabel, .finePrint, .disclosure, .widgetNote, .widgetUnit: 12
+        case .monoBold, .monoSmall, .widgetCaption, .widgetPhase: 11
+        case .monoTiny, .widgetPhaseSmall, .widgetLabel: 10
         }
     }
 
     /// The system style it scales alongside when the person changes text size.
     var scalesLike: Font.TextStyle {
         switch self {
-        case .display, .timer: .largeTitle
+        case .display, .timer, .widgetCountdown, .widgetCountdownSmall: .largeTitle
         case .timerCompact, .breathCount: .title2
         case .prompt, .bodyLarge: .body
         case .hero: .title
         case .title: .title2
         case .section: .title3
-        case .cardTitle, .price, .monoNumber, .monoNumberBold: .headline
+        case .cardTitle, .price, .monoNumber, .monoNumberBold, .widgetTitle: .headline
         case .button: .body
-        case .bodyStrong, .body, .bodyHeavy, .monoBody: .subheadline
-        case .monoLarge, .monoLabel, .widgetCaption, .widgetNote: .footnote
+        case .bodyStrong, .body, .bodyHeavy, .widgetTitleSmall: .subheadline
+        case .monoLarge, .monoLabel, .widgetCaption, .widgetNote, .widgetUnit, .widgetPhase: .footnote
         case .mono, .monoBold, .disclosure, .finePrint: .caption
-        case .monoSmall, .monoTiny: .caption2
+        case .monoSmall, .monoTiny, .widgetPhaseSmall, .widgetLabel: .caption2
         }
     }
 

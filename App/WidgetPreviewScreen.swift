@@ -3,9 +3,10 @@ import DesignSystem
 import HomeWidget
 import RetroCore
 import SwiftUI
+import WidgetKit
 
-/// Debug review aid (`-widgetPreview YES`): the real widget view at this iPhone's medium widget
-/// size, for today and for the middle of each phase of the current cycle, from the bundled data.
+/// Debug review aid (`-widgetPreview YES`): the real widget view at this iPhone's small and medium
+/// widget sizes, for today and for the middle of each phase of the current cycle, from the bundled data.
 /// iOS draws the actual widget; this only lets it be reviewed without a Home Screen.
 /// `-widgetOnly DIRECT` (or TODAY, PRE-SHADOW, RETROGRADE, POST-SHADOW) shows just that one.
 struct WidgetPreviewScreen: View {
@@ -17,7 +18,11 @@ struct WidgetPreviewScreen: View {
                 ForEach(shown, id: \.title) { sample in
                     VStack(alignment: .leading, spacing: 6) {
                         Text(sample.title).retroText(.mono).foregroundStyle(RetroColor.textMuted)
-                        WidgetFrame { MercuryWidgetView(content: sample.content) }
+                        HStack(alignment: .top, spacing: 12) {
+                            WidgetFrame(family: .systemSmall) { MercuryWidgetView(content: sample.content, family: .systemSmall) }
+                            Spacer(minLength: 0)
+                        }
+                        WidgetFrame(family: .systemMedium) { MercuryWidgetView(content: sample.content, family: .systemMedium) }
                     }
                 }
             }
@@ -48,19 +53,20 @@ struct WidgetPreviewScreen: View {
     }
 }
 
-/// iOS's medium widget frame for this screen width, with its rounded corners and 16 pt margins.
+/// iOS's small or medium widget frame for this screen width, with its rounded corners and 16 pt margins.
 private struct WidgetFrame<Content: View>: View {
+    let family: WidgetFamily
     @ViewBuilder let content: Content
 
     var body: some View {
         let width = UIScreen.main.bounds.width
-        let size = width >= 428 ? CGSize(width: 364, height: 170) : width >= 390 ? CGSize(width: 338, height: 158) : CGSize(width: 321, height: 148)
+        let height: CGFloat = width >= 428 ? 170 : width >= 390 ? 158 : 148
+        let medium: CGFloat = width >= 428 ? 364 : width >= 390 ? 338 : 321
         content
             .padding(16)
-            .frame(width: size.width, height: size.height)
+            .frame(width: family == .systemSmall ? height : medium, height: height)
             .background(WidgetBackground())
             .clipShape(RoundedRectangle(cornerRadius: 23, style: .continuous))
-            .frame(maxWidth: .infinity)
     }
 }
 #endif

@@ -2,6 +2,14 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-05 (M14.5 widget redesign)
+
+- **Two sizes, Small and Medium** (Figma review page "6 · M14.5 Widget redesign"), free for everyone, no account. Small: MERCURY, the phase, the countdown and its words, the bar and the day label, with Mercury top right. Medium: Mercury on the left; the phase, countdown, bar and both bar labels on the right. Same words, numbers and phase logic as the Overview (`WidgetContent`), from the bundled sky data, in the person's time zone, offline; the timeline (midnights and exact phase changes) is unchanged. Tap opens the Overview. Supersedes M12's medium-only widget. Lock Screen, StandBy and Large aren't offered.
+- **Mercury** is the approved artwork (Figma "Hero BG", the same image, crop and turn as the splash and onboarding), exported from Figma as `Widget/Assets.xcassets/WidgetMercury` (290 × 282 px, transparent corners): sharp at both sizes (46 and 84 pt). Never recoloured; a blurred glow behind it in the phase colour (mauve, pink, soft pink, mint) carries the phase. On tinted Home Screens (iOS 18+) iOS shows it in greys (`widgetAccentedRenderingMode(.desaturated)`).
+- **Type:** widget-only styles, held by a test (`widgetTitle` 17 / `widgetTitleSmall` 13, `widgetPhase` 11 / 10, `widgetCountdown` 32 / 34, `widgetUnit` 12, `widgetCaption` 11, `widgetLabel` 10, `widgetNote` 12). The countdown words wrap to a second line rather than shrink or cut off.
+- **Add Widget prompts follow what iOS reports** (`WidgetPrompt`, `WidgetPresence`): Retrograde asks iOS (`WidgetCenter.getCurrentConfigurations`) at launch, on every return to the app and when the how-to sheet closes. At least one Retrograde widget listed (any size, any number) → the Overview's "Add to Home Screen" pill and the dashboard tip hide. None listed → they may return; a tip dismissed with ✕ stays hidden until a widget has been listed and then removed. A failed check changes nothing. iOS's list can lag (it has been seen to keep a removed widget), so the app never says a widget is installed or removed. The M13.1 ✕ is kept.
+- **Settings › Widgets** replaces the "Add the widget to your Home Screen" row: what the widget shows, the two sizes, how to add one ("Show me how" opens the how-to sheet) and how to remove one. No on/off switch (iOS manages widgets). Always available, whatever iOS reports. The how-to sheet's third step now reads "pick Small or Medium".
+
 ## 2026-11-05 (M14.3 legal and support links in the app)
 
 - **Production links** (all in `App/AppLinks.swift`, the only place they're defined): Privacy Policy https://apps.nkreative.com/retrograde/privacy, Support https://apps.nkreative.com/retrograde/support, support email support@nkreative.com (also for privacy questions). The same URLs are in App Store Connect. The pages are published from the separate public repository Nkreative/apps.nkreative.com (GitHub Pages).

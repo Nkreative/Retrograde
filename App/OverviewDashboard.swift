@@ -21,8 +21,8 @@ struct OverviewDashboard: View {
     @Environment(AppRouter.self) private var router
     @Environment(SharingActivity.self) private var sharing
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// Set by the tip's ✕; Settings › General keeps the how-to.
-    @AppStorage("overview.widgetTipHidden") private var widgetTipHidden = false
+    /// Hidden while iOS lists a widget, or after ✕; Settings › Widgets keeps the how-to.
+    @Environment(WidgetPrompt.self) private var widgetPrompt
     /// Today's card, previewed for sharing from the empty sharing section.
     @State private var sharingCard: InsightShareCard?
 
@@ -69,9 +69,9 @@ struct OverviewDashboard: View {
                 )
             }
             .id("sharing")
-            if !widgetTipHidden {
+            if widgetPrompt.showsTip {
                 WidgetTip(onOpen: router.openWidgetHowTo) {
-                    withAnimation(reduceMotion ? nil : .easeOut(duration: 0.25)) { widgetTipHidden = true }
+                    withAnimation(reduceMotion ? nil : .easeOut(duration: 0.25)) { widgetPrompt.dismissTip() }
                 }
                 .transition(.opacity)
             }

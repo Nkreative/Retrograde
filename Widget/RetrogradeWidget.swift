@@ -19,17 +19,25 @@ struct RetrogradeWidgets: WidgetBundle {
 }
 
 struct MercuryCycleWidget: Widget {
-    static let kind = "MercuryCycle"
-
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: Self.kind, provider: CycleProvider()) { entry in
-            MercuryWidgetView(content: entry.content)
+        StaticConfiguration(kind: WidgetKind.mercuryCycle, provider: CycleProvider()) { entry in
+            CycleEntryView(entry: entry)
                 .containerBackground(for: .widget) { WidgetBackground() }
                 .widgetURL(WidgetLink.overview)
         }
         .configurationDisplayName("Mercury")
         .description("Mercury’s phase, countdown and progress at a glance.")
-        .supportedFamilies([.systemMedium])
+        .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
+/// Passes the placed widget's size to the shared view.
+private struct CycleEntryView: View {
+    let entry: CycleEntry
+    @Environment(\.widgetFamily) private var family
+
+    var body: some View {
+        MercuryWidgetView(content: entry.content, family: family)
     }
 }
 
@@ -68,6 +76,12 @@ struct CycleProvider: TimelineProvider {
 }
 
 #Preview(as: .systemMedium) {
+    MercuryCycleWidget()
+} timeline: {
+    CycleEntry(date: .now, content: nil)
+}
+
+#Preview(as: .systemSmall) {
     MercuryCycleWidget()
 } timeline: {
     CycleEntry(date: .now, content: nil)

@@ -4,17 +4,21 @@ import RetroCore
 import SwiftUI
 import WidgetKit
 
-/// The medium Home Screen widget (Figma "M12 · Home Screen widget"): MERCURY, the phase, the
-/// Overview's countdown line, the stage's progress bar and its day label. Shared by the widget
-/// extension and the app's debug preview.
+/// The Home Screen widget, small and medium (Figma "6 · M14.5 Widget redesign"): MERCURY, the
+/// phase, the Overview's countdown line, the stage's progress bar and its day label, beside the
+/// approved Mercury artwork. Shared by the widget extension and the app (how-to sheet, debug preview).
 struct MercuryWidgetView: View {
     /// nil when the bundled sky data doesn't cover today.
     let content: WidgetContent?
+    var family: WidgetFamily = .systemMedium
 
     var body: some View {
         Group {
             if let content {
-                CycleCard(content: content)
+                switch family {
+                case .systemSmall: SmallCycleCard(content: content)
+                default: MediumCycleCard(content: content)
+                }
             } else {
                 MissingSkyCard()
             }
@@ -40,79 +44,140 @@ struct WidgetBackground: View {
     }
 }
 
-private struct CycleCard: View {
+private struct SmallCycleCard: View {
     let content: WidgetContent
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .top, spacing: 8) {
-                VStack(alignment: .leading, spacing: 3) {
+            HStack(alignment: .top, spacing: 0) {
+                VStack(alignment: .leading, spacing: 5) {
                     Text(content.planetName)
-                        .retroText(.section)
+                        .retroText(.widgetTitleSmall)
                         .foregroundStyle(RetroColor.text)
-                    HStack(spacing: 6) {
-                        Circle().fill(content.stage.accent).frame(width: 7, height: 7)
-                        Text(content.phaseName)
-                            .retroText(.monoLabel)
-                            .foregroundStyle(content.stage.accent)
-                            .widgetAccentable()
-                    }
+                    PhaseLabel(content: content, style: .widgetPhaseSmall)
                 }
                 Spacer(minLength: 0)
-                OrbitMark(accent: content.stage.accent)
+                MercuryPlanet(disc: 46, accent: content.stage.accent)
+                    .offset(x: 3, y: -4)
             }
             Spacer(minLength: 2)
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(content.countdown)
-                    .retroText(.display)
-                    .foregroundStyle(RetroColor.yellow)
-                    .widgetAccentable()
-                    .layoutPriority(1)
-                Text(content.countdownText)
-                    .retroText(.monoBody)
-                    .foregroundStyle(RetroColor.text)
-                    .lineLimit(2)
-            }
-            .minimumScaleFactor(0.7)
-            Spacer(minLength: 6)
-            CycleProgressBar(progress: content.progress, fill: content.stage.accent)
-            HStack {
-                Text(content.leading)
-                Spacer(minLength: 8)
-                Text(content.trailing)
-            }
-            .retroText(.widgetCaption)
-            .foregroundStyle(RetroColor.textMuted)
-            .lineLimit(1)
-            .minimumScaleFactor(0.8)
-            .padding(.top, 7)
+            Text(content.countdown)
+                .retroText(.widgetCountdownSmall)
+                .foregroundStyle(RetroColor.yellow)
+                .widgetAccentable()
+            Text(content.countdownText)
+                .retroText(.widgetCaption)
+                .foregroundStyle(RetroColor.text)
+                .lineLimit(2)
+                .minimumScaleFactor(1) // wraps onto a second line rather than shrinking or cutting off
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 4)
+            CycleProgressBar(progress: content.progress, fill: content.stage.accent, markerSize: 9)
+            Text(content.leading)
+                .retroText(.widgetLabel)
+                .foregroundStyle(RetroColor.textMuted)
+                .padding(.top, 5)
         }
         .lineLimit(1)
+        .minimumScaleFactor(0.7)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(content.accessibilityLabel)
     }
 }
 
-/// Mercury on a tilted orbit, in the phase colour.
-private struct OrbitMark: View {
+private struct MediumCycleCard: View {
+    let content: WidgetContent
+
+    var body: some View {
+        HStack(spacing: 18) {
+            MercuryPlanet(disc: 84, accent: content.stage.accent)
+                .frame(width: 96)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(content.planetName)
+                    .retroText(.widgetTitle)
+                    .foregroundStyle(RetroColor.text)
+                PhaseLabel(content: content, style: .widgetPhase)
+                    .padding(.top, 4)
+                Spacer(minLength: 4)
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(content.countdown)
+                        .retroText(.widgetCountdown)
+                        .foregroundStyle(RetroColor.yellow)
+                        .widgetAccentable()
+                        .layoutPriority(1)
+                    Text(content.countdownText)
+                        .retroText(.widgetUnit)
+                        .foregroundStyle(RetroColor.text)
+                        .lineLimit(2)
+                        .minimumScaleFactor(1)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 6)
+                CycleProgressBar(progress: content.progress, fill: content.stage.accent, markerSize: 9)
+                HStack {
+                    Text(content.leading)
+                    Spacer(minLength: 8)
+                    Text(content.trailing)
+                }
+                .retroText(.widgetLabel)
+                .foregroundStyle(RetroColor.textMuted)
+                .padding(.top, 6)
+            }
+        }
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(content.accessibilityLabel)
+    }
+}
+
+/// "● RETROGRADE" in the phase colour.
+private struct PhaseLabel: View {
+    let content: WidgetContent
+    let style: RetroTextStyle
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Circle().fill(content.stage.accent).frame(width: 7, height: 7)
+            Text(content.phaseName)
+                .retroText(style)
+                .foregroundStyle(content.stage.accent)
+                .widgetAccentable()
+        }
+    }
+}
+
+/// The approved Mercury artwork (Figma "Hero BG": the same image, crop and turn as the splash and
+/// onboarding, pre-cropped as `WidgetMercury`). The planet is never recoloured; a soft glow in the
+/// phase colour behind it carries the phase. On tinted Home Screens iOS shows it desaturated.
+struct MercuryPlanet: View {
+    /// The planet's diameter; the glow spreads beyond it.
+    let disc: CGFloat
     let accent: Color
 
     var body: some View {
-        let size = CGSize(width: 70, height: 24)
-        let angle = Angle.degrees(205) // front-left of the orbit
         ZStack {
-            Ellipse()
-                .stroke(RetroColor.line, lineWidth: 1.5)
-                .frame(width: size.width, height: size.height)
             Circle()
-                .fill(accent)
-                .frame(width: 12, height: 12)
-                .shadow(color: accent.opacity(0.7), radius: 6)
-                .offset(x: size.width / 2 * cos(angle.radians), y: -size.height / 2 * sin(angle.radians))
+                .fill(accent.opacity(0.5))
+                .frame(width: disc * 1.4, height: disc * 1.4)
+                .blur(radius: disc * 0.3)
+            Image("WidgetMercury")
+                .resizable()
+                .interpolation(.high)
+                .desaturatedWhenTinted()
+                .aspectRatio(contentMode: .fit)
+                // The image is the disc's turned square (290 × 282 px for a 252 px disc).
+                .frame(width: disc * 290 / 252)
         }
-        .rotationEffect(.degrees(-18))
-        .frame(width: 76, height: 44)
+        .frame(width: disc, height: disc)
         .accessibilityHidden(true)
+    }
+}
+
+private extension Image {
+    /// Tinted Home Screens (iOS 18 and later) show the planet in greys rather than hiding it.
+    @ViewBuilder func desaturatedWhenTinted() -> some View {
+        if #available(iOS 18, *) { widgetAccentedRenderingMode(.desaturated) } else { self }
     }
 }
 
