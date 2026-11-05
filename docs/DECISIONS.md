@@ -2,6 +2,23 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-04 (M11 local notifications)
+
+- **What's scheduled** (`NotificationPlanner`, from the bundled ephemeris and the saved choices; same 6 toggles as the approved Settings mockup — each "before" toggle covers both the 2-week and the 3-day alert, which gives exactly the requested defaults: both before-retrograde alerts on, both before-direct alerts off):
+
+  | Alert | When (person's local time) | Opens |
+  |---|---|---|
+  | Mercury turns retrograde / direct | the exact moment if 09:00–21:00; earlier → 09:00 that day; later → 09:00 next day. Never before the event. | Calendar on that day |
+  | 2 weeks / 3 days before | 09:00, that many calendar days before the event's local day | Calendar on the event's day |
+  | New cycle's kit | first 18:00 at or after the kit rolls over (station retrograde) | Survival Kit |
+  | Unfinished tasks (off by default) | every other day at 18:00 from the kit's start until the post-shadow ends, only while tasks the person can open remain; the count is the real one | Survival Kit |
+
+- **Copy:** "Mercury’s officially going backward." / "Your cosmic backup plan starts now."; "Mercury’s moving forward again." / "The universe has stopped buffering. Mostly."; "Three days until Mercury acts up." / "Maybe back up your files. Just saying."; "Two weeks until Mercury acts up." / "Plenty of time to get ahead of the chaos."; "Two weeks / Three days until Mercury turns direct." / "Still backward. Still survivable." · "The finish line is in sight. Hang in there."; "Your survival kit is ready." / "A little preparation never hurt anyone."; "Your survival kit misses you." / "3 small moves left this cycle. Pick one."
+- **Scheduling** (`NotificationScheduler`): local notifications only. Each alert has a stable id (e.g. `mercury-2026-10-24.retrograde.lead-3d`), used for iOS and the history, so re-runs replace rather than duplicate. Only the soonest 60 alerts within 400 days are scheduled (iOS keeps 64). Nothing in the past. Re-run on launch, every return to the app, time zone / daylight-saving / midnight changes, preference saves, Premium changes, task completion and onboarding completion. Turning a preference off cancels its pending alerts and their future history entries. Nothing is scheduled unless iOS allows notifications (allowed or provisional) — and iOS itself refuses to store alerts without permission. Permission is requested only from onboarding or the explicit "Turn on notifications" button in Settings › Notifications.
+- **History and delivery:** an entry is recorded when an alert is scheduled; the Notification Center shows it once its time has passed. It's marked delivered only when iOS confirms it: shown while the app was open, opened by a tap, or still listed among iOS's delivered notifications. iOS gives no record of an alert the person cleared without opening or that Focus held back, so those stay "due" (time passed, delivery unknown), never "delivered". Opening one from iOS marks it read.
+- **Taps:** open the Calendar on the event's day or the Survival Kit — with the app open, in the background, or launched by the tap (the destination waits until the main screen appears, including after onboarding).
+- **Settings › Notifications:** real iOS status (on, quiet, off, not yet asked) with "Turn on notifications" (not yet asked), "Allow banners and sounds" (quiet) or "Open iOS Settings" (off); re-read on return from iOS Settings. Preferences stay independent of the permission.
+
 ## 2026-11-04 (M10 final: launch message and copy)
 
 - **Launch message on the paywall:** "MERCURY’S CLOCKING OUT. PRICES ARE DROPPING." / "Celebrate the end of retrograde with 50% off Lifetime Premium." / "The chaos will return. Your backup stays." — a compact card between the benefits and the plans. It appears only when both hold: StoreKit verifies the Lifetime launch price (the discount shown is the verified one), and the bundled sky data says Mercury is retrograde and turns direct within 7 calendar days (`PromotionMoment`, through the day it turns direct). Otherwise the regular paywall copy alone; the headline "FULL BACKUP, EVERY CYCLE." stays in both.

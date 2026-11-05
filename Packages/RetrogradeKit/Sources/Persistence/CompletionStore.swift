@@ -26,6 +26,9 @@ public final class CompletionStore {
     private let context: ModelContext
     /// Completed task IDs per cycle, loaded on first use.
     private var cache: [String: Set<String>] = [:]
+    /// Increases whenever a task is marked done or not done, so others (notification reminders)
+    /// can follow progress without reading every cycle.
+    public private(set) var revision = 0
 
     public init(container: ModelContainer) {
         self.context = ModelContext(container)
@@ -53,6 +56,7 @@ public final class CompletionStore {
         context.insert(TaskCompletion(cycleID: cycleID, taskID: taskID, completedAt: date))
         save()
         cache[cycleID, default: []].insert(taskID)
+        revision += 1
     }
 
     public func markNotDone(_ taskID: String, in cycleID: String) {
@@ -62,6 +66,7 @@ public final class CompletionStore {
         records.forEach(context.delete)
         save()
         cache[cycleID]?.remove(taskID)
+        revision += 1
     }
 
     private func save() {

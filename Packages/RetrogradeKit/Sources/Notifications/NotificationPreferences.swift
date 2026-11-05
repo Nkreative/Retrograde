@@ -4,8 +4,8 @@ import Observation
 import UserNotifications
 #endif
 
-/// The alerts a person can choose, as in the approved Notifications mockup. M11 schedules from
-/// these; nothing here schedules or asks for permission.
+/// The alerts a person can choose, as in the approved Notifications mockup. `NotificationPlanner`
+/// turns the chosen ones into alerts; nothing here schedules or asks for permission.
 public enum NotificationKind: String, CaseIterable, Codable, Sendable {
     // Mercury
     case mercuryTurnsRetrograde
@@ -32,7 +32,7 @@ public enum NotificationKind: String, CaseIterable, Codable, Sendable {
     public static let unfinishedReminderInterval = DateComponents(day: 2)
 }
 
-/// Saved notification choices. Settings edits a draft and saves it; M11 reads `enabled`.
+/// Saved notification choices. Settings edits a draft and saves it; the scheduler reads `enabled`.
 @MainActor
 @Observable
 public final class NotificationPreferences {
@@ -56,7 +56,7 @@ public final class NotificationPreferences {
         }
     }
 
-    public static var defaults: Set<NotificationKind> { Set(NotificationKind.allCases.filter(\.enabledByDefault)) }
+    nonisolated public static var defaults: Set<NotificationKind> { Set(NotificationKind.allCases.filter(\.enabledByDefault)) }
 
     /// Carries over the first version's choices: its "starts" and "ends" toggles become Mercury
     /// turning retrograde / direct (kept as saved, including off). New options start at their
@@ -79,7 +79,7 @@ public final class NotificationPreferences {
 
 /// Whether iOS lets Retrograde show notifications. Reading it never prompts.
 public enum NotificationAuthorization: Equatable, Sendable {
-    /// Never asked — Retrograde asks once alerts exist (M11).
+    /// Never asked. Retrograde asks only when the person taps to turn notifications on.
     case notDetermined
     /// Turned off for Retrograde in iOS Settings.
     case denied
@@ -91,6 +91,9 @@ public enum NotificationAuthorization: Equatable, Sendable {
     /// Ask iOS only when it has never asked (or to upgrade quiet delivery): a person who declined
     /// is never prompted again.
     public var shouldPrompt: Bool { self == .notDetermined || self == .provisional }
+
+    /// iOS will show (or quietly deliver) Retrograde's alerts, so they're worth scheduling.
+    public var canDeliver: Bool { self == .allowed || self == .provisional }
 
     #if canImport(UserNotifications)
     public init(_ status: UNAuthorizationStatus) {

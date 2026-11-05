@@ -35,6 +35,13 @@ import Testing
         #expect(policy.lockedCount(in: kit, isPremium: false) == 23)
         #expect(policy.lockedCount(in: kit, isPremium: true) == 0)
     }
+
+    /// What reminders count: the tasks the person can open (the first of each section when free).
+    @Test func openTasksMatchTheLocks() {
+        let kit = SurvivalKit.for(.mercury)!
+        #expect(policy.openTasks(in: kit, isPremium: false).map(\.id) == kit.sections.map { $0.tasks[0].id })
+        #expect(policy.openTasks(in: kit, isPremium: true).count == kit.tasks.count)
+    }
 }
 
 @Suite struct KitCycleTests {

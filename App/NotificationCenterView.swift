@@ -121,6 +121,7 @@ private extension NotificationDestination {
         switch self {
         case .calendarDay: "calendar day"
         case .survivalKitSection: "Survival Kit section"
+        case .survivalKit: "Survival Kit"
         }
     }
 }
@@ -130,17 +131,16 @@ private extension NotificationDestination {
 enum SampleNotifications {
     static func records(now: Date = .now) -> [NotificationRecord] {
         let hour: TimeInterval = 3_600
-        var read = NotificationRecord(id: "sample.lead-3d", kind: .beforeMercuryRetrograde, title: "Mercury turns retrograde in 3 days",
-                                      body: "A good moment to back up and wrap up open loops.", fireDate: now - 4 * 24 * hour,
+        let lead = NotificationCopy.beforeRetrograde(.mercury, days: 3), direct = NotificationCopy.turnsDirect(.mercury)
+        var read = NotificationRecord(id: "sample.lead-3d", kind: .beforeMercuryRetrograde, title: lead.title,
+                                      body: lead.body, fireDate: now - 4 * 24 * hour,
                                       destination: .calendarDay("2026-10-24"))
         read.readAt = now - 3 * 24 * hour
         return [
-            NotificationRecord(id: "sample.direct", kind: .mercuryTurnsDirect, title: "Mercury turns direct today",
-                               body: "Its apparent backward motion ends. Revisit what you’ve been putting off.",
+            NotificationRecord(id: "sample.direct", kind: .mercuryTurnsDirect, title: direct.title, body: direct.body,
                                fireDate: now - 2 * hour, destination: .calendarDay("2026-11-13")),
-            NotificationRecord(id: "sample.tasks", kind: .newCycleTasks, title: "Your new Survival Kit is ready",
-                               body: "27 small moves for this cycle. Start with one.", fireDate: now - 26 * hour,
-                               destination: .survivalKitSection("communication")),
+            NotificationRecord(id: "sample.tasks", kind: .newCycleTasks, title: NotificationCopy.kitReady.title,
+                               body: NotificationCopy.kitReady.body, fireDate: now - 26 * hour, destination: .survivalKit),
             read,
         ]
     }

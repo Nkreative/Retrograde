@@ -7,10 +7,34 @@ public enum NotificationDestination: Codable, Equatable, Sendable {
     case calendarDay(String)
     /// A Survival Kit section id (e.g. "communication").
     case survivalKitSection(String)
+    /// The Survival Kit tab.
+    case survivalKit
+
+    /// Key in an iOS notification's `userInfo` carrying `userInfoValue`.
+    public static let userInfoKey = "retrograde.destination"
+
+    /// A compact string form for the iOS notification (e.g. "calendarDay:2026-11-13").
+    public var userInfoValue: String {
+        switch self {
+        case let .calendarDay(day): "calendarDay:\(day)"
+        case let .survivalKitSection(id): "survivalKitSection:\(id)"
+        case .survivalKit: "survivalKit"
+        }
+    }
+
+    public init?(userInfoValue: String) {
+        let parts = userInfoValue.split(separator: ":", maxSplits: 1).map(String.init)
+        switch (parts.first, parts.count) {
+        case ("calendarDay", 2): self = .calendarDay(parts[1])
+        case ("survivalKitSection", 2): self = .survivalKitSection(parts[1])
+        case ("survivalKit", 1): self = .survivalKit
+        default: return nil
+        }
+    }
 }
 
-/// One notification Retrograde created for this person. M11 records an entry when it schedules an
-/// alert; the history never invents entries and never assumes iOS kept a delivery record.
+/// One notification Retrograde scheduled for this person. An entry is recorded when the alert is
+/// scheduled with iOS; the history never invents entries and never assumes iOS showed one.
 public struct NotificationRecord: Codable, Equatable, Identifiable, Sendable {
     /// What is actually known about delivery.
     public enum Delivery: String, Codable, Sendable {
@@ -18,12 +42,13 @@ public struct NotificationRecord: Codable, Equatable, Identifiable, Sendable {
         case scheduled
         /// Its time has passed; whether iOS showed it is unknown (permission off, Focus, removed…).
         case due
-        /// Confirmed: shown while the app was open, or the person opened it.
+        /// Confirmed by iOS: shown while the app was open, opened by the person, or listed among
+        /// the delivered notifications iOS still keeps for the app.
         case delivered
     }
 
-    /// Stable per event, e.g. "mercury.retrograde.2026-10-24.lead-3d". Rescheduling the same event
-    /// reuses it, so it never appears twice.
+    /// Stable per event, e.g. "mercury-2026-10-24.retrograde.lead-3d"; also the iOS request id.
+    /// Rescheduling the same event reuses it, so it never appears twice.
     public let id: String
     public let kind: NotificationKind
     public var title: String
@@ -99,6 +124,15 @@ public final class NotificationHistory {
         guard let i = records.firstIndex(where: { $0.id == id }), records[i].delivery(at: now()) == .scheduled else { return }
         records.remove(at: i)
         persist()
+    }
+
+    /// Removes every entry still waiting for its time that isn't in `ids` (no longer scheduled: a
+    /// preference turned off, permission withdrawn, the plan changed). Past entries stay.
+    public func cancelScheduled(keeping ids: Set<String>) {
+        let t = now()
+        let before = records.count
+        records.removeAll { $0.delivery(at: t) == .scheduled && !ids.contains($0.id) }
+        if records.count != before { persist() }
     }
 
     /// Called when iOS reports the notification (shown in the app, or opened by the person).

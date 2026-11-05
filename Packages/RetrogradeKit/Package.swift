@@ -31,8 +31,8 @@ let package = Package(
         .target(name: "Persistence"),
         // Premium status: one source of truth from StoreKit 2 verified transactions (simulator in debug only).
         .target(name: "Entitlements"),
-        // Notification preferences (stored now; scheduling arrives in M11).
-        .target(name: "Notifications"),
+        // Notification preferences, the alert plan built from the sky data, scheduling with iOS and history.
+        .target(name: "Notifications", dependencies: ["RetroCore"]),
         // Colours, fonts, icons and shared SwiftUI components from the Figma design.
         .target(
             name: "DesignSystem",
@@ -44,7 +44,7 @@ let package = Package(
         .testTarget(name: "EditorialTests", dependencies: ["Editorial", "RetroCore", "AstroData"]),
         .testTarget(name: "SurvivalKitTests", dependencies: ["SurvivalKit", "RetroCore", "AstroData"]),
         .testTarget(name: "PersistenceTests", dependencies: ["Persistence"]),
-        .testTarget(name: "NotificationsTests", dependencies: ["Notifications"]),
+        .testTarget(name: "NotificationsTests", dependencies: ["Notifications", "RetroCore", "AstroData"]),
         .testTarget(name: "EntitlementsTests", dependencies: ["Entitlements", "SurvivalKit", "Persistence", "Editorial", "RetroCore", "AstroData"]),
     ]
 )

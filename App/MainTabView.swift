@@ -23,6 +23,7 @@ struct MainTabView: View {
     @State private var paywall: PaywallPresenter
     @Environment(NotificationHistory.self) private var history
     @Environment(EntitlementStore.self) private var entitlements
+    @Environment(NotificationRoutes.self) private var notificationRoutes
     /// Debug-only clock override for reviewing other cycle stages.
     private let now: Date?
     /// Set when onboarding has just finished: Premium is offered once, then this is cleared.
@@ -72,6 +73,15 @@ struct MainTabView: View {
                 offersPremium = false
                 showLaunchOffer()
             }
+        }
+        // A tapped notification: open where it leads, whether the app was open, in the background
+        // or launched by the tap (then it waited until this screen appeared).
+        .task(id: notificationRoutes.pending) {
+            guard let destination = notificationRoutes.pending else { return }
+            try? await Task.sleep(for: .milliseconds(300)) // let the tabs appear first on a cold launch
+            notificationRoutes.pending = nil
+            paywall.isPresented = false
+            router.open(destination)
         }
         .sheet(isPresented: $router.showsSettings) { SettingsView().environment(paywall) }
         .sheet(isPresented: $router.showsNotificationCenter) { NotificationCenterView().environment(router) }

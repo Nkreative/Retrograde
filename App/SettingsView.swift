@@ -57,6 +57,8 @@ struct SettingsView: View {
                 #if DEBUG
                 Section {
                     row(.premiumSimulator, "Premium simulator")
+                    NavigationLink { ScheduledAlertsView() } label: { Text("Scheduled alerts") }
+                        .frame(minHeight: 44)
                     Button("Replay onboarding") {
                         onboarding.reset()
                         dismiss()

@@ -5,10 +5,12 @@ import UIKit
 import UserNotifications
 
 /// Settings › Notifications, following the approved mockup: Mercury alerts and Survival Kit
-/// reminders, edited as a draft and saved with Save Preferences. Opening it never asks for
-/// permission and nothing is scheduled yet (M11).
+/// reminders, edited as a draft and saved with Save Preferences (the schedule follows at once).
+/// Shows iOS's real permission; it asks iOS only when the person taps to turn notifications on.
 struct NotificationPreferencesView: View {
     @Environment(NotificationPreferences.self) private var preferences
+    @Environment(NotificationScheduler.self) private var scheduler
+    @Environment(\.scenePhase) private var scenePhase
     @State private var draft: Set<NotificationKind> = []
     @State private var loaded = false
     @State private var authorization: NotificationAuthorization?
@@ -17,12 +19,12 @@ struct NotificationPreferencesView: View {
     var body: some View {
         List {
             Section {
-                Text("Choose which alerts and reminders you’d like. Alerts start once notification delivery arrives in an upcoming update — your choices are saved and ready.")
+                Text("Choose which alerts and reminders you’d like. They arrive in your time zone, at sensible hours.")
                     .retroText(.body).foregroundStyle(RetroColor.textMuted)
                     .listRowBackground(Color.clear)
             }
             if let authorization {
-                PermissionStatus(authorization: authorization)
+                PermissionStatus(authorization: authorization, request: requestPermission)
             }
             Section {
                 toggle(.mercuryTurnsRetrograde, "When Mercury turns retrograde")
@@ -65,6 +67,18 @@ struct NotificationPreferencesView: View {
             if !loaded { draft = preferences.enabled; loaded = true }
         }
         .task { authorization = await NotificationPermission.current() }
+        // Back from iOS Settings: show what changed and reschedule.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { authorization = await NotificationPermission.current() } }
+        }
+    }
+
+    /// The person tapped to turn notifications on: iOS asks once (or offers to upgrade quiet
+    /// delivery). Never called otherwise.
+    private func requestPermission() async {
+        _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
+        authorization = await NotificationPermission.current()
+        await scheduler.refresh()
     }
 
     private func toggle(_ kind: NotificationKind, _ title: String) -> some View {
@@ -81,10 +95,12 @@ struct NotificationPreferencesView: View {
     }
 }
 
-/// iOS permission, read without prompting.
+/// iOS permission, read without prompting; a button asks only when tapped.
 private struct PermissionStatus: View {
     let authorization: NotificationAuthorization
+    let request: () async -> Void
     @Environment(\.openURL) private var openURL
+    @State private var asking = false
 
     var body: some View {
         Section {
@@ -103,25 +119,35 @@ private struct PermissionStatus: View {
                 }
                 .frame(minHeight: 44)
             }
+            if authorization.shouldPrompt {
+                Button {
+                    Task { asking = true; await request(); asking = false }
+                } label: {
+                    Label(authorization == .provisional ? "Allow banners and sounds" : "Turn on notifications",
+                          systemImage: RetroSymbol.notifications).retroText(.bodyStrong)
+                }
+                .disabled(asking)
+                .frame(minHeight: 44)
+            }
         }
         .listRowBackground(authorization == .denied ? RetroColor.wine : RetroColor.surface)
     }
 
     private var title: String {
         switch authorization {
-        case .allowed: "Notifications are allowed"
+        case .allowed: "Notifications are on"
         case .provisional: "Delivered quietly"
         case .denied: "Notifications are off for Retrograde"
-        case .notDetermined: "Permission not requested yet"
+        case .notDetermined: "Notifications aren’t on yet"
         }
     }
 
     private var detail: String {
         switch authorization {
-        case .allowed: "Retrograde can show alerts once they’re available."
-        case .provisional: "Retrograde alerts go straight to Notification Center, without sounds or banners. You can change this in iOS Settings."
-        case .denied: "Your choices are saved, but iOS won’t show Retrograde alerts until you turn notifications on."
-        case .notDetermined: "We’ll ask once alerts are ready — and only if you’ve turned some on."
+        case .allowed: "Retrograde sends the alerts you choose below."
+        case .provisional: "Alerts go straight to Notification Center, without sounds or banners."
+        case .denied: "Your choices are saved, but iOS won’t show Retrograde alerts until you turn notifications on in iOS Settings."
+        case .notDetermined: "Turn them on to get the alerts you choose below. iOS will ask you once."
         }
     }
 
@@ -141,16 +167,22 @@ private struct PermissionStatus: View {
 enum NotificationPermission {
     static func current() async -> NotificationAuthorization {
         #if DEBUG
-        // `-notificationAuth denied|allowed|provisional|notDetermined` for review screenshots.
-        switch UserDefaults.standard.string(forKey: "notificationAuth") {
-        case "denied": return .denied
-        case "allowed": return .allowed
-        case "provisional": return .provisional
-        case "notDetermined": return .notDetermined
-        default: break
-        }
+        if let debugOverride { return debugOverride }
         #endif
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         return NotificationAuthorization(settings.authorizationStatus)
     }
+
+    #if DEBUG
+    /// `-notificationAuth denied|allowed|provisional|notDetermined` for review screenshots.
+    static var debugOverride: NotificationAuthorization? {
+        switch UserDefaults.standard.string(forKey: "notificationAuth") {
+        case "denied": .denied
+        case "allowed": .allowed
+        case "provisional": .provisional
+        case "notDetermined": .notDetermined
+        default: nil
+        }
+    }
+    #endif
 }

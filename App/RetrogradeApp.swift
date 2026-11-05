@@ -4,14 +4,17 @@ import Notifications
 import Persistence
 import SwiftData
 import SwiftUI
+import UIKit
 
 @main
 struct RetrogradeApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.scenePhase) private var scenePhase
     @State private var completions: CompletionStore
-    @State private var entitlements = AppEntitlements.make()
-    @State private var notificationPreferences = NotificationPreferences()
-    @State private var notificationHistory = Self.makeHistory()
+    @State private var entitlements: EntitlementStore
+    @State private var notificationPreferences: NotificationPreferences
+    @State private var notificationHistory: NotificationHistory
+    @State private var notificationScheduler: NotificationScheduler
     @State private var onboarding = Self.makeOnboarding()
 
     init() {
@@ -30,7 +33,23 @@ struct RetrogradeApp: App {
             for id in ids.split(separator: ",") { store.markDone(String(id), in: KitCycle.id(at: .now)) }
         }
         #endif
+        let entitlements = AppEntitlements.make()
+        let preferences = NotificationPreferences()
+        let history = Self.makeHistory()
+        NotificationResponder.shared.history = history
         _completions = State(initialValue: store)
+        _entitlements = State(initialValue: entitlements)
+        _notificationPreferences = State(initialValue: preferences)
+        _notificationHistory = State(initialValue: history)
+        _notificationScheduler = State(initialValue: AppNotifications.makeScheduler(
+            history: history, preferences: preferences, completions: store, entitlements: entitlements))
+        #if DEBUG
+        // `-openNotification calendarDay:2026-11-13` (or `survivalKit`) acts as if a notification
+        // was tapped to launch the app, for review of cold-launch navigation.
+        if let destination = UserDefaults.standard.string(forKey: "openNotification") {
+            NotificationResponder.shared.opened(id: "debug.cold-launch", destination: destination)
+        }
+        #endif
     }
 
     /// The on-device notification history. Debug builds launched with `-sampleNotifications YES`
@@ -74,6 +93,11 @@ struct RetrogradeApp: App {
         #endif
     }
 
+    private func rescheduleNotifications() {
+        guard !Self.isHostingTests else { return }
+        Task { await notificationScheduler.refresh() }
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -82,11 +106,29 @@ struct RetrogradeApp: App {
                 .environment(notificationPreferences)
                 .environment(notificationHistory)
                 .environment(onboarding)
+                .environment(notificationScheduler)
+                .environment(NotificationResponder.shared.routes)
                 .preferredColorScheme(.dark)
                 // Verified entitlements at launch, then live updates; re-checked on every return to the app.
                 .task { if !Self.isHostingTests { await entitlements.start() } }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active, !Self.isHostingTests { Task { await entitlements.refresh() } }
+                }
+                // Alerts follow everything they depend on: launch and every return to the app
+                // (permission may have changed in iOS Settings), choices, Premium, task progress,
+                // finishing onboarding (permission asked), and the clock (time zone, daylight
+                // saving, midnight).
+                .task { rescheduleNotifications() }
+                .onChange(of: scenePhase) { _, phase in if phase == .active { rescheduleNotifications() } }
+                .onChange(of: notificationPreferences.enabled) { rescheduleNotifications() }
+                .onChange(of: entitlements.isPremium) { rescheduleNotifications() }
+                .onChange(of: completions.revision) { rescheduleNotifications() }
+                .onChange(of: onboarding.isComplete) { rescheduleNotifications() }
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
+                    rescheduleNotifications()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in
+                    rescheduleNotifications()
                 }
         }
     }

@@ -29,9 +29,10 @@ final class AppRouter {
         showsSettings = true
     }
 
-    /// Closes the Notification Center and shows where the notification points.
+    /// Closes the Notification Center (and Settings) and shows where the notification points.
     func open(_ destination: NotificationDestination) {
         showsNotificationCenter = false
+        showsSettings = false
         switch destination {
         case let .calendarDay(iso):
             guard let day = CalendarDay(iso: iso) else { return }
@@ -40,6 +41,8 @@ final class AppRouter {
         case let .survivalKitSection(id):
             tab = .survivalKit
             kitFocus = id
+        case .survivalKit:
+            tab = .survivalKit
         }
     }
 }

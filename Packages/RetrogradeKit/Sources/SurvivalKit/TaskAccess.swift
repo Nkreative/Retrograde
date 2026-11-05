@@ -28,6 +28,13 @@ public struct TaskAccessPolicy: Sendable {
         return index < freeUnlockedPerSection + freePreviewPerSection ? .preview : .hidden
     }
 
+    /// Tasks the person can open and complete (all of them with Premium).
+    public func openTasks(in kit: SurvivalKit, isPremium: Bool) -> [KitTask] {
+        kit.sections.flatMap { section in
+            section.tasks.enumerated().filter { visibility(ofTaskAt: $0.offset, isPremium: isPremium) == .unlocked }.map(\.element)
+        }
+    }
+
     /// Tasks a free person can't open, for the "N more tasks in Premium" nudge.
     public func lockedCount(in kit: SurvivalKit, isPremium: Bool) -> Int {
         guard !isPremium else { return 0 }
