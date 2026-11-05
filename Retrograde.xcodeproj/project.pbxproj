@@ -331,7 +331,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Block App Store archives until the privacy policy and App Store URLs are set in App/AppLinks.swift.\nif [ \"$ACTION\" = \"install\" ] && grep -q 'privacyPolicy: URL? = nil' \"$SRCROOT/App/AppLinks.swift\"; then\n  echo \"error: Set AppLinks.privacyPolicy (App/AppLinks.swift) to the published privacy policy URL before archiving.\"\n  exit 1\nfi\nif [ \"$ACTION\" = \"install\" ] && grep -q 'appStore: URL? = nil' \"$SRCROOT/App/AppLinks.swift\"; then\n  echo \"error: Set AppLinks.appStore (App/AppLinks.swift) to Retrograde's App Store URL before archiving, so Share Retrograde includes the link.\"\n  exit 1\nfi\n";
+			shellScript = "# Block App Store archives until the privacy policy, App Store and support links are set in App/AppLinks.swift.\nif [ \"$ACTION\" = \"install\" ] && grep -q 'privacyPolicy: URL? = nil' \"$SRCROOT/App/AppLinks.swift\"; then\n  echo \"error: Set AppLinks.privacyPolicy (App/AppLinks.swift) to the published privacy policy URL before archiving.\"\n  exit 1\nfi\nif [ \"$ACTION\" = \"install\" ] && grep -q 'appStore: URL? = nil' \"$SRCROOT/App/AppLinks.swift\"; then\n  echo \"error: Set AppLinks.appStore (App/AppLinks.swift) to Retrograde's App Store URL before archiving, so Share Retrograde includes the link.\"\n  exit 1\nfi\nif [ \"$ACTION\" = \"install\" ] && grep -qE 'supportPage: URL\\? = nil|supportEmail: String\\? = nil' \"$SRCROOT/App/AppLinks.swift\"; then\n  echo \"error: Set AppLinks.supportPage and AppLinks.supportEmail (App/AppLinks.swift) before archiving, so Contact Support is available.\"\n  exit 1\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

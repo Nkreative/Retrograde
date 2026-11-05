@@ -17,11 +17,21 @@ import Testing
         }
     }
 
-    /// Share Retrograde's link, once set, must be a real App Store app address (no made-up IDs).
-    @Test func appStoreLinkIsAnAppStoreAddress() {
-        guard let url = AppLinks.appStore else { return }
+    /// Share Retrograde's link must be a real App Store app address (no made-up IDs).
+    @Test func appStoreLinkIsAnAppStoreAddress() throws {
+        let url = try #require(AppLinks.appStore)
         #expect(url.scheme == "https" && url.host() == "apps.apple.com", "\(url)")
         #expect(url.absoluteString.range(of: #"/id\d+$"#, options: .regularExpression) != nil, "\(url)")
+        #expect(url.absoluteString == "https://apps.apple.com/app/id6830406388")
+    }
+
+    /// The approved production links (M14.3), the same ones entered in App Store Connect.
+    @Test func releaseLinksAreTheApprovedOnes() {
+        #expect(AppLinks.privacyPolicy?.absoluteString == "https://apps.nkreative.com/retrograde/privacy")
+        #expect(AppLinks.supportPage?.absoluteString == "https://apps.nkreative.com/retrograde/support")
+        #expect(AppLinks.supportEmail == "support@nkreative.com")
+        #expect(SupportContact.configured.mailURL?.absoluteString == "mailto:support@nkreative.com?subject=Retrograde%20support")
+        #expect(SettingsRoute.availability(of: .legal(.privacy)) && SettingsRoute.availability(of: .support))
     }
 
     @Test func operatorAndVersion() {

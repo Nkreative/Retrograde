@@ -106,8 +106,8 @@ Still to check or do:
 14. **TestFlight:** internal testing is immediate; external testers need Beta App Review and test information (feedback email, description).
 
 ### Before App Store submission
-15a. **Support contact in the app:** set `AppLinks.supportPage` and/or `AppLinks.supportEmail` — Contact Support stays hidden until then, and App Store Connect also requires a Support URL.
-15. **Privacy policy in the app:** set `AppLinks.privacyPolicy` in `App/AppLinks.swift` — archiving is blocked until it's set.
+15a. **Support contact in the app:** done in M14.3 — https://apps.nkreative.com/retrograde/support and support@nkreative.com (`AppLinks`); also entered in App Store Connect.
+15. **Privacy policy in the app:** done in M14.3 — https://apps.nkreative.com/retrograde/privacy (`AppLinks.privacyPolicy`); also entered in App Store Connect. The archive check (build phase "Require release links") now passes and also requires the support links.
 15b. **App Information:** subtitle, category (Lifestyle suggested), age rating questionnaire, copyright line, **Privacy Policy URL** and **Support URL** (both required).
 16. **App Privacy:** answer only after the data-flow audit (planned before submission) — don't assume "Data Not Collected".
 17. **Version page:** iPhone screenshots (6.9-inch required), description, keywords, promotional text, review notes explaining Premium and that Sandbox purchase works.

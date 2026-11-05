@@ -2,6 +2,14 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-05 (M14.3 legal and support links in the app)
+
+- **Production links** (all in `App/AppLinks.swift`, the only place they're defined): Privacy Policy https://apps.nkreative.com/retrograde/privacy, Support https://apps.nkreative.com/retrograde/support, support email support@nkreative.com (also for privacy questions). The same URLs are in App Store Connect. The pages are published from the separate public repository Nkreative/apps.nkreative.com (GitHub Pages).
+- **Where they appear:** Settings › About & Support (Privacy Policy, Terms of Use, Contact Support) and the paywall's legal row (Restore Purchases · Terms · Privacy). Privacy and Terms open in Retrograde's in-app web page with Open in Safari; Contact Support offers "Email support" (Mail, subject "Retrograde support", with the address to copy if no mail account is set up) and the support page.
+- **Terms of Use:** unchanged, Apple's standard licensed-application EULA.
+- **App Store link** for Share Retrograde unchanged: https://apps.apple.com/app/id6830406388.
+- **Archive check** ("Require release links") now also requires the support page and email; all four links are set, so it passes.
+
 ## 2026-11-05 (M14.4 app icon)
 
 - **Icon A, pink tile** (approved; Figma review page "5 · M14.4 App icon", node 353:5): the header brand mark (Figma 249:13) with its white mark at exactly the size and offset it has inside the pink disc, on a full `#FF2D87` square. Same vectors, scaled, stroke scaled in proportion; the stretched splash logo isn't used. iOS adds the rounded corners.
