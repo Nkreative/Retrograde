@@ -10,42 +10,125 @@ struct NotificationCenterView: View {
     @Environment(AppRouter.self) private var router
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if history.visible.isEmpty {
-                    EmptyNotifications()
-                } else {
-                    List {
-                        ForEach(history.visible) { record in
-                            Button { open(record) } label: { NotificationRow(record: record) }
-                                .buttonStyle(.plain)
-                                .listRowBackground(record.isRead ? RetroColor.surface : RetroColor.wine)
-                        }
+        Group {
+            if history.visible.isEmpty {
+                EmptyNotifications()
+            } else {
+                List {
+                    ForEach(history.visible) { record in
+                        Button { open(record) } label: { NotificationRow(record: record) }
+                            .buttonStyle(.plain)
+                            .listRowBackground(record.isRead ? RetroColor.surface : RetroColor.wine)
                     }
-                    .scrollContentBackground(.hidden)
                 }
-            }
-            .retroScreenBackground()
-            .navigationTitle("Notifications")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Mark all as read") { history.markAllRead() }
-                        .disabled(history.unreadCount == 0)
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }.fontWeight(.semibold)
-                }
+                .scrollContentBackground(.hidden)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .safeAreaInset(edge: .top, spacing: 0) { header }
+        .retroScreenBackground()
         .tint(RetroColor.pink)
         .preferredColorScheme(.dark)
+    }
+
+    /// The system bar centres its title in whatever space the buttons leave, which pushed it right
+    /// of centre beside the wide "Mark all as read" (too wide to balance on any iPhone). So the title
+    /// and Done share the top row, with the title on the screen's centre, and "Mark all as read" sits
+    /// under them while something is unread. When the text is too large for one row, the title moves
+    /// under Done.
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                BalancedBar {
+                    title
+                    done
+                }
+                VStack(spacing: 4) {
+                    done.frame(maxWidth: .infinity, alignment: .trailing)
+                    title.multilineTextAlignment(.center)
+                }
+            }
+            markAllRead
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+        .animation(.default, value: history.unreadCount == 0)
+    }
+
+    private var title: some View {
+        Text("Notifications")
+            .font(.headline)
+            .foregroundStyle(RetroColor.text)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    /// Only offered while something is unread.
+    @ViewBuilder private var markAllRead: some View {
+        if history.unreadCount > 0 {
+            Button("Mark all as read") { history.markAllRead() }
+                .modifier(BarButton())
+        }
+    }
+
+    private var done: some View {
+        Button("Done") { dismiss() }
+            .fontWeight(.semibold)
+            .modifier(BarButton())
     }
 
     private func open(_ record: NotificationRecord) {
         history.markRead(id: record.id)
         if let destination = record.destination {
             router.open(destination)
+        }
+    }
+}
+
+/// Lays out [leading?, title, trailing] with the title on the bar's centre: each side gets the width
+/// of the wider button, so a missing or narrow button doesn't shift it. Its ideal width is what that
+/// needs, so `ViewThatFits` can fall back when the row is too wide.
+private struct BalancedBar: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
+        let side = sideWidth(sizes)
+        return CGSize(width: proposal.width ?? 2 * (side + spacing) + sizes[titleIndex(sizes)].width,
+                      height: sizes.map(\.height).max() ?? 0)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
+        let side = sideWidth(sizes), title = titleIndex(sizes)
+        for (index, subview) in subviews.enumerated() {
+            if index == title {
+                subview.place(at: CGPoint(x: bounds.midX, y: bounds.midY), anchor: .center,
+                              proposal: ProposedViewSize(width: max(0, bounds.width - 2 * (side + spacing)), height: nil))
+            } else if index < title {
+                subview.place(at: CGPoint(x: bounds.minX, y: bounds.midY), anchor: .leading, proposal: .unspecified)
+            } else {
+                subview.place(at: CGPoint(x: bounds.maxX, y: bounds.midY), anchor: .trailing, proposal: .unspecified)
+            }
+        }
+    }
+
+    /// The title is the middle view, or the first when the leading button is hidden.
+    private func titleIndex(_ sizes: [CGSize]) -> Int { sizes.count == 3 ? 1 : 0 }
+
+    private func sideWidth(_ sizes: [CGSize]) -> CGFloat {
+        let title = titleIndex(sizes)
+        return sizes.indices.filter { $0 != title }.map { sizes[$0].width }.max() ?? 0
+    }
+}
+
+/// The header's buttons: Liquid Glass capsules where iOS has them, like the system bar's.
+private struct BarButton: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.buttonStyle(.glass).controlSize(.large)
+        } else {
+            content.buttonStyle(.bordered).buttonBorderShape(.capsule).controlSize(.large)
         }
     }
 }

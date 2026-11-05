@@ -54,12 +54,14 @@ struct RetrogradeApp: App {
     }
 
     /// The on-device notification history. Debug builds launched with `-sampleNotifications YES`
-    /// use an in-memory history with sample entries instead (screenshots only).
+    /// use an in-memory history with sample entries instead (screenshots only); `read` marks them
+    /// all read and `empty` starts with none.
     private static func makeHistory() -> NotificationHistory {
         #if DEBUG
-        if UserDefaults.standard.bool(forKey: "sampleNotifications") {
+        if let sample = UserDefaults.standard.string(forKey: "sampleNotifications"), ["YES", "read", "empty"].contains(sample) {
             let history = NotificationHistory(defaults: nil)
-            history.debugReplace(with: SampleNotifications.records())
+            if sample != "empty" { history.debugReplace(with: SampleNotifications.records()) }
+            if sample == "read" { history.markAllRead() }
             return history
         }
         #endif

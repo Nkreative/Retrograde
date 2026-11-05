@@ -73,9 +73,11 @@ struct CalendarScreen: View {
         }
         #if DEBUG
         .onAppear {
-            // `-scrollCalendar detail` scrolls to the day detail, for review screenshots.
-            if UserDefaults.standard.string(forKey: "scrollCalendar") == "detail" {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { proxy.scrollTo(Self.detailID, anchor: .top) }
+            // `-scrollCalendar detail` scrolls to the day detail (`detailEnd` to its end), for review screenshots.
+            switch UserDefaults.standard.string(forKey: "scrollCalendar") {
+            case "detail": DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { proxy.scrollTo(Self.detailID, anchor: .top) }
+            case "detailEnd": DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { proxy.scrollTo(Self.detailID, anchor: .bottom) }
+            default: break
             }
         }
         #endif
@@ -679,7 +681,8 @@ private struct HabitCard: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Good habit for this day").retroText(.cardTitle).foregroundStyle(RetroColor.text)
             // Full-strength text: muted text on the wine card was the weakest contrast in the app.
-            Text(habit.text).retroText(.bodyLarge).foregroundStyle(RetroColor.text)
+            // 15 pt with the roomier line spacing, one step under the title.
+            Text(habit.text).retroText(.prompt).foregroundStyle(RetroColor.text)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
