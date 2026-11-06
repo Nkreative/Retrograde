@@ -30,9 +30,9 @@ import Testing
         let p = LaunchPromotion(plan: .lifetime, start: launch, durationDays: 14, percentOff: 50, prices: LaunchPromotion.launch.prices)
         #expect(p.end == pacific.date(from: DateComponents(year: 2026, month: 12, day: 15)))
         guard case let .active(display) = p.status(for: lifetime("9.99"), at: launch + 60) else { Issue.record("not active"); return }
-        #expect(PaywallCopy.promotionDetail(display, locale: Locale(identifier: "en_US")) == "Launch special through Dec 14. One-time purchase.")
+        #expect(PaywallCopy.promotionDetail(display, locale: Locale(identifier: "en_US")) == "Launch offer ends Dec 14.")
         // Same last day for someone in another time zone or language.
-        #expect(PaywallCopy.promotionDetail(display, locale: Locale(identifier: "en_GB")) == "Launch special through 14 Dec. One-time purchase.")
+        #expect(PaywallCopy.promotionDetail(display, locale: Locale(identifier: "en_GB")) == "Launch offer ends 14 Dec.")
         // Daylight saving doesn't shift it: a March sale crossing the switch still ends at midnight.
         let spring = pacific.date(from: DateComponents(year: 2027, month: 3, day: 1))!
         let q = LaunchPromotion(plan: .lifetime, start: spring, durationDays: 14, percentOff: 50, prices: LaunchPromotion.launch.prices)
@@ -78,9 +78,9 @@ import Testing
     @Test func copyAndVoiceOver() {
         let d = LaunchPromotion.Display(percentOff: 50, regularPrice: "$19.99", endsAt: start)
         #expect(PaywallCopy.promotionBadge(d) == "LAUNCH OFFER")
-        #expect(PaywallCopy.promotionDetail(d, locale: Locale(identifier: "en_US")).hasPrefix("Launch special through "))
+        #expect(PaywallCopy.promotionDetail(d, locale: Locale(identifier: "en_US")).hasPrefix("Launch offer ends "))
         #expect(PaywallCopy.accessibilityLabel(lifetime("9.99"), bestValue: true, promotion: d)
-            == "Lifetime access, Launch special, 50% off, regular price $19.99, $9.99, one-time purchase")
+            == "Lifetime access, Launch offer, 50% off, regular price $19.99, $9.99, one-time purchase")
         #expect(PaywallCopy.buttonTitle(.yearly, offer: PlanOffer(plan: .yearly, displayPrice: "$9.99", billingPeriod: .init(value: 1, unit: .year), introOffer: .freeTrial(.init(value: 3, unit: .day)))) == "Start 3-day free trial")
     }
 }

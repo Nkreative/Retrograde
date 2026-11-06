@@ -90,18 +90,19 @@ public enum PaywallCopy {
         return "\(offer.displayPrice) \(period.perFrequency), charged to your Apple Account at confirmation. Renews automatically \(period.adverb) unless cancelled at least 24 hours before the current period ends. \(manage)"
     }
 
-    /// Badge for a verified launch price (shown beside BEST VALUE). The discount itself is shown as
-    /// the crossed-out regular price beside StoreKit's price.
+    /// Badge for a verified launch price, shown instead of BEST VALUE while it runs. The discount
+    /// itself is shown as the crossed-out regular price beside StoreKit's price.
     public static func promotionBadge(_ promotion: LaunchPromotion.Display) -> String {
         "LAUNCH OFFER"
     }
 
-    /// Plan line during a promotion: its last day from the configured schedule ("Nov 17"), in the
-    /// person's language but on App Store Connect's Pacific calendar, so the date is the same everywhere.
+    /// Plan line during a promotion, e.g. "Launch offer ends Dec 14.": the last full day of the
+    /// configured schedule, in the person's language but on App Store Connect's Pacific calendar (the
+    /// regular price returns at midnight Pacific after it), so the date is the same everywhere.
     public static func promotionDetail(_ promotion: LaunchPromotion.Display, locale: Locale = .autoupdatingCurrent) -> String {
         var style = Date.FormatStyle.dateTime.month(.abbreviated).day().locale(locale)
         style.timeZone = LaunchPromotion.scheduleTimeZone
-        return "Launch special through \(promotion.lastDay.formatted(style)). One-time purchase."
+        return "Launch offer ends \(promotion.lastDay.formatted(style))."
     }
 
     /// VoiceOver label for a plan card: name, Best value (Lifetime only) or a verified discount,
@@ -109,7 +110,7 @@ public enum PaywallCopy {
     public static func accessibilityLabel(_ offer: PlanOffer, bestValue: Bool, promotion: LaunchPromotion.Display? = nil) -> String {
         var parts = [planName(offer.plan)]
         if let promotion {
-            parts.append("Launch special, \(promotion.percentOff)% off, regular price \(promotion.regularPrice)")
+            parts.append("Launch offer, \(promotion.percentOff)% off, regular price \(promotion.regularPrice)")
         } else if let percent = offer.introPercentOff, let intro = offer.paidIntro {
             parts.append("\(percent)% off the first \(intro.duration.firstLength)")
         } else if bestValue {

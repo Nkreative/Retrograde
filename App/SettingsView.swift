@@ -74,7 +74,6 @@ struct SettingsView: View {
                     SectionHeader("General")
                 }
                 .listRowBackground(RetroColor.surface)
-        .compactSettingsRows()
                 Section {
                     row(.methodology, "How we rate each day")
                     row(.sources, "Where our sky data comes from")
@@ -82,7 +81,6 @@ struct SettingsView: View {
                     SectionHeader("How it works")
                 }
                 .listRowBackground(RetroColor.surface)
-        .compactSettingsRows()
                 AboutSection(row: { route, title, icon in row(route, title, icon: icon) }).id(Self.aboutID)
                 #if DEBUG
                 Section {
@@ -101,7 +99,6 @@ struct SettingsView: View {
                     SectionHeader("Developer (debug builds only)")
                 }
                 .listRowBackground(RetroColor.surface)
-        .compactSettingsRows()
                 #endif
             }
             .retroSettingsStyle()
@@ -216,7 +213,7 @@ private struct PremiumSection: View {
                     .padding(.top, 4)
                 }
             }
-            .padding(.vertical, 12) // the plan card keeps its breathing room inside the tighter rows
+            .padding(.vertical, 6)
             .accessibilityElement(children: .combine)
 
             ForEach(summary.actions, id: \.self) { action in
@@ -230,7 +227,6 @@ private struct PremiumSection: View {
             SectionHeader("Premium")
         }
         .listRowBackground(RetroColor.surface)
-        .compactSettingsRows()
         .manageSubscriptionsSheet(isPresented: $showsManage)
         .refundRequestSheet(for: refundTransaction ?? 0, isPresented: Binding(
             get: { refundTransaction != nil }, set: { if !$0 { refundTransaction = nil } }
@@ -335,7 +331,6 @@ private struct AboutSection<Row: View>: View {
                 .retroText(.body).foregroundStyle(RetroColor.textMuted)
         }
         .listRowBackground(RetroColor.surface)
-        .compactSettingsRows()
     }
 
     /// A page without its URL/contact yet: flagged in debug builds, hidden in release builds.
@@ -405,17 +400,10 @@ private struct SectionHeader: View {
 }
 
 private extension View {
-    /// Settings rows about 48 pt tall (M15): the list's own vertical insets trimmed, while every
-    /// row keeps its 44 pt minimum to tap.
-    func compactSettingsRows() -> some View {
-        listRowInsets(EdgeInsets(top: 2, leading: 16, bottom: 2, trailing: 16))
-    }
-
     func retroSettingsStyle() -> some View {
         self
             .scrollContentBackground(.hidden)
             .background(RetroColor.background.ignoresSafeArea())
             .environment(\.defaultMinListRowHeight, 44)
-            .listSectionSpacing(.compact)
     }
 }

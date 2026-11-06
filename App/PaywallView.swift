@@ -288,21 +288,11 @@ private struct PlanCard: View {
         }
     }
 
-    /// BEST VALUE on Lifetime (with LAUNCH OFFER while a verified launch price runs), or a discounted
-    /// first year that StoreKit's own prices confirm.
+    /// Lifetime: LAUNCH OFFER while a verified launch price runs, otherwise BEST VALUE (never both).
+    /// Yearly: a discounted first year that StoreKit's own prices confirm.
     @ViewBuilder private var badge: some View {
         if let promotion {
-            // Side by side where they fit; stacked with large text, so the card never runs wide.
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 6) {
-                    Badge(PaywallCopy.promotionBadge(promotion)).fixedSize()
-                    Badge("BEST VALUE").fixedSize()
-                }
-                VStack(alignment: .leading, spacing: 4) {
-                    Badge(PaywallCopy.promotionBadge(promotion)).fixedSize()
-                    Badge("BEST VALUE").fixedSize()
-                }
-            }
+            Badge(PaywallCopy.promotionBadge(promotion)).fixedSize()
         } else if let intro = offer.flatMap(PaywallCopy.introBadge) {
             // One line where it fits; at the largest text sizes it wraps rather than running off the card.
             ViewThatFits(in: .horizontal) {

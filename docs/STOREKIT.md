@@ -83,12 +83,12 @@ The app shows an introductory offer only when StoreKit returns one for the perso
 2. Add a second price change: United States back to **$19.99**, starting exactly **14 calendar days later** (App Store Connect price changes start at 12:00 a.m. Pacific).
 3. Tell me the start date. I set `LaunchPromotion.launch.start` in `Packages/RetrogradeKit/Sources/Entitlements/LaunchPromotion.swift` to that date (midnight Pacific) and ship the update. Until it's set, the app shows no badge and no crossed-out price, even if StoreKit already charges $9.99.
 
-**How the app decides to show "LAUNCH · 50% OFF" and the crossed-out $19.99** — all must be true, otherwise the plan shows StoreKit's price with no promotion:
+**How the app decides to show "LAUNCH OFFER" and the crossed-out $19.99** — all must be true, otherwise the plan shows StoreKit's price with no promotion:
 - the promotion has a configured start, and the current time is within its 14 days (it ends by itself; no update needed);
 - the person's storefront is one the promotion lists (US only), in the listed currency (USD);
 - StoreKit's actual Lifetime price for that storefront is exactly the configured promotional price ($9.99).
 
-The plan line says "Launch special through <last day>": the last full day before the regular price returns, on the Pacific calendar (e.g. a Dec 1 start reads "through Dec 14"). The price the person pays and sees is always StoreKit's. The app never hardcodes it, and never assumes a discount just because the price happens to be $9.99. To extend the special to other countries, add each storefront's currency, regular and promotional price to `LaunchPromotion.launch.prices` and schedule the matching price change in App Store Connect.
+During the offer the Lifetime card shows a "LAUNCH OFFER" badge (instead of "BEST VALUE"), $19.99 crossed out beside StoreKit's $9.99, and "Launch offer ends <last day>.": the last full day before the regular price returns, on the Pacific calendar (a Dec 1 start reads "ends Dec 14"). The offer is the same for everyone (a scheduled App Store price, not a per-person offer); it starts at the public launch and lasts 14 calendar days. The price the person pays and sees is always StoreKit's. The app never hardcodes it, and never assumes a discount just because the price happens to be $9.99. To extend the special to other countries, add each storefront's currency, regular and promotional price to `LaunchPromotion.launch.prices` and schedule the matching price change in App Store Connect.
 
 ### Before Sandbox testing (on your iPhone)
 Done: legal entity decision (individual for now), Paid Apps Agreement, bundle ID, both products.
