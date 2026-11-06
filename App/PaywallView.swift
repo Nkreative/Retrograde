@@ -34,15 +34,18 @@ struct PaywallView: View {
     #endif
 
     var body: some View {
-        // Sized so the plans and the purchase button fit on the first screen: the artwork window
-        // and spacing tighten as screens get shorter (e.g. iPhone 17e); the rest scrolls.
+        // Sized so both plans fit on the first screen above the pinned purchase button (approved
+        // Figma 431:3): the artwork window and spacing tighten as screens get shorter (e.g. iPhone
+        // 17e); the rest scrolls behind the button.
         GeometryReader { screen in
             let roomy = screen.size.height + screen.safeAreaInsets.top + screen.safeAreaInsets.bottom >= 920
             // Short screens also lose 32 pt of the artwork's empty sky (it slides up under the status
-            // bar, unscaled, the moon still clear) and run slightly tighter, so both plans and the whole
-            // purchase button fit on the first screen. Text sizes never change; large text scrolls.
-            content(heroRatio: roomy ? 0.86 : 0.78, heroTrim: roomy ? 0 : 32, headlineOverlap: roomy ? 56 : 50, spacing: roomy ? 16 : 10,
-                    benefitSpacing: roomy ? 11 : 7, compactPlans: !roomy)
+            // bar, unscaled, the moon still clear) and run tighter. Text sizes never change; large text scrolls.
+            content(heroRatio: roomy ? 0.86 : 0.78, heroTrim: roomy ? 0 : 32, headlineOverlap: 56, spacing: roomy ? 12 : 6,
+                    benefitSpacing: roomy ? 9 : 5, compactPlans: !roomy)
+            #if DEBUG
+            .onAppear { PaywallDebug.logSafeArea(screen.safeAreaInsets, height: screen.size.height) }
+            #endif
         }
         .task {
             var promotion = AppEntitlements.promotion
@@ -55,6 +58,10 @@ struct PaywallView: View {
             PaywallDebug.flow = flow
             #endif
             await flow.load()
+            #if DEBUG
+            // `-paywallPlan yearly` selects Yearly once prices load, for review screenshots.
+            if UserDefaults.standard.string(forKey: "paywallPlan") == "yearly" { flow.select(.yearly) }
+            #endif
         }
         // Premium arrived (purchase, approval of a pending purchase, restore): close.
         .onChange(of: entitlements.isPremium) { _, isPremium in
@@ -89,10 +96,7 @@ struct PaywallView: View {
                         }
 
                         PlanList(flow: flow, compact: compactPlans)
-                        if let message = flow.flatMap({ StatusBanner.message(for: $0.phase) }) {
-                            StatusBanner(phase: flow!.phase, message: message)
-                        }
-                        PurchaseButton(flow: flow) { await buy() }
+                        PurchaseTerms(flow: flow)
 
                         Button("Continue free") { close() }
                             .retroText(.bodyStrong)
@@ -106,6 +110,10 @@ struct PaywallView: View {
                     .padding(.top, -headlineOverlap) // the headline sits on the artwork's faded edge
                     .padding(.bottom, 24)
                 }
+            }
+            // Pinned above the home indicator; the inset lets the page's end scroll fully clear of it.
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                PurchaseFooter(flow: flow) { await buy() }
             }
             #if DEBUG
             .onAppear {
@@ -184,6 +192,14 @@ struct PaywallView: View {
 enum PaywallDebug {
     static weak var flow: PurchaseFlow?
     static var scrollToBottom: (() -> Void)?
+
+    /// `-logSafeArea YES` writes the paywall's real safe-area insets to `tmp/safe-area.log` in the
+    /// app's container, for measuring the pinned button against the home indicator.
+    static func logSafeArea(_ insets: EdgeInsets, height: CGFloat) {
+        guard UserDefaults.standard.bool(forKey: "logSafeArea") else { return }
+        let line = "top \(insets.top) bottom \(insets.bottom) height \(height)\n"
+        try? line.write(to: FileManager.default.temporaryDirectory.appending(path: "safe-area.log"), atomically: true, encoding: .utf8)
+    }
 }
 #endif
 
@@ -244,7 +260,7 @@ private struct PlanCard: View {
                     }
                 }
             }
-            .padding(.vertical, compact ? 11 : 14)
+            .padding(.vertical, compact ? 9 : 13)
             .padding(.horizontal, 16)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(selected ? RetroColor.wine : RetroColor.surface, in: RoundedRectangle(cornerRadius: RetroMetrics.Radius.card))
@@ -377,8 +393,10 @@ private struct StatusBanner: View {
     }
 }
 
-/// The purchase button for the selected plan, with that plan's terms underneath.
-private struct PurchaseButton: View {
+/// The pinned footer: the purchase button for the selected plan (its label and product follow the
+/// selected card), with any pending, failed or restore message just above it. 8 pt above the
+/// bottom safe area; a soft fade where the page scrolls underneath. Grows with large text.
+private struct PurchaseFooter: View {
     let flow: PurchaseFlow?
     let action: () async -> Void
 
@@ -386,7 +404,10 @@ private struct PurchaseButton: View {
         let purchasing: Bool = if case .purchasing = flow?.phase { true } else { false }
         let enabled = flow?.canPurchase ?? false
         let plan = flow?.selectedPlan ?? .lifetime
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
+            if let flow, let message = StatusBanner.message(for: flow.phase) {
+                StatusBanner(phase: flow.phase, message: message)
+            }
             PrimaryButton(purchasing ? "Processing…" : PaywallCopy.buttonTitle(plan, offer: flow?.selectedOffer)) {
                 Task { await action() }
             }
@@ -396,13 +417,33 @@ private struct PurchaseButton: View {
             .disabled(!enabled)
             .opacity(enabled || purchasing ? 1 : 0.55)
             .accessibilityHint(purchasing ? "Processing your purchase" : "")
-            if let offer = flow?.selectedOffer, flow?.phase != .unavailable {
-                Text(PaywallCopy.disclosure(offer))
-                    .retroText(.disclosure)
-                    .foregroundStyle(RetroColor.text.opacity(0.78))
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
+        }
+        .padding(.horizontal, RetroMetrics.screenPadding)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
+        .background {
+            VStack(spacing: 0) {
+                LinearGradient(colors: [RetroColor.background.opacity(0), RetroColor.background], startPoint: .top, endPoint: .bottom)
+                    .frame(height: 12)
+                RetroColor.background
             }
+            .padding(.top, -12) // the fade sits just above the footer, over the page
+            .ignoresSafeArea(edges: .bottom)
+        }
+    }
+}
+
+/// The selected plan's purchase terms, in the page under the plans.
+private struct PurchaseTerms: View {
+    let flow: PurchaseFlow?
+
+    var body: some View {
+        if let offer = flow?.selectedOffer, flow?.phase != .unavailable {
+            Text(PaywallCopy.disclosure(offer))
+                .retroText(.disclosure)
+                .foregroundStyle(RetroColor.text.opacity(0.78))
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
         }
     }
 }

@@ -2,6 +2,11 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-06 (M19 paywall: pinned purchase button)
+
+- **Paywall (approved Figma 431:3):** the purchase button is pinned in a footer 8 pt above the bottom safe area (measured: 34 pt on iPhone 17e and 18 Pro Max), with a 12 pt fade above it where the page scrolls underneath; the page gets a matching bottom inset. Its label and product follow the selected plan ("Get lifetime access" / "Start Premium"); pending and error messages appear just above it. Purchase terms, Continue free and Restore · Terms · Privacy stay in the page under the plans. Same footer at every entry point (onboarding, locked content, Settings, the six debug scenarios).
+- **Spacing:** short screens gaps 6, benefits 5, plan-card padding 9, headline overlap 56; taller screens gaps 12, benefits 9, card padding 13. On iPhone 17e the Yearly card ends about 745 pt against the button at 750 pt, so its last few points sit under the footer's fade at rest (the 12 pt separation target needs tighter spacing, which was declined); on Pro Max during offers it ends at about 853 pt against 862 pt. The page scrolls to show it fully.
+
 ## 2026-11-06 (M15 Overview A: pinned Start Survival Kit)
 
 - **Overview A:** "Start Survival Kit" (same button) is pinned at the bottom of the Overview, above the tab bar, with a soft fade from the background; the page gets a matching bottom inset so the kit card scrolls fully clear of it. It goes away when the kit starts (State B). The line under it ("Free: the first task in every section. No account needed." / "Premium: every task is unlocked.") is removed.
