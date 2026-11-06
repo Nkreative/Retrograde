@@ -2,6 +2,13 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-05 (M15 Settings, paywall and copy)
+
+- **Settings:** rows trimmed to about 48 pt (list insets 2 pt; every row keeps its 44 pt minimum to tap), compact section spacing; sections, order, the Premium card and all actions unchanged. The plan card keeps 12 pt inside.
+- **Paywall:** the fourth benefit ("No ads. No account needed." / "Your progress stays on your phone.") is removed. While the Lifetime launch price is verified (unchanged rule: a configured start date, within 14 days, StoreKit charging exactly the promotional price in a listed storefront), Lifetime shows "LAUNCH OFFER" beside "BEST VALUE" (stacked at large text), its regular price crossed out and StoreKit's price. Otherwise "BEST VALUE" and StoreKit's price only. Yearly unchanged. Lifetime stays selected by default. The launch price must be scheduled in App Store Connect (docs/STOREKIT.md); `LaunchPromotion.launch.start` is still unset, so nothing shows as discounted yet.
+- **Copy:** conversational em dashes replaced with periods, colons or brackets in the methodology page, the Notification Center's empty state, a paywall benefit and error, two Premium notices, and a debug label. Date ranges, "—" placeholders and the shared card's "— Retrograde" sign-off are unchanged.
+- **Deferred:** the compact scrolling header.
+
 ## 2026-11-05 (M15 Survival Kit, Calendar and Overview polish)
 
 Approved Figma page "M15 — Final UX/UI Refinement" (400:2).

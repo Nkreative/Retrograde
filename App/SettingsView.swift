@@ -74,6 +74,7 @@ struct SettingsView: View {
                     SectionHeader("General")
                 }
                 .listRowBackground(RetroColor.surface)
+        .compactSettingsRows()
                 Section {
                     row(.methodology, "How we rate each day")
                     row(.sources, "Where our sky data comes from")
@@ -81,6 +82,7 @@ struct SettingsView: View {
                     SectionHeader("How it works")
                 }
                 .listRowBackground(RetroColor.surface)
+        .compactSettingsRows()
                 AboutSection(row: { route, title, icon in row(route, title, icon: icon) }).id(Self.aboutID)
                 #if DEBUG
                 Section {
@@ -99,6 +101,7 @@ struct SettingsView: View {
                     SectionHeader("Developer (debug builds only)")
                 }
                 .listRowBackground(RetroColor.surface)
+        .compactSettingsRows()
                 #endif
             }
             .retroSettingsStyle()
@@ -213,7 +216,7 @@ private struct PremiumSection: View {
                     .padding(.top, 4)
                 }
             }
-            .padding(.vertical, 6)
+            .padding(.vertical, 12) // the plan card keeps its breathing room inside the tighter rows
             .accessibilityElement(children: .combine)
 
             ForEach(summary.actions, id: \.self) { action in
@@ -227,6 +230,7 @@ private struct PremiumSection: View {
             SectionHeader("Premium")
         }
         .listRowBackground(RetroColor.surface)
+        .compactSettingsRows()
         .manageSubscriptionsSheet(isPresented: $showsManage)
         .refundRequestSheet(for: refundTransaction ?? 0, isPresented: Binding(
             get: { refundTransaction != nil }, set: { if !$0 { refundTransaction = nil } }
@@ -331,6 +335,7 @@ private struct AboutSection<Row: View>: View {
                 .retroText(.body).foregroundStyle(RetroColor.textMuted)
         }
         .listRowBackground(RetroColor.surface)
+        .compactSettingsRows()
     }
 
     /// A page without its URL/contact yet: flagged in debug builds, hidden in release builds.
@@ -351,10 +356,10 @@ private struct AboutSection<Row: View>: View {
 private struct MethodologyView: View {
     var body: some View {
         InfoPage(title: "How we rate each day", paragraphs: [
-            "Each day gets an intensity — Calm, Mild, Elevated or Intense — from the sky events that fall on it in your time zone.",
+            "Each day gets an intensity (Calm, Mild, Elevated or Intense) from the sky events that fall on it in your time zone.",
             "Mercury retrograde adds the most, and its turning days (when it appears to stop and change direction) add more. The days around a turning point, Mercury’s shadow periods, Venus or Mars retrograde, other planets changing direction, New and Full Moons, and Mercury moving into a new sign each add a little.",
             "The points add up: none is Calm, 1–2 Mild, 3–4 Elevated, 5 or more Intense. The same day always gets the same rating.",
-            "It’s an astrology-inspired reflection score built from verified astronomical events — a prompt to slow down and plan kindly, not a prediction of what will happen.",
+            "It’s an astrology-inspired reflection score built from verified astronomical events: a prompt to slow down and plan kindly, not a prediction of what will happen.",
         ])
     }
 }
@@ -400,10 +405,17 @@ private struct SectionHeader: View {
 }
 
 private extension View {
+    /// Settings rows about 48 pt tall (M15): the list's own vertical insets trimmed, while every
+    /// row keeps its 44 pt minimum to tap.
+    func compactSettingsRows() -> some View {
+        listRowInsets(EdgeInsets(top: 2, leading: 16, bottom: 2, trailing: 16))
+    }
+
     func retroSettingsStyle() -> some View {
         self
             .scrollContentBackground(.hidden)
             .background(RetroColor.background.ignoresSafeArea())
             .environment(\.defaultMinListRowHeight, 44)
+            .listSectionSpacing(.compact)
     }
 }

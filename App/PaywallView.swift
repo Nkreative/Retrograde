@@ -67,9 +67,8 @@ struct PaywallView: View {
 
                         VStack(alignment: .leading, spacing: benefitSpacing) {
                             benefit(RetroSymbol.firstAid, "All 27 Survival Kit tasks", "Not just the first one in each section.")
-                            benefit(RetroSymbol.planning, "Every calendar day, in detail", "Plan past the next four days — weeks ahead.")
+                            benefit(RetroSymbol.planning, "Every calendar day, in detail", "Plan past the next four days, weeks ahead.")
                             benefit(RetroSymbol.moon, "The cosmic details behind each day", "Retrogrades, shadows and moon phases, explained.")
-                            benefit(RetroSymbol.heart, "No ads. No account needed.", "Your progress stays on your phone.")
                         }
 
                         if let message = promotionMessage {
@@ -281,11 +280,21 @@ private struct PlanCard: View {
         }
     }
 
-    /// BEST VALUE on Lifetime, the verified launch badge while the promotion runs, or a discounted
+    /// BEST VALUE on Lifetime (with LAUNCH OFFER while a verified launch price runs), or a discounted
     /// first year that StoreKit's own prices confirm.
     @ViewBuilder private var badge: some View {
         if let promotion {
-            Badge(PaywallCopy.promotionBadge(promotion)).fixedSize()
+            // Side by side where they fit; stacked with large text, so the card never runs wide.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 6) {
+                    Badge(PaywallCopy.promotionBadge(promotion)).fixedSize()
+                    Badge("BEST VALUE").fixedSize()
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Badge(PaywallCopy.promotionBadge(promotion)).fixedSize()
+                    Badge("BEST VALUE").fixedSize()
+                }
+            }
         } else if let intro = offer.flatMap(PaywallCopy.introBadge) {
             Badge(intro).fixedSize()
         } else if plan == .lifetime {
@@ -335,7 +344,7 @@ private struct Unavailable: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Prices aren’t available right now").retroText(.bodyStrong).foregroundStyle(RetroColor.text)
-            Text("We couldn’t reach the App Store. Check your connection and try again — nothing has been charged.")
+            Text("We couldn’t reach the App Store. Check your connection and try again. Nothing has been charged.")
                 .retroText(.body).foregroundStyle(RetroColor.textMuted)
             SecondaryButton("Try again", systemImage: RetroSymbol.restart, action: retry)
         }

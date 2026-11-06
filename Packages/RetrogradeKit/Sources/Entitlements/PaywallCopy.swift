@@ -90,9 +90,10 @@ public enum PaywallCopy {
         return "\(offer.displayPrice) \(period.perFrequency), charged to your Apple Account at confirmation. Renews automatically \(period.adverb) unless cancelled at least 24 hours before the current period ends. \(manage)"
     }
 
-    /// Badge text for a verified promotion, e.g. "LAUNCH · 50% OFF".
+    /// Badge for a verified launch price (shown beside BEST VALUE). The discount itself is shown as
+    /// the crossed-out regular price beside StoreKit's price.
     public static func promotionBadge(_ promotion: LaunchPromotion.Display) -> String {
-        "LAUNCH · \(promotion.percentOff)% OFF"
+        "LAUNCH OFFER"
     }
 
     /// Plan line during a promotion: its last day from the configured schedule ("Nov 17"), in the

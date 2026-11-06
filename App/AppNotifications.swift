@@ -122,7 +122,7 @@ struct ScheduledAlertsView: View {
     var body: some View {
         List {
             Section {
-                Button(sent ? "Test alert sent — lock the phone" : "Send a test alert in 10 seconds") { Task { await sendTest() } }
+                Button(sent ? "Test alert sent. Lock the phone." : "Send a test alert in 10 seconds") { Task { await sendTest() } }
                     .frame(minHeight: 44)
                 Text("Copies the next scheduled alert (title, text and where it opens). Not saved in the history.")
                     .retroText(.body).foregroundStyle(RetroColor.textMuted)

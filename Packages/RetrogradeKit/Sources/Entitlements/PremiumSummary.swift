@@ -30,7 +30,7 @@ public struct PremiumSummary: Equatable, Sendable {
                 title: "Premium · Lifetime",
                 detail: "One-time purchase. It never expires and never renews.",
                 notice: yearlyStillRenewing
-                    ? "You also have a Yearly subscription that’s still set to renew. Cancel it in Manage Subscription to avoid further charges — Lifetime already covers everything."
+                    ? "You also have a Yearly subscription that’s still set to renew. Cancel it in Manage Subscription to avoid further charges. Lifetime already covers everything."
                     : nil,
                 tone: .premium,
                 actions: yearlyStillRenewing ? [.manageSubscription, .restore, .requestRefund] : [.restore, .requestRefund]
@@ -43,7 +43,7 @@ public struct PremiumSummary: Equatable, Sendable {
             return PremiumSummary(
                 title: "Premium · Yearly",
                 detail: nil,
-                notice: "There’s a problem with your payment. Premium stays on\(day(until).map { " until \($0)" } ?? "") while Apple retries — update your payment method in Manage Subscription.",
+                notice: "There’s a problem with your payment. Premium stays on\(day(until).map { " until \($0)" } ?? "") while Apple retries. Update your payment method in Manage Subscription.",
                 tone: .warning, actions: [.manageSubscription, .restore]
             )
         case .yearlyBillingIssue:

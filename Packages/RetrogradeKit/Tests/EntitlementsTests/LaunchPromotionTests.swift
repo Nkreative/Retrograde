@@ -77,7 +77,7 @@ import Testing
 
     @Test func copyAndVoiceOver() {
         let d = LaunchPromotion.Display(percentOff: 50, regularPrice: "$19.99", endsAt: start)
-        #expect(PaywallCopy.promotionBadge(d) == "LAUNCH · 50% OFF")
+        #expect(PaywallCopy.promotionBadge(d) == "LAUNCH OFFER")
         #expect(PaywallCopy.promotionDetail(d, locale: Locale(identifier: "en_US")).hasPrefix("Launch special through "))
         #expect(PaywallCopy.accessibilityLabel(lifetime("9.99"), bestValue: true, promotion: d)
             == "Lifetime access, Launch special, 50% off, regular price $19.99, $9.99, one-time purchase")

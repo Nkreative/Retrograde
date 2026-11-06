@@ -178,7 +178,7 @@ private struct EmptyNotifications: View {
                 .foregroundStyle(RetroColor.textMuted)
                 .accessibilityHidden(true)
             Text("You’re all caught up.").retroText(.cardTitle).foregroundStyle(RetroColor.text)
-            Text("Retrograde alerts — Mercury turning points, new Survival Kits and reminders you choose — will appear here.")
+            Text("Retrograde alerts will appear here: Mercury turning points, new Survival Kits and the reminders you choose.")
                 .retroText(.body).foregroundStyle(RetroColor.textMuted)
                 .multilineTextAlignment(.center)
         }
