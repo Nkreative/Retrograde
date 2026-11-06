@@ -1,6 +1,5 @@
 import DesignSystem
 import Editorial
-import Entitlements
 import Persistence
 import RetroCore
 import SwiftUI
@@ -12,7 +11,6 @@ struct OverviewScreen: View {
     /// Debug-only clock override for reviewing other cycle stages; nil uses the real time.
     var now: Date?
     @Environment(SurvivalKitActivation.self) private var activation
-    @Environment(EntitlementStore.self) private var premium
     @Environment(AppRouter.self) private var router
     @Environment(WidgetPrompt.self) private var widgetPrompt
     /// The scroll view's visible height (the dashboard spreads its sections across it).
@@ -22,6 +20,7 @@ struct OverviewScreen: View {
         TimelineView(.everyMinute) { context in
             let date = now ?? context.date
             let status = SkyData.calculator?.status(of: .mercury, at: date)
+            let introduces = OverviewMode(kitStarted: activation.isStarted) == .introduction && status.flatMap { OverviewCopy.for(.mercury, $0.stage) } != nil
             ScrollViewReader { proxy in
                 ScrollView {
                     Group {
@@ -36,6 +35,11 @@ struct OverviewScreen: View {
                     .id(Self.bottomID)
                 }
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { viewportHeight = $0 }
+                // State A's one action stays pinned above the tab bar while the page scrolls; the
+                // inset lets the page's end scroll fully clear of it. Gone once the kit is started.
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    if introduces { StartKitBar(action: startKit) }
+                }
                 #if DEBUG
                 .onAppear {
                     // `-scrollOverview bottom` opens it scrolled to the end, for review screenshots.
@@ -72,27 +76,44 @@ struct OverviewScreen: View {
 
             VStack(alignment: .leading, spacing: RetroMetrics.sectionSpacing) {
                 HeroCard(headline: copy.heroHeadline)
-                KitIntroCard(
-                    introduction: copy.kitIntroduction(daysUntilTarget: status.daysUntilTarget),
-                    isPremium: premium.isPremium,
-                    onStart: {
-                        activation.start()
-                        router.openKit()
-                    }
-                )
+                KitIntroCard(introduction: copy.kitIntroduction(daysUntilTarget: status.daysUntilTarget))
             }
             .padding(.bottom, 18)
         }
         .padding(.horizontal, RetroMetrics.screenPadding)
     }
+
+    /// Starts the kit (the Overview becomes the dashboard) and opens it.
+    private func startKit() {
+        activation.start()
+        router.openKit()
+    }
 }
 
-/// State A's Survival Kit card (approved M13.1 Figma): what the kit is for, its four sections, and
-/// the one main action.
+/// State A's "Start Survival Kit", pinned at the bottom of the Overview, above the tab bar. A soft
+/// fade from the page's background keeps it readable over the content scrolling underneath.
+private struct StartKitBar: View {
+    let action: () -> Void
+
+    var body: some View {
+        PrimaryButton("Start Survival Kit", systemImage: RetroSymbol.firstAid, layout: .leading, showsArrow: true, action: action)
+            .accessibilityHint("Opens the Survival Kit")
+            .padding(.horizontal, RetroMetrics.screenPadding)
+            .padding(.top, 20)
+            .padding(.bottom, 12)
+            .background {
+                LinearGradient(
+                    stops: [.init(color: RetroColor.background.opacity(0), location: 0), .init(color: RetroColor.background, location: 0.4)],
+                    startPoint: .top, endPoint: .bottom
+                )
+            }
+    }
+}
+
+/// State A's Survival Kit card (approved M13.1 Figma): what the kit is for and its four sections.
+/// Its action, "Start Survival Kit", is pinned below the page (`StartKitBar`).
 private struct KitIntroCard: View {
     let introduction: String
-    let isPremium: Bool
-    let onStart: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -105,15 +126,6 @@ private struct KitIntroCard: View {
                 Text(introduction).retroText(.body).foregroundStyle(RetroColor.textMuted)
             }
             TopicChips()
-            VStack(spacing: 12) {
-                PrimaryButton("Start Survival Kit", systemImage: RetroSymbol.firstAid, layout: .leading, showsArrow: true, action: onStart)
-                    .accessibilityHint("Opens the Survival Kit")
-                Text(isPremium ? "Premium: every task is unlocked." : "Free: the first task in every section. No account needed.")
-                    .retroText(.finePrint)
-                    .foregroundStyle(RetroColor.textMuted)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-            }
         }
         .retroCard(fill: RetroColor.surfaceRaised)
     }

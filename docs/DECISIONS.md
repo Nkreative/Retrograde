@@ -2,6 +2,10 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-06 (M15 Overview A: pinned Start Survival Kit)
+
+- **Overview A:** "Start Survival Kit" (same button) is pinned at the bottom of the Overview, above the tab bar, with a soft fade from the background; the page gets a matching bottom inset so the kit card scrolls fully clear of it. It goes away when the kit starts (State B). The line under it ("Free: the first task in every section. No account needed." / "Premium: every task is unlocked.") is removed.
+
 ## 2026-11-06 (M15 second iPhone QA)
 
 - **Overview A headline:** Archivo Black 24 (was 30), between the countdown (32) and the kit card's title (19). Same font, colour and copy.
