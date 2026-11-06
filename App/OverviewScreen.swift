@@ -237,8 +237,9 @@ private struct HeroCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
+            // One step under the countdown above it and still clearly over the kit card's title.
             Text(headline)
-                .retroText(.hero)
+                .retroText(.heroCompact)
                 .foregroundStyle(RetroColor.text)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)

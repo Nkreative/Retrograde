@@ -70,7 +70,7 @@ struct SurvivalKitScreen: View {
                             .retroText(.cardTitle)
                             .foregroundStyle(RetroColor.text)
                             .accessibilityAddTraits(.isHeader)
-                        Text("Main things you can control. The cosmos can wait.")
+                        Text(KitCopy.introduction(planet: kit.planet, taskCount: kit.tasks.count))
                             .retroText(.body)
                             .foregroundStyle(RetroColor.textMuted)
                     }

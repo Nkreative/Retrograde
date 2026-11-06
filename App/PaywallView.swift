@@ -23,6 +23,9 @@ final class PaywallPresenter {
 /// Restore, Terms and Privacy. Purchase logic lives in `PurchaseFlow`.
 struct PaywallView: View {
     @Environment(\.dismiss) private var dismiss
+    /// Set when the paywall is onboarding's last step rather than a presented screen: ✕, Continue
+    /// free and a completed purchase call it instead of dismissing.
+    var onClose: (() -> Void)?
     @Environment(EntitlementStore.self) private var entitlements
     @State private var flow: PurchaseFlow?
     #if DEBUG
@@ -55,7 +58,7 @@ struct PaywallView: View {
         }
         // Premium arrived (purchase, approval of a pending purchase, restore): close.
         .onChange(of: entitlements.isPremium) { _, isPremium in
-            if isPremium { dismiss() }
+            if isPremium { close() }
         }
         .onChange(of: flow?.phase) { _, phase in
             if let message = phase.flatMap(StatusBanner.message) {
@@ -91,7 +94,7 @@ struct PaywallView: View {
                         }
                         PurchaseButton(flow: flow) { await buy() }
 
-                        Button("Continue free") { dismiss() }
+                        Button("Continue free") { close() }
                             .retroText(.bodyStrong)
                             .foregroundStyle(RetroColor.text)
                             .frame(maxWidth: .infinity, minHeight: 44)
@@ -111,6 +114,11 @@ struct PaywallView: View {
                 if UserDefaults.standard.string(forKey: "scrollPaywall") == "bottom" {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1) { proxy.scrollTo(Self.bottomID, anchor: .bottom) }
                 }
+                // `-paywallTap close` presses ✕ after a moment (Continue free does the same), for checking
+                // where closing leads.
+                if UserDefaults.standard.string(forKey: "paywallTap") == "close" {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { close() }
+                }
             }
             #endif
         }
@@ -118,7 +126,7 @@ struct PaywallView: View {
         .retroScreenBackground()
         // Pinned so it's always reachable, even after scrolling past the artwork.
         .overlay(alignment: .topTrailing) {
-            Button { dismiss() } label: {
+            Button { close() } label: {
                 Image(systemName: RetroSymbol.close)
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(RetroColor.text)
@@ -144,14 +152,18 @@ struct PaywallView: View {
         return PromotionMoment.message(for: .mercury)
     }
 
+    private func close() {
+        if let onClose { onClose() } else { dismiss() }
+    }
+
     private func buy() async {
         guard let flow, await flow.purchase() else { return }
-        dismiss()
+        close()
     }
 
     private func restore() async {
         guard let flow, await flow.restore() else { return }
-        dismiss()
+        close()
     }
 
     private func benefit(_ icon: String, _ title: String, _ detail: String) -> some View {

@@ -3,8 +3,8 @@ import Observation
 
 /// First-launch onboarding (the splash, then the notifications screen), saved on the device so an
 /// interrupted onboarding starts again on the next launch. Completion is permanent (updates never
-/// replay it). It's marked complete when the person leaves the notifications screen — before the
-/// paywall — so reopening the app never lands on a purchase screen.
+/// replay it). It's marked complete when the person leaves the notifications screen, as Premium
+/// appears as onboarding's last step, so reopening the app never lands on a purchase screen.
 @MainActor
 @Observable
 public final class OnboardingProgress {

@@ -5,10 +5,9 @@ import SwiftUI
 import UserNotifications
 
 /// First launch, as in the approved Figma frames: the splash for about 2 seconds, then the
-/// notifications screen with Mercury drifting across. The paywall follows (presented by the app).
+/// notifications screen with Mercury drifting across. Premium follows as the last step (`RootView`).
 struct OnboardingView: View {
-    @Environment(OnboardingProgress.self) private var progress
-    /// Called once the notifications screen is done (onboarding is then complete).
+    /// Called once the notifications screen is done; the caller saves onboarding as complete.
     let onFinished: () -> Void
     @State private var showsSplash = Self.startsWithSplash
 
@@ -31,7 +30,6 @@ struct OnboardingView: View {
     }
 
     private func finish() {
-        progress.complete()
         onFinished()
     }
 

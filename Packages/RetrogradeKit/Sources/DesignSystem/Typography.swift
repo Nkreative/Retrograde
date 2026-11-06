@@ -29,8 +29,12 @@ public enum RetroFonts {
 public enum RetroTextStyle: CaseIterable, Sendable {
     /// Archivo Black 32 — countdown number.
     case display
-    /// Archivo Black 30 — hero headline ("A LITTLE CHAOS.").
+    /// Space Mono 32 — a big number one step quieter than the countdown (the sharing count).
+    case displayMono
+    /// Archivo Black 30 — hero headline (paywall, splash).
     case hero
+    /// Archivo Black 24 — the Overview's stage headline ("A LITTLE CHAOS."), under the countdown.
+    case heroCompact
     /// Archivo Black 20 — wordmark, sheet titles.
     case title
     /// Archivo Black 19 — section titles, selected date.
@@ -94,12 +98,12 @@ public enum RetroTextStyle: CaseIterable, Sendable {
 
     var postScriptName: String {
         switch self {
-        case .display, .hero, .title, .section, .cardTitle, .breathCount, .widgetTitle, .widgetTitleSmall, .widgetCountdown, .widgetCountdownSmall: "ArchivoBlack-Regular"
+        case .display, .hero, .heroCompact, .title, .section, .cardTitle, .breathCount, .widgetTitle, .widgetTitleSmall, .widgetCountdown, .widgetCountdownSmall: "ArchivoBlack-Regular"
         case .button: "Inter-Bold"
         case .bodyStrong, .price: "Inter-SemiBold"
         case .bodyLarge, .body, .finePrint, .prompt, .disclosure, .widgetNote: "Inter-Regular"
         case .bodyHeavy: "Inter-ExtraBold"
-        case .monoLarge, .mono, .monoSmall, .timer, .timerCompact, .monoTiny, .monoNumber, .widgetUnit, .widgetCaption, .widgetLabel: "SpaceMono-Regular"
+        case .displayMono, .monoLarge, .mono, .monoSmall, .timer, .timerCompact, .monoTiny, .monoNumber, .widgetUnit, .widgetCaption, .widgetLabel: "SpaceMono-Regular"
         case .monoLabel, .monoBold, .monoNumberBold, .widgetPhase, .widgetPhaseSmall: "SpaceMono-Bold"
         }
     }
@@ -108,8 +112,9 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         switch self {
         case .timer: 36
         case .widgetCountdownSmall: 34
-        case .display, .widgetCountdown: 32
+        case .display, .displayMono, .widgetCountdown: 32
         case .hero: 30
+        case .heroCompact: 24
         case .timerCompact: 27
         case .breathCount: 21
         case .widgetTitle: 17
@@ -128,10 +133,10 @@ public enum RetroTextStyle: CaseIterable, Sendable {
     /// The system style it scales alongside when the person changes text size.
     var scalesLike: Font.TextStyle {
         switch self {
-        case .display, .timer, .widgetCountdown, .widgetCountdownSmall: .largeTitle
+        case .display, .displayMono, .timer, .widgetCountdown, .widgetCountdownSmall: .largeTitle
         case .timerCompact, .breathCount: .title2
         case .prompt, .bodyLarge: .body
-        case .hero: .title
+        case .hero, .heroCompact: .title
         case .title: .title2
         case .section: .title3
         case .cardTitle, .price, .monoNumber, .monoNumberBold, .widgetTitle: .headline

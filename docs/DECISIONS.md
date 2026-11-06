@@ -2,6 +2,14 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-06 (M15 second iPhone QA)
+
+- **Overview A headline:** Archivo Black 24 (was 30), between the countdown (32) and the kit card's title (19). Same font, colour and copy.
+- **Sharing count:** regular weight. Archivo Black has no regular weight, so the count uses Space Mono Regular at the same 32 pt and yellow, centred on its sentence as before.
+- **Survival Kit tab introduction:** "Mercury’s doing its thing. You’ve got 27 ways to beat the chaos. Complete each task, build your progress, and make it through this retrograde on your terms." (planet and task count from the kit). The Overview card's introduction is unchanged.
+- **Calendar:** "What’s shaping the day" is its own card under the day's panel, open whenever a day is selected, closable. Locked days keep the blurred preview and lock inside the panel.
+- **Onboarding:** splash, notifications, then Premium as the last step (the same paywall, not a pop-up over the app), then the Overview. ✕, Continue free and a purchase all lead to the Overview; Premium isn't offered again automatically. Onboarding is saved as complete as Premium appears, so a relaunch or an existing user goes straight to the app; Premium users skip the step.
+
 ## 2026-11-06 (M15 iPhone QA: four screens)
 
 - **Overview A:** the four topic pills form a two-column grid (equal columns, 6 pt gaps both ways; one column only at text sizes where a pill won't fit half the width). The stage headline sits above the artwork instead of overlapping its top edge.

@@ -353,11 +353,12 @@ private struct SharingLine: View {
             .fixedSize(horizontal: false, vertical: wraps)
         if let count = summary.count {
             HStack(alignment: .capMiddle, spacing: 10) {
+                // Regular weight, so Mercury's day count stays the boldest number on the screen.
                 Text(count)
-                    .retroText(.display)
+                    .retroText(.displayMono)
                     .foregroundStyle(RetroColor.yellow)
                     .fixedSize()
-                    .capMiddle(.display)
+                    .capMiddle(.displayMono)
                 sentence.capMiddle(.bodyStrong)
             }
         } else {

@@ -21,7 +21,7 @@ struct CalendarScreen: View {
     @State private var expanded = false
     /// The day whose card is being previewed for sharing.
     @State private var sharing: InsightShareCard?
-    /// "What's shaping the day" is closed until the person opens it.
+    /// "What's shaping the day" is open whenever a day is selected; the person can close it.
     @State private var showsSkyDetails = Self.initiallyShowsSkyDetails
 
     private let policy = CalendarAccessPolicy.launch
@@ -89,6 +89,8 @@ struct CalendarScreen: View {
         }
         .retroScreenBackground()
         .sheet(item: $sharing) { InsightSharePreview(card: $0) }
+        // Each newly selected day opens with its sky details showing.
+        .onChange(of: selected) { showsSkyDetails = true }
         // A tapped notification asked for a day: select it (past days need the month view).
         .onChange(of: router.calendarFocus) { _, day in
             guard let day else { return }
@@ -119,10 +121,10 @@ struct CalendarScreen: View {
 
     private static var initiallyShowsSkyDetails: Bool {
         #if DEBUG
-        // `-skyDetails open` opens "What's shaping the day", for review screenshots.
-        return UserDefaults.standard.string(forKey: "skyDetails") == "open"
+        // `-skyDetails closed` starts with "What's shaping the day" closed, for review screenshots.
+        return UserDefaults.standard.string(forKey: "skyDetails") != "closed"
         #else
-        return false
+        return true
         #endif
     }
 
@@ -489,10 +491,22 @@ private struct DayDetail: View {
     let content: DayDetailContent?
     let onUnlock: () -> Void
     let onShare: (InsightShareCard) -> Void
-    /// "What's shaping the day" open or closed; closed by default, kept while moving between days.
+    /// "What's shaping the day" open or closed (open whenever a day is selected).
     @Binding var showsSkyDetails: Bool
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            panel
+            // Its own card under the day's panel, for unlocked days (locked days keep the blurred
+            // preview inside the panel).
+            if let content, case let .unlocked(insight, others) = content.details {
+                SkyDetails(rows: insight.rows, retrogrades: SkyData.intensity()?.retrogrades(on: day) ?? [], others: others,
+                           when: day == today ? "today" : "on \(day.shortTitle)", isOpen: $showsSkyDetails)
+            }
+        }
+    }
+
+    private var panel: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 6) {
@@ -514,12 +528,10 @@ private struct DayDetail: View {
 
             if let content {
                 switch content.details {
-                case let .unlocked(insight, others):
-                    // Date, level and summary, then the habit; the sky's details open on request.
+                case let .unlocked(insight, _):
+                    // Date, level and summary, then the habit; the sky's details follow in their own card.
                     IntensityPanel(level: content.level, summary: insight.summary, stepNames: false)
                     HabitCard(habit: insight.habit)
-                    SkyDetails(rows: insight.rows, retrogrades: SkyData.intensity()?.retrogrades(on: day) ?? [], others: others,
-                               when: day == today ? "today" : "on \(day.shortTitle)", isOpen: $showsSkyDetails)
                     if let card = InsightShareCard(content) {
                         SecondaryButton("Share this day", systemImage: RetroSymbol.share) { onShare(card) }
                             .accessibilityHint("Previews a card of \(day.spokenDate) to share")
@@ -608,8 +620,9 @@ struct IntensityPanel: View {
     }
 }
 
-/// "What's shaping the day": closed, one line naming the planets retrograde; open, the day's
-/// events (retrograde ones with their dates), then any other planets retrograde, each planet once.
+/// "What's shaping the day", a card of its own under the day's panel: the title and one line naming
+/// the planets retrograde, then (open, the default) the day's events (retrograde ones with their
+/// dates) and any other planets retrograde, each planet once. Tapping the header closes or reopens it.
 private struct SkyDetails: View {
     let rows: [DailyInsight.Row]
     /// Every planet retrograde on the day, Mercury included (for the dates on event rows).
@@ -621,14 +634,15 @@ private struct SkyDetails: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 10)
+        let shape = RoundedRectangle(cornerRadius: RetroMetrics.Radius.panel)
         VStack(alignment: .leading, spacing: 0) {
             Button {
                 withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) { isOpen.toggle() }
             } label: {
                 HStack(spacing: 10) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("What’s shaping the day").retroText(.bodyStrong).foregroundStyle(RetroColor.text)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("What’s shaping the day").retroText(.cardTitle).foregroundStyle(RetroColor.text)
+                            .accessibilityAddTraits(.isHeader)
                         Text(SkySummary.line(planets: retrogrades.map(\.planet), rows: rows)).retroText(.body).foregroundStyle(RetroColor.textMuted)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -671,9 +685,9 @@ private struct SkyDetails: View {
                 .transition(.opacity)
             }
         }
-        .padding(.vertical, 6)
-        .padding(.horizontal, 14)
-        .background(RetroColor.background, in: shape)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 16)
+        .background(RetroColor.surfaceRaised, in: shape)
         .overlay(shape.strokeBorder(RetroColor.line, lineWidth: 1))
     }
 
