@@ -66,7 +66,7 @@ struct SurvivalKitScreen: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: RetroMetrics.sectionSpacing) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("SMALL MOVES. YOU’LL GET IT DONE.")
+                        Text("BEAT MERCURY AT ITS OWN GAME.")
                             .retroText(.cardTitle)
                             .foregroundStyle(RetroColor.text)
                             .accessibilityAddTraits(.isHeader)
