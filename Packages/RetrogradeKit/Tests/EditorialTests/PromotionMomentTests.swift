@@ -40,6 +40,6 @@ import Testing
         let message = PromotionMoment.message(for: .mercury)
         #expect(message.headline == "MERCURY’S CLOCKING OUT.")
         #expect(message.body == "Prices are dropping.")
-        #expect(message.signOff == "The chaos will return. Your backup plan doesn’t have to disappear with it.")
+        #expect(message.signOff == "The chaos will return. Your backup stays.")
     }
 }

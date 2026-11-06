@@ -23,7 +23,7 @@ public enum PromotionMoment {
         Message(
             headline: "\(planet.name.uppercased())’S CLOCKING OUT.",
             body: "Prices are dropping.",
-            signOff: "The chaos will return. Your backup plan doesn’t have to disappear with it."
+            signOff: "The chaos will return. Your backup stays."
         )
     }
 }

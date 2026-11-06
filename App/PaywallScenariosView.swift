@@ -57,6 +57,7 @@ private struct PaywallScenarioPreview: View {
                     .foregroundStyle(RetroColor.background)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
+                    .dynamicTypeSize(...DynamicTypeSize.large) // a review label: keep it off the artwork
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
                     .background(RetroColor.pink, in: Capsule())
