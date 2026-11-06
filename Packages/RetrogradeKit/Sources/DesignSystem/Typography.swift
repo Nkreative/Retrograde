@@ -6,7 +6,7 @@ import SwiftUI
 public enum RetroFonts {
     public static let postScriptNames = [
         "ArchivoBlack-Regular", "SpaceMono-Regular", "SpaceMono-Bold", "Inter-Regular", "Inter-SemiBold", "Inter-Bold",
-        "Inter-ExtraBold",
+        "Inter-ExtraBold", "Inter-LightItalic",
     ]
 
     public static func register() { _ = registration }
@@ -47,6 +47,8 @@ public enum RetroTextStyle: CaseIterable, Sendable {
     case bodyStrong
     /// Inter Regular 16 — task instructions, the day's habit.
     case bodyLarge
+    /// Inter Light Italic 14 — the Overview's good habit line (Figma 454:550).
+    case bodyLightItalic
     /// Inter Regular 15 — body copy.
     case body
     /// Inter ExtraBold 15 — emphasised word inside body copy ("Mercury").
@@ -102,6 +104,7 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .button: "Inter-Bold"
         case .bodyStrong, .price: "Inter-SemiBold"
         case .bodyLarge, .body, .finePrint, .prompt, .disclosure, .widgetNote: "Inter-Regular"
+        case .bodyLightItalic: "Inter-LightItalic"
         case .bodyHeavy: "Inter-ExtraBold"
         case .displayMono, .monoLarge, .mono, .monoSmall, .timer, .timerCompact, .monoTiny, .monoNumber, .widgetUnit, .widgetCaption, .widgetLabel: "SpaceMono-Regular"
         case .monoLabel, .monoBold, .monoNumberBold, .widgetPhase, .widgetPhaseSmall: "SpaceMono-Bold"
@@ -122,6 +125,7 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .section: 19
         case .cardTitle, .price, .bodyLarge, .monoNumber, .monoNumberBold: 16
         case .bodyStrong, .body, .bodyHeavy, .prompt: 15
+        case .bodyLightItalic: 14
         case .button: 14
         case .monoLarge, .widgetTitleSmall: 13
         case .mono, .monoLabel, .finePrint, .disclosure, .widgetNote, .widgetUnit: 12
@@ -141,7 +145,7 @@ public enum RetroTextStyle: CaseIterable, Sendable {
         case .section: .title3
         case .cardTitle, .price, .monoNumber, .monoNumberBold, .widgetTitle: .headline
         case .button: .body
-        case .bodyStrong, .body, .bodyHeavy, .widgetTitleSmall: .subheadline
+        case .bodyStrong, .body, .bodyHeavy, .bodyLightItalic, .widgetTitleSmall: .subheadline
         case .monoLarge, .monoLabel, .widgetCaption, .widgetNote, .widgetUnit, .widgetPhase: .footnote
         case .mono, .monoBold, .disclosure, .finePrint: .caption
         case .monoSmall, .monoTiny, .widgetPhaseSmall, .widgetLabel: .caption2
@@ -152,7 +156,7 @@ public enum RetroTextStyle: CaseIterable, Sendable {
     /// easily than the font's own.
     var lineSpacing: CGFloat {
         switch self {
-        case .body, .bodyHeavy, .bodyStrong: 3
+        case .body, .bodyHeavy, .bodyStrong, .bodyLightItalic: 3
         case .bodyLarge, .prompt: 4
         case .disclosure, .finePrint: 2
         case .widgetNote: 2

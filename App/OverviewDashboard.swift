@@ -60,6 +60,8 @@ struct OverviewDashboard: View {
             }
             if let today = OverviewToday.make(today: today) {
                 IntensityCard(today: today) { router.open(overview: .today(today.day)) }
+                Gap(12...22)
+                GoodHabitCard(habit: today.habit)
                 Gap(16...31)
             }
             SharingCard(summary: SharingSummary(finishedShares: sharing.records.count)) { router.open(overview: .shareInvite) }
@@ -150,13 +152,53 @@ struct OverviewToday: Equatable {
     let day: CalendarDay
     let level: IntensityLevel
     let summary: String
+    /// The same good habit as the Calendar's day detail.
+    let habit: String
 
     @MainActor static func make(today: CalendarDay, intensity: IntensityCalculator? = SkyData.intensity()) -> OverviewToday? {
         guard let intensity,
               let content = DayDetailContent.make(day: today, today: today, isPremium: false, policy: .launch, intensity: intensity),
               case let .unlocked(insight, _) = content.details
         else { return nil }
-        return OverviewToday(day: today, level: content.level, summary: insight.summary)
+        return OverviewToday(day: today, level: content.level, summary: insight.summary, habit: insight.habit.text)
+    }
+}
+
+// MARK: - Good habit
+
+/// Today's good habit (Figma 454:550): the sunset heart on the left, the Calendar's habit for
+/// today beside it, on a mint-tinted card. Grows with large text; the artwork stays top left.
+private struct GoodHabitCard: View {
+    let habit: String
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 10)
+        VStack(alignment: .leading, spacing: 3) {
+            Text("Good habit for this day")
+                .retroText(.cardTitle)
+                .foregroundStyle(RetroColor.text.opacity(0.8))
+                .accessibilityAddTraits(.isHeader)
+            Text(habit)
+                .retroText(.bodyLightItalic)
+                .foregroundStyle(RetroColor.text)
+                .padding(.trailing, 12)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(.leading, 108)
+        .padding(.trailing, 6)
+        .padding(.top, 14)
+        .padding(.bottom, 14)
+        .frame(maxWidth: .infinity, minHeight: 90, alignment: .topLeading)
+        .background(alignment: .topLeading) {
+            Image("GoodHabitHeart")
+                .resizable()
+                .frame(width: 110, height: 90)
+                .accessibilityHidden(true)
+        }
+        .background(RetroColor.mintTint.opacity(0.18), in: shape)
+        .clipShape(shape)
+        .overlay(shape.strokeBorder(RetroColor.slate.opacity(0.7), lineWidth: 1))
+        .accessibilityElement(children: .combine)
     }
 }
 

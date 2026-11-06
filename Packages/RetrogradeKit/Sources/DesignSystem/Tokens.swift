@@ -30,6 +30,10 @@ public enum RetroColor {
     public static let dim = Color(hex: 0x49334F)
     /// "Calm" intensity level.
     public static let calm = Color(hex: 0xA89CBE)
+    /// The Overview's good habit card, at 18 % over the background (Figma 454:550).
+    public static let mintTint = Color(hex: 0xA7F3D0)
+    /// The good habit card's border, at 70 % (Figma 454:550).
+    public static let slate = Color(hex: 0x475362)
 }
 
 public enum RetroMetrics {
