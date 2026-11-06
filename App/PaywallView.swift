@@ -31,7 +31,11 @@ struct PaywallView: View {
         // and spacing tighten as screens get shorter (e.g. iPhone 17e); the rest scrolls.
         GeometryReader { screen in
             let roomy = screen.size.height + screen.safeAreaInsets.top + screen.safeAreaInsets.bottom >= 920
-            content(heroRatio: roomy ? 0.86 : 0.78, headlineOverlap: roomy ? 56 : 44, spacing: roomy ? 16 : 13, benefitSpacing: roomy ? 11 : 9)
+            // Short screens also lose 32 pt of the artwork's empty sky (it slides up under the status
+            // bar, unscaled, the moon still clear) and run slightly tighter, so both plans and the whole
+            // purchase button fit on the first screen. Text sizes never change; large text scrolls.
+            content(heroRatio: roomy ? 0.86 : 0.78, heroTrim: roomy ? 0 : 32, headlineOverlap: roomy ? 56 : 50, spacing: roomy ? 16 : 10,
+                    benefitSpacing: roomy ? 11 : 7, compactPlans: !roomy)
         }
         .task {
             let flow = self.flow ?? PurchaseFlow(store: entitlements, promotion: AppEntitlements.promotion)
@@ -52,11 +56,12 @@ struct PaywallView: View {
         }
     }
 
-    private func content(heroRatio: CGFloat, headlineOverlap: CGFloat, spacing: CGFloat, benefitSpacing: CGFloat) -> some View {
+    private func content(heroRatio: CGFloat, heroTrim: CGFloat, headlineOverlap: CGFloat, spacing: CGFloat, benefitSpacing: CGFloat, compactPlans: Bool) -> some View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 0) {
                     PaywallHero(windowRatio: heroRatio)
+                        .padding(.top, -heroTrim)
                     VStack(alignment: .leading, spacing: spacing) {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("RETROGRADE PREMIUM").retroText(.mono).foregroundStyle(RetroColor.pink)
@@ -75,7 +80,7 @@ struct PaywallView: View {
                             PromotionMessage(message: message)
                         }
 
-                        PlanList(flow: flow)
+                        PlanList(flow: flow, compact: compactPlans)
                         if let message = flow.flatMap({ StatusBanner.message(for: $0.phase) }) {
                             StatusBanner(phase: flow!.phase, message: message)
                         }
@@ -195,14 +200,16 @@ private struct PromotionMessage: View {
 /// Lifetime and Yearly cards with live prices; placeholders while loading; a retry when unavailable.
 private struct PlanList: View {
     let flow: PurchaseFlow?
+    /// Short screens: cards 8 pt apart with slightly less padding inside.
+    var compact = false
 
     var body: some View {
         let phase = flow?.phase ?? .loading
-        VStack(spacing: 10) {
+        VStack(spacing: compact ? 8 : 10) {
             switch phase {
             case .loading:
                 ForEach(PremiumPlan.paywallOrder, id: \.self) { plan in
-                    PlanCard(plan: plan, offer: nil, selected: plan == .lifetime, enabled: false) {}
+                    PlanCard(plan: plan, offer: nil, selected: plan == .lifetime, enabled: false, compact: compact) {}
                 }
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("Loading prices")
@@ -212,7 +219,7 @@ private struct PlanList: View {
                 if let flow {
                     ForEach(PremiumPlan.paywallOrder, id: \.self) { plan in
                         PlanCard(plan: plan, offer: flow.offers[plan], selected: flow.selectedPlan == plan, enabled: !flow.isBusy && flow.offers[plan] != nil,
-                                 promotion: flow.promotion(for: plan)) {
+                                 promotion: flow.promotion(for: plan), compact: compact) {
                             flow.select(plan)
                         }
                     }
@@ -228,6 +235,7 @@ private struct PlanCard: View {
     let selected: Bool
     let enabled: Bool
     var promotion: LaunchPromotion.Display? = nil
+    var compact = false
     let action: () -> Void
 
     var body: some View {
@@ -245,7 +253,7 @@ private struct PlanCard: View {
                     }
                 }
             }
-            .padding(.vertical, 14)
+            .padding(.vertical, compact ? 11 : 14)
             .padding(.horizontal, 16)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(selected ? RetroColor.wine : RetroColor.surface, in: RoundedRectangle(cornerRadius: RetroMetrics.Radius.card))
@@ -296,7 +304,11 @@ private struct PlanCard: View {
                 }
             }
         } else if let intro = offer.flatMap(PaywallCopy.introBadge) {
-            Badge(intro).fixedSize()
+            // One line where it fits; at the largest text sizes it wraps rather than running off the card.
+            ViewThatFits(in: .horizontal) {
+                Badge(intro).fixedSize()
+                Badge(intro).fixedSize(horizontal: false, vertical: true)
+            }
         } else if plan == .lifetime {
             Badge("BEST VALUE").fixedSize()
         }
@@ -314,23 +326,25 @@ private struct PlanCard: View {
     /// wraps internally: if it doesn't fit beside the plan text, the whole group moves below it.
     @ViewBuilder private var price: some View {
         if let offer {
-            // The crossed-out regular price sits clearly apart from the price being charged.
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                if let regular = promotion?.regularPrice ?? PaywallCopy.regularPriceStruck(offer) {
-                    Text(regular)
-                        .retroText(.body)
-                        .strikethrough(color: RetroColor.textMuted)
-                        .foregroundStyle(RetroColor.textMuted)
-                }
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(PaywallCopy.price(offer)).retroText(.price).foregroundStyle(RetroColor.text)
-                    if let unit = PaywallCopy.priceUnit(offer) {
-                        Text(unit).retroText(.finePrint).foregroundStyle(RetroColor.textMuted)
-                    }
+            let struck = (promotion?.regularPrice ?? PaywallCopy.regularPriceStruck(offer)).map {
+                Text($0).retroText(.body).strikethrough(color: RetroColor.textMuted).foregroundStyle(RetroColor.textMuted)
+            }
+            let charged = HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(PaywallCopy.price(offer)).retroText(.price).foregroundStyle(RetroColor.text)
+                if let unit = PaywallCopy.priceUnit(offer) {
+                    Text(unit).retroText(.finePrint).foregroundStyle(RetroColor.textMuted)
                 }
             }
-            .lineLimit(1)
-            .fixedSize()
+            // The crossed-out regular price sits clearly apart from the price being charged; at the
+            // largest text sizes it goes on the line above instead of pushing the card wider.
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: 10) { struck; charged }
+                    .lineLimit(1)
+                    .fixedSize()
+                VStack(alignment: .trailing, spacing: 2) { struck; charged }
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
         } else {
             ProgressView().tint(RetroColor.textMuted)
         }
