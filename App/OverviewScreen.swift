@@ -119,8 +119,9 @@ private struct KitIntroCard: View {
     }
 }
 
-/// MESSAGES · TECH · PLANS · JOURNAL, in one row where it fits, else two, else one per line.
-/// Decorative: the introduction above says the same in words.
+/// MESSAGES · TECH · PLANS · JOURNAL in a balanced grid: two equal columns, two rows (one column
+/// at text sizes where a chip won't fit in half the width). Decorative: the introduction above says
+/// the same in words.
 private struct TopicChips: View {
     private static let topics: [(symbol: String, title: String)] = [
         (RetroSymbol.communication, "MESSAGES"), (RetroSymbol.techBackup, "TECH"),
@@ -128,28 +129,57 @@ private struct TopicChips: View {
     ]
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 5) { chips(Self.topics) }
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 5) { chips(Array(Self.topics.prefix(2))) }
-                HStack(spacing: 5) { chips(Array(Self.topics.suffix(2))) }
+        TwoColumnGrid(spacing: 6) {
+            ForEach(Self.topics, id: \.title) { topic in
+                HStack(spacing: 4) {
+                    Image(systemName: topic.symbol).font(.system(size: 11, weight: .medium)).foregroundStyle(RetroColor.pink)
+                    Text(topic.title).retroText(.monoSmall).foregroundStyle(RetroColor.text)
+                }
+                .lineLimit(1)
+                .fixedSize()
+                .padding(.vertical, 7)
+                .padding(.horizontal, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(RetroColor.chip, in: Capsule())
             }
-            VStack(alignment: .leading, spacing: 6) { chips(Self.topics) }
         }
         .accessibilityHidden(true)
     }
+}
 
-    private func chips(_ topics: [(symbol: String, title: String)]) -> some View {
-        ForEach(topics, id: \.title) { topic in
-            HStack(spacing: 4) {
-                Image(systemName: topic.symbol).font(.system(size: 11, weight: .medium)).foregroundStyle(RetroColor.pink)
-                Text(topic.title).retroText(.monoSmall).foregroundStyle(RetroColor.text)
+/// Two equal-width columns filled row by row, the same gap across and down; a single column when
+/// the widest item doesn't fit in half the width.
+struct TwoColumnGrid: Layout {
+    var spacing: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let widest = subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
+        let width = proposal.width ?? 2 * widest + spacing
+        let rows = rows(width: width, subviews: subviews)
+        return CGSize(width: width, height: rows.reduce(0) { $0 + $1.height } + spacing * CGFloat(max(0, rows.count - 1)))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var y = bounds.minY
+        for row in rows(width: bounds.width, subviews: subviews) {
+            for (column, index) in row.indices.enumerated() {
+                let x = bounds.minX + CGFloat(column) * (row.columnWidth + spacing)
+                subviews[index].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(width: row.columnWidth, height: row.height))
             }
-            .lineLimit(1)
-            .fixedSize()
-            .padding(.vertical, 7)
-            .padding(.horizontal, 8)
-            .background(RetroColor.chip, in: Capsule())
+            y += row.height + spacing
+        }
+    }
+
+    private struct Row { let indices: [Int]; let columnWidth: CGFloat; let height: CGFloat }
+
+    private func rows(width: CGFloat, subviews: Subviews) -> [Row] {
+        let widest = subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
+        let columns = 2 * widest + spacing <= width ? 2 : 1
+        let columnWidth = (width - spacing * CGFloat(columns - 1)) / CGFloat(columns)
+        return stride(from: 0, to: subviews.count, by: columns).map { start in
+            let indices = Array(start..<min(start + columns, subviews.count))
+            let height = indices.map { subviews[$0].sizeThatFits(ProposedViewSize(width: columnWidth, height: nil)).height }.max() ?? 0
+            return Row(indices: indices, columnWidth: columnWidth, height: height)
         }
     }
 }
@@ -200,52 +230,29 @@ struct CountdownRow: View {
 }
 
 /// The approved "cosmic chaos" artwork, shown whole at its 2:1 proportions (so the girl, the
-/// tangled orbits and every icon stay in frame). The stage headline is live text in a dark band
-/// that blends into the artwork's night sky, overlapping only the empty top edge.
+/// tangled orbits and every icon stay in frame), with the stage headline as live text just above
+/// it: the whole headline stays clear of the header and the illustration at every text size.
 private struct HeroCard: View {
     let headline: String
-    /// Height of the dark band above the artwork; the headline dips just into the sky below it.
-    @ScaledMetric(relativeTo: .title) private var band: CGFloat = 60
-    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        if typeSize.isAccessibilitySize {
-            // Large text wraps the headline onto more lines than the band holds: put it above.
-            VStack(alignment: .leading, spacing: 8) {
-                headlineText
-                artwork
-            }
-        } else {
-            banded
+        VStack(alignment: .leading, spacing: 8) {
+            Text(headline)
+                .retroText(.hero)
+                .foregroundStyle(RetroColor.text)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+            Image("OverviewHero")
+                .resizable()
+                .aspectRatio(2, contentMode: .fit)
+                .frame(maxWidth: .infinity)
+                .overlay(alignment: .top) {
+                    // The artwork's top rows are already near the background colour; this removes the seam.
+                    LinearGradient(colors: [RetroColor.background, RetroColor.background.opacity(0)], startPoint: .top, endPoint: .bottom)
+                        .frame(height: 24)
+                }
+                .accessibilityHidden(true)
         }
-    }
-
-    private var headlineText: some View {
-        Text(headline)
-            .retroText(.hero)
-            .foregroundStyle(RetroColor.text)
-            .shadow(color: .black.opacity(0.5), radius: 8)
-            .accessibilityAddTraits(.isHeader)
-    }
-
-    private var artwork: some View {
-        Image("OverviewHero")
-            .resizable()
-            .aspectRatio(2, contentMode: .fit)
-            .frame(maxWidth: .infinity)
-            .accessibilityHidden(true)
-    }
-
-    private var banded: some View {
-        VStack(spacing: 0) {
-            Color.clear.frame(height: band)
-            artwork.overlay(alignment: .top) {
-                // The artwork's top rows are already near the background colour; this removes the seam.
-                LinearGradient(colors: [RetroColor.background, RetroColor.background.opacity(0)], startPoint: .top, endPoint: .bottom)
-                    .frame(height: 24)
-            }
-        }
-        .overlay(alignment: .topLeading) { headlineText }
     }
 }
 

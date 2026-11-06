@@ -98,11 +98,17 @@ import UIKit
         #expect(router.showsWidgetHowTo)
     }
 
-    @Test func spacingGrowsOnTallerScreensOnly() {
-        #expect(OverviewLayout.gapStretch(viewportHeight: 0) == 1) // not measured yet
-        #expect(OverviewLayout.gapStretch(viewportHeight: 580) == 1)
-        #expect(OverviewLayout.gapStretch(viewportHeight: 696) > 1.19 && OverviewLayout.gapStretch(viewportHeight: 696) < 1.21)
-        #expect(OverviewLayout.gapStretch(viewportHeight: 2000) == 1.5)
+    @Test func spareHeightIsSharedBetweenTheGaps() {
+        let gaps: [ClosedRange<CGFloat>] = [6...16, 12...16, 24...44, 16...31, 20...20] // 127 pt in Figma
+        #expect(OverviewLayout.gapHeights(gaps, spare: 127) == [16, 16, 44, 31, 20])
+        // Twice the room: every gap doubles, so the sections spread rather than bunch at the top.
+        #expect(OverviewLayout.gapHeights(gaps, spare: 254) == [32, 32, 88, 62, 40])
+        // Never more than three times Figma's spacing; the rest stays below.
+        #expect(OverviewLayout.gapHeights(gaps, spare: 2000) == [48, 48, 132, 93, 60])
+        // Short of room: gaps shrink evenly towards their minimums, never below.
+        let tight = OverviewLayout.gapHeights(gaps, spare: 102.5) // halfway between 78 and 127
+        #expect(tight == [11, 14, 34, 23.5, 20])
+        #expect(OverviewLayout.gapHeights(gaps, spare: 10) == [6, 12, 24, 16, 20])
     }
 
     @Test func dashboardOnlyAfterTheKitIsStarted() {

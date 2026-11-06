@@ -80,12 +80,19 @@ struct ShareInviteView: View {
     @Environment(SharingActivity.self) private var activity
     @Environment(\.dynamicTypeSize) private var typeSize
 
+    /// The sheet's visible size: the artwork's height follows its width, and spare height goes
+    /// around the artwork rather than under the button.
+    @State private var viewport: CGSize = .zero
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 SheetTitle("Invite someone who needs this", onClose: { dismiss() })
                     .padding(.horizontal, RetroMetrics.screenPadding)
-                    .padding(.bottom, 8)
+                // Spare height is shared between title → artwork, artwork → button and the bottom
+                // (each up to a limit), so the artwork sits balanced and the button lands lower on
+                // taller sheets. Short sheets and large text keep the minimums and scroll.
+                Spacer(minLength: 20).frame(maxHeight: 36)
                 // At accessibility sizes the line sits under the artwork rather than over it.
                 if typeSize.isAccessibilitySize {
                     artwork
@@ -95,6 +102,7 @@ struct ShareInviteView: View {
                         line.padding(.horizontal, 35).padding(.bottom, 40)
                     }
                 }
+                Spacer(minLength: 22).frame(maxHeight: 56)
                 VStack(spacing: 14) {
                     PrimaryButton("Share Retrograde", systemImage: RetroSymbol.share) {
                         ShareSheet.shareApp(recordingIn: activity)
@@ -105,11 +113,12 @@ struct ShareInviteView: View {
                         .multilineTextAlignment(.center)
                 }
                 .padding(.horizontal, RetroMetrics.screenPadding * 2)
-                .padding(.top, 22)
-                .padding(.bottom, 24)
+                Spacer(minLength: 24)
             }
             .padding(.top, 20)
+            .frame(minHeight: viewport.height, alignment: .top)
         }
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { viewport = $0 }
         .retroScreenBackground()
         .preferredColorScheme(.dark)
         #if DEBUG
@@ -117,12 +126,14 @@ struct ShareInviteView: View {
         #endif
     }
 
+    /// Figma's 382 × 530 pt artwork at the content width, never taller than 530 pt (wider sheets crop
+    /// its sides). A fixed height, so the spacing around it can't stretch or squash it.
     private var artwork: some View {
-        Image("ShareHero")
-            .resizable()
-            .aspectRatio(382.0 / 530.0, contentMode: .fill)
+        let width = viewport.width > 0 ? viewport.width - 2 * RetroMetrics.screenPadding : 342
+        return Color.clear
             .frame(maxWidth: .infinity)
-            .frame(maxHeight: 530)
+            .frame(height: min(530, width * 530 / 382))
+            .overlay { Image("ShareHero").resizable().aspectRatio(contentMode: .fill) }
             .clipped()
             .overlay(alignment: .bottom) {
                 LinearGradient(colors: [RetroColor.background.opacity(0), RetroColor.background.opacity(0.8)], startPoint: .top, endPoint: .bottom)

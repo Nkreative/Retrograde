@@ -156,6 +156,31 @@ public enum RetroTextStyle: CaseIterable, Sendable {
     }
 
     public var font: Font { .custom(postScriptName, size: size, relativeTo: scalesLike) }
+
+    /// Where the middle of the capital letters sits, as a fraction of the distance from the top of
+    /// the text to its first baseline. Same at every text size, so a big number and a sentence beside
+    /// it can be lined up on their visual centres (`VerticalAlignment.capMiddle`).
+    public var capMiddleFromTop: CGFloat {
+        let font = CTFontCreateWithName(postScriptName as CFString, size, nil)
+        let ascent = CTFontGetAscent(font)
+        return ascent > 0 ? 1 - CTFontGetCapHeight(font) / (2 * ascent) : 0.6
+    }
+}
+
+public extension VerticalAlignment {
+    private enum CapMiddle: AlignmentID {
+        static func defaultValue(in d: ViewDimensions) -> CGFloat { d[VerticalAlignment.center] }
+    }
+
+    /// The middle of a text's capital letters; set it with `.capMiddle(_:)`.
+    static let capMiddle = VerticalAlignment(CapMiddle.self)
+}
+
+public extension View {
+    /// Aligns this text on the middle of its capitals in a `HStack(alignment: .capMiddle)`.
+    func capMiddle(_ style: RetroTextStyle) -> some View {
+        alignmentGuide(.capMiddle) { $0[.firstTextBaseline] * style.capMiddleFromTop }
+    }
 }
 
 public extension View {

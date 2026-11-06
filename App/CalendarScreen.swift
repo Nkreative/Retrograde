@@ -284,26 +284,32 @@ private struct CalendarCard: View {
 }
 
 /// Yellow line under the free days in a row, labelled only on the row where the window starts.
+/// The label starts under the first free day and slides left (wrapping at the largest text sizes)
+/// rather than run past the grid's right edge.
 private struct FreeWindowMarker: View {
     let first: Int
     let last: Int
     let showsLabel: Bool
-    @ScaledMetric(relativeTo: .caption2) private var labelHeight: CGFloat = 19
+    /// The row's width, the same as the day grid's.
+    @State private var width: CGFloat = 0
 
     var body: some View {
-        GeometryReader { geo in
-            let cell = (geo.size.width - 4 * 6) / 7
-            let x = CGFloat(first) * (cell + 4)
-            let width = CGFloat(last - first + 1) * (cell + 4) - 4
-            VStack(alignment: .leading, spacing: 3) {
-                Capsule().fill(RetroColor.yellow).frame(width: width, height: 2)
-                if showsLabel {
-                    Text("FREE · TODAY + 3 DAYS").retroText(.monoTiny).foregroundStyle(RetroColor.yellow).fixedSize()
-                }
+        let rowWidth = width
+        let cell = max(0, (rowWidth - 4 * 6) / 7)
+        let x = CGFloat(first) * (cell + 4)
+        let lineWidth = max(0, CGFloat(last - first + 1) * (cell + 4) - 4)
+        VStack(alignment: .leading, spacing: 3) {
+            Capsule().fill(RetroColor.yellow).frame(width: lineWidth, height: 2).padding(.leading, x)
+            if showsLabel {
+                Text("FREE · TODAY + 3 DAYS")
+                    .retroText(.monoTiny)
+                    .foregroundStyle(RetroColor.yellow)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .alignmentGuide(.leading) { -min(x, max(0, rowWidth - $0.width)) }
             }
-            .offset(x: x)
         }
-        .frame(height: showsLabel ? labelHeight : 4)
+        .frame(maxWidth: .infinity, minHeight: showsLabel ? 0 : 4, alignment: .topLeading)
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         .accessibilityHidden(true)
     }
 }

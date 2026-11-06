@@ -31,57 +31,85 @@ struct OverviewDashboard: View {
         let today = CalendarDay(now, in: .autoupdatingCurrent)
         let progress = KitProgressSummary(kit: kit, done: completions.completedTaskIDs(in: KitCycle.id(at: now)), isPremium: premium.isPremium)
         let showsPill = OverviewLayout.showsWidgetPill(widgetPrompt)
-        let stretch = OverviewLayout.gapStretch(viewportHeight: viewportHeight)
-        // Each gap grows from its minimum to the Figma spacing as room allows (header 16, title 14,
-        // bars to card 44, cards 31, scaled up on taller screens); anything left over stays at the bottom. With large text the gaps
-        // stay at their minimums and the page scrolls.
-        VStack(alignment: .leading, spacing: 0) {
-            Gap(6...16, stretch: stretch)
+        // Figma's gaps (header 16, title 16, bars to card 44, cards 31, bottom 20) are the starting
+        // point. Spare height under the header is shared out between them in proportion, so the
+        // sections spread across any phone instead of bunching at the top; when room is short (or
+        // the text is large) they shrink to their minimums and the page scrolls.
+        DashboardStack(targetHeight: viewportHeight) {
+            Gap(6...16)
             Text("Today")
                 .retroText(.cardTitle)
                 .foregroundStyle(RetroColor.text)
                 .accessibilityAddTraits(.isHeader)
-            Gap(12...16, stretch: stretch)
+            Gap(12...16)
             if let status, let copy = OverviewCopy.for(status.planet, status.stage) {
                 CycleSection(status: status, copy: copy, kit: progress) { router.open(overview: .survivalKit) }
             } else {
                 MissingSkyData(padded: false)
             }
             if showsPill {
-                Gap(2...8, stretch: stretch)
+                Gap(2...8)
                 HStack {
                     Spacer()
                     PillButton("ADD WIDGET", systemImage: RetroSymbol.add) { router.open(overview: .widgetHowTo) }
                         .accessibilityHint("Shows how to add the widget")
                 }
-                Gap(4...14, stretch: stretch)
+                Gap(4...14)
             } else {
-                Gap(24...44, stretch: stretch)
+                Gap(24...44)
             }
             if let today = OverviewToday.make(today: today) {
                 IntensityCard(today: today) { router.open(overview: .today(today.day)) }
-                Gap(16...31, stretch: stretch)
+                Gap(16...31)
             }
             SharingCard(summary: SharingSummary(finishedShares: sharing.records.count)) { router.open(overview: .shareInvite) }
-            Spacer(minLength: 20)
+            Gap(20...20)
         }
-        .frame(minHeight: viewportHeight, alignment: .top)
         .padding(.horizontal, RetroMetrics.screenPadding)
     }
 }
 
-/// A vertical gap that takes as much of the spare height as it may, between `range`'s bounds.
+/// A vertical gap in a `DashboardStack`: never shorter than its lower bound; its upper bound is
+/// Figma's spacing, the share it grows from when there's room to spare.
 private struct Gap: View {
     let range: ClosedRange<CGFloat>
-    let stretch: CGFloat
 
-    init(_ range: ClosedRange<CGFloat>, stretch: CGFloat) {
-        self.range = range
-        self.stretch = stretch
-    }
+    init(_ range: ClosedRange<CGFloat>) { self.range = range }
 
     var body: some View {
-        Spacer(minLength: range.lowerBound).frame(maxHeight: range.upperBound * stretch)
+        Color.clear.layoutValue(key: GapRange.self, value: range)
+    }
+}
+
+private struct GapRange: LayoutValueKey {
+    static let defaultValue: ClosedRange<CGFloat>? = nil
+}
+
+/// Stacks its children top to bottom at full width, sizing the `Gap`s so the stack fills
+/// `targetHeight` where it can (see `OverviewLayout.gapHeights`).
+private struct DashboardStack: Layout {
+    let targetHeight: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? 0
+        return CGSize(width: width, height: heights(width: width, subviews: subviews).reduce(0, +))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var y = bounds.minY
+        for (subview, height) in zip(subviews, heights(width: bounds.width, subviews: subviews)) {
+            subview.place(at: CGPoint(x: bounds.minX, y: y), proposal: ProposedViewSize(width: bounds.width, height: height))
+            y += height
+        }
+    }
+
+    private func heights(width: CGFloat, subviews: Subviews) -> [CGFloat] {
+        var heights = subviews.map { $0[GapRange.self] == nil ? $0.sizeThatFits(ProposedViewSize(width: width, height: nil)).height : 0 }
+        let gaps = subviews.indices.compactMap { i in subviews[i][GapRange.self].map { (i, $0) } }
+        // Not measured yet: Figma's spacing.
+        let spare = targetHeight > 0 ? targetHeight - heights.reduce(0, +) : gaps.reduce(0) { $0 + $1.1.upperBound }
+        for (gap, height) in zip(gaps, OverviewLayout.gapHeights(gaps.map(\.1), spare: spare)) { heights[gap.0] = height }
+        return heights
     }
 }
 
@@ -90,10 +118,19 @@ enum OverviewLayout {
     /// The Add Widget pill shows while iOS reports no Retrograde widget (best effort; see `WidgetPrompt`).
     @MainActor static func showsWidgetPill(_ prompt: WidgetPrompt) -> Bool { prompt.offersWidget }
 
-    /// How much the gaps may grow beyond Figma's spacing: 1 on the 17e-sized screen Figma was drawn
-    /// for (580 pt between header and tab bar), more on taller ones, never less.
-    static func gapStretch(viewportHeight: CGFloat) -> CGFloat {
-        min(max(viewportHeight / 580, 1), 1.5)
+    /// Gap heights for `spare` points of room. With at least Figma's spacing to spare, every gap
+    /// grows from its Figma value (upper bound) in proportion, up to `maxStretch` times it, so the
+    /// sections spread evenly down the screen; with less, gaps shrink evenly towards their minimums
+    /// (lower bounds) and never below them.
+    static func gapHeights(_ gaps: [ClosedRange<CGFloat>], spare: CGFloat, maxStretch: CGFloat = 3) -> [CGFloat] {
+        let ideal = gaps.reduce(0) { $0 + $1.upperBound }, least = gaps.reduce(0) { $0 + $1.lowerBound }
+        if spare >= ideal {
+            let factor = ideal > 0 ? min(spare / ideal, maxStretch) : 1
+            return gaps.map { $0.upperBound * factor }
+        }
+        guard spare > least else { return gaps.map(\.lowerBound) }
+        let t = (spare - least) / (ideal - least)
+        return gaps.map { $0.lowerBound + ($0.upperBound - $0.lowerBound) * t }
     }
 }
 
@@ -278,14 +315,8 @@ private struct SharingCard: View {
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: RetroMetrics.Radius.panel)
         Button(action: action) {
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                // Number and sentence are one text, so they share a single baseline whatever the
-                // count's length. One line (shrinking slightly on narrow phones if it must); wraps
-                // only at the largest text sizes.
-                SharingLine(summary: summary)
-                    .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
-                    .minimumScaleFactor(0.85)
-                    .fixedSize(horizontal: false, vertical: typeSize.isAccessibilitySize)
+            HStack(alignment: .center, spacing: 4) {
+                SharingLine(summary: summary, wraps: typeSize.isAccessibilitySize)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Chevron()
             }
@@ -306,14 +337,29 @@ private struct SharingCard: View {
     }
 }
 
-/// "12  times you’ve shared Retrograde": the big yellow count and the sentence in one text.
+/// "12  times you’ve shared Retrograde": the big yellow count with the sentence centred on it (on
+/// the middle of their capitals, so one or two digits line up the same way).
 private struct SharingLine: View {
     let summary: SharingSummary
+    /// Largest text sizes: the sentence wraps; otherwise one line, shrinking slightly on narrow phones if it must.
+    let wraps: Bool
 
     var body: some View {
-        let sentence = Text(summary.message).font(RetroTextStyle.bodyStrong.font).foregroundColor(RetroColor.text)
+        let sentence = Text(summary.message)
+            .retroText(.bodyStrong)
+            .foregroundStyle(RetroColor.text)
+            .lineLimit(wraps ? nil : 1)
+            .minimumScaleFactor(0.85)
+            .fixedSize(horizontal: false, vertical: wraps)
         if let count = summary.count {
-            Text(count).font(RetroTextStyle.display.font).foregroundColor(RetroColor.yellow) + Text("  ").font(RetroTextStyle.bodyStrong.font) + sentence
+            HStack(alignment: .capMiddle, spacing: 10) {
+                Text(count)
+                    .retroText(.display)
+                    .foregroundStyle(RetroColor.yellow)
+                    .fixedSize()
+                    .capMiddle(.display)
+                sentence.capMiddle(.bodyStrong)
+            }
         } else {
             sentence
         }

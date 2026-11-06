@@ -2,6 +2,13 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-06 (M15 iPhone QA: four screens)
+
+- **Overview A:** the four topic pills form a two-column grid (equal columns, 6 pt gaps both ways; one column only at text sizes where a pill won't fit half the width). The stage headline sits above the artwork instead of overlapping its top edge.
+- **Overview B:** spare height under the header is shared between the gaps in proportion to Figma's spacing (up to three times it), so the sections spread down any phone; short screens and large text shrink the gaps to their minimums and scroll. The sharing count and its sentence are centred on each other (middle of the capitals), for any number of digits.
+- **Calendar:** "FREE · TODAY + 3 DAYS" starts under the first free day and slides left, or wraps at the largest text sizes, so it stays inside the grid.
+- **Share invite:** more room under the title, the artwork balanced in the sheet and the button lower; spare height is shared between those gaps, each with a limit; large text scrolls.
+
 ## 2026-11-06 (M15 promotion strategy)
 
 - **Two Lifetime promotions, one price:** regular $19.99, promotional $9.99, in two independent periods: the launch (14 calendar days from the public release, once `LaunchPromotion.launch.start` is set) and Mercury (the 7 calendar days before every Mercury direct station, worked out from the bundled ephemeris, midnight to midnight Pacific to match App Store Connect's schedule). Overlapping or back-to-back periods merge into one: one price, no extra discount, ending when the regular price returns. Yearly unchanged ($6.99 first year, then $9.99).
