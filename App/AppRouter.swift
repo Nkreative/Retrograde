@@ -52,6 +52,16 @@ final class AppRouter {
         showsWidgetHowTo = false
     }
 
+    /// Where the Overview dashboard's tappable areas lead.
+    func open(overview destination: OverviewDestination) {
+        switch destination {
+        case .survivalKit: openKit()
+        case let .today(day): openCalendar(on: day)
+        case .shareInvite: openShareInvite()
+        case .widgetHowTo: openWidgetHowTo()
+        }
+    }
+
     /// The Survival Kit tab, opened at a task.
     func openKit(at task: KitTask? = nil) {
         tab = .survivalKit
@@ -84,4 +94,14 @@ final class AppRouter {
             tab = .survivalKit
         }
     }
+}
+
+/// The Overview dashboard's tappable areas (M13.1): the countdown and bars, today's intensity card,
+/// the sharing card and the Add Widget pill.
+enum OverviewDestination: Equatable {
+    case survivalKit
+    /// The Calendar with this day (today) selected.
+    case today(CalendarDay)
+    case shareInvite
+    case widgetHowTo
 }

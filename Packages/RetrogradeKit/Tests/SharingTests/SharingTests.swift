@@ -132,3 +132,36 @@ private let enUS = Locale(identifier: "en_US")
         #expect(activity.records.first?.sharedAt == at + 5)
     }
 }
+
+@MainActor
+@Suite struct SharingSummaryTests {
+    @Test func countsFinishedShares() {
+        #expect(SharingSummary(finishedShares: 12) == SharingSummary(finishedShares: 12))
+        #expect(SharingSummary(finishedShares: 12).count == "12" && SharingSummary(finishedShares: 12).message == "times you’ve shared Retrograde")
+        #expect(SharingSummary(finishedShares: 1).count == "1" && SharingSummary(finishedShares: 1).message == "time you’ve shared Retrograde")
+        #expect(SharingSummary(finishedShares: 12).spoken == "12 times you’ve shared Retrograde.")
+    }
+
+    @Test func noCountBeforeTheFirstShare() {
+        let none = SharingSummary(finishedShares: 0)
+        #expect(none.count == nil && none.message == "Invite someone who needs this.")
+    }
+
+    @Test func neverClaimsToKnowRecipients() {
+        for n in [0, 1, 2, 12, 200] {
+            let s = SharingSummary(finishedShares: n)
+            for word in ["helped", "messaged", "people", "friends", "received", "reached", "sent to"] {
+                #expect(!s.message.localizedCaseInsensitiveContains(word), "\(n): \(s.message)")
+                #expect(!s.spoken.localizedCaseInsensitiveContains(word), "\(n): \(s.spoken)")
+            }
+        }
+    }
+
+    @Test func countsOnlyCompletedShares() {
+        let activity = SharingActivity(defaults: nil)
+        activity.shareSheetFinished(.app, completed: false) // opened, then cancelled
+        #expect(SharingSummary(finishedShares: activity.records.count).count == nil)
+        activity.shareSheetFinished(.app, completed: true)
+        #expect(SharingSummary(finishedShares: activity.records.count).count == "1")
+    }
+}

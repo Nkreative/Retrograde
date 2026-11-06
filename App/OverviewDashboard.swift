@@ -1,478 +1,353 @@
 import DesignSystem
 import Editorial
 import Entitlements
-import HomeWidget
 import Persistence
 import RetroCore
 import Sharing
 import SurvivalKit
 import SwiftUI
 
-/// The Overview once the Survival Kit is started (approved M13.1 Figma, State B): a compact Mercury
-/// card, then the person's kit progress, today's Calendar read and their recent shares, and a
-/// dismissible widget tip. Every section reads the same data as its own tab.
+/// The Overview once the Survival Kit is started (State B; approved M13.1 Figma, the Calm, Mild,
+/// Elevated and Intense frames): "Today", Mercury's countdown with the cycle and Survival Kit bars,
+/// the Add Widget pill while iOS lists no Retrograde widget, today's intensity card and the sharing
+/// card. Every number and sentence comes from the same data as the other tabs.
 struct OverviewDashboard: View {
     let now: Date
     /// Nil outside the verified data.
     let status: CycleStatus?
     @Environment(CompletionStore.self) private var completions
     @Environment(EntitlementStore.self) private var premium
-    @Environment(PaywallPresenter.self) private var paywall
     @Environment(AppRouter.self) private var router
     @Environment(SharingActivity.self) private var sharing
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// Hidden while iOS lists a widget, or after ✕; Settings › Widgets keeps the how-to.
     @Environment(WidgetPrompt.self) private var widgetPrompt
-    /// Today's card, previewed for sharing from the empty sharing section.
-    @State private var sharingCard: InsightShareCard?
 
     private let kit = SurvivalKit.for(.mercury)!
 
     var body: some View {
         let today = CalendarDay(now, in: .autoupdatingCurrent)
-        let cycleID = KitCycle.id(at: now)
-        let progress = KitProgressSummary(kit: kit, done: completions.completedTaskIDs(in: cycleID), isPremium: premium.isPremium)
-        // Today is always in the free window, so its details are always unlocked.
-        let todayContent = SkyData.intensity().flatMap {
-            DayDetailContent.make(day: today, today: today, isPremium: premium.isPremium, policy: .launch, intensity: $0)
-        }
-        VStack(alignment: .leading, spacing: RetroMetrics.sectionSpacing) {
-            if let status, let content = WidgetContent(status: status) {
-                MercuryStatusCard(status: status, content: content)
+        let progress = KitProgressSummary(kit: kit, done: completions.completedTaskIDs(in: KitCycle.id(at: now)), isPremium: premium.isPremium)
+        let showsPill = OverviewLayout.showsWidgetPill(widgetPrompt)
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Today")
+                .retroText(.cardTitle)
+                .foregroundStyle(RetroColor.text)
+                .accessibilityAddTraits(.isHeader)
+            if let status, let copy = OverviewCopy.for(status.planet, status.stage) {
+                CycleSection(status: status, copy: copy, kit: progress) { router.open(overview: .survivalKit) }
+                    .padding(.top, 12)
             } else {
-                MissingSkyData(padded: false)
+                MissingSkyData(padded: false).padding(.top, 12)
             }
-            DashboardSection("YOUR SURVIVAL KIT", detail: "THIS CYCLE") {
-                KitCard(
-                    progress: progress,
-                    // A new retrograde has reset the kit; earlier cycles' ticks are still saved.
-                    isNewCycle: progress.done == 0 && completions.hasCompletions(outside: cycleID),
-                    onOpenTask: { router.openKit(at: $0) },
-                    onOpenKit: { router.openKit() },
-                    onUnlock: paywall.present
-                )
-            }
-            .id("kit")
-            if let todayContent, case let .unlocked(insight, _) = todayContent.details {
-                DashboardSection("TODAY", detail: today.mediumTitle.uppercased()) {
-                    TodayCard(level: todayContent.level, insight: insight) { router.openCalendar(on: today) }
+            if showsPill {
+                HStack {
+                    Spacer()
+                    PillButton("ADD WIDGET", systemImage: RetroSymbol.add) { router.open(overview: .widgetHowTo) }
+                        .accessibilityHint("Shows how to add the widget")
                 }
-                .id("today")
+                .padding(.top, 2)
             }
-            DashboardSection("YOUR SHARING", detail: "ON THIS IPHONE") {
-                SharingCard(
-                    records: sharing.recent(3), today: today,
-                    todayCard: todayContent.flatMap(InsightShareCard.init),
-                    onOpenDay: { router.openCalendar(on: $0) },
-                    onShareCard: { sharingCard = $0 },
-                    onShareApp: { ShareSheet.shareApp(recordingIn: sharing) }
-                )
-            }
-            .id("sharing")
-            if widgetPrompt.showsTip {
-                WidgetTip(onOpen: router.openWidgetHowTo) {
-                    withAnimation(reduceMotion ? nil : .easeOut(duration: 0.25)) { widgetPrompt.dismissTip() }
+            VStack(spacing: 16) {
+                if let today = OverviewToday.make(today: today) {
+                    IntensityCard(today: today) { router.open(overview: .today(today.day)) }
                 }
-                .transition(.opacity)
+                SharingCard(summary: SharingSummary(finishedShares: sharing.records.count)) { router.open(overview: .shareInvite) }
             }
+            .padding(.top, showsPill ? 6 : 24)
         }
         .padding(.horizontal, RetroMetrics.screenPadding)
         .padding(.top, 6)
         .padding(.bottom, 20)
-        .sheet(item: $sharingCard) { InsightSharePreview(card: $0) }
     }
 }
 
-/// "YOUR SURVIVAL KIT ········ THIS CYCLE" above a section's card.
-private struct DashboardSection<Content: View>: View {
-    let title: String
-    let detail: String
-    @ViewBuilder let content: Content
+/// Small rules the dashboard follows, kept apart so they can be tested.
+enum OverviewLayout {
+    /// The Add Widget pill shows while iOS reports no Retrograde widget (best effort; see `WidgetPrompt`).
+    @MainActor static func showsWidgetPill(_ prompt: WidgetPrompt) -> Bool { prompt.offersWidget }
+}
 
-    init(_ title: String, detail: String, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.detail = detail
-        self.content = content()
-    }
+/// Which Overview the person sees: the kit introduction until they start the Survival Kit, then
+/// the dashboard for good (new cycles included).
+enum OverviewMode: Equatable {
+    case introduction, dashboard
 
-    var body: some View {
-        let titleText = Text(title).retroText(.mono).foregroundStyle(RetroColor.text)
-        let detailText = Text(detail).retroText(.monoSmall).foregroundStyle(RetroColor.textMuted)
-        VStack(alignment: .leading, spacing: 10) {
-            // One row where it fits; with large text, the detail under the title.
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    titleText
-                    Spacer(minLength: 8)
-                    detailText
-                }
-                .lineLimit(1)
-                VStack(alignment: .leading, spacing: 2) {
-                    titleText
-                    detailText
-                }
-            }
-            .accessibilityElement(children: .combine)
-            .accessibilityAddTraits(.isHeader)
-            content
-        }
+    init(kitStarted: Bool) {
+        self = kitStarted ? .dashboard : .introduction
     }
 }
 
-// MARK: - Mercury
+/// Today's level and explanation for the intensity card, from the same daily data as the Calendar.
+/// Today is always in the free window, so it's always unlocked; nil outside the verified data.
+struct OverviewToday: Equatable {
+    let day: CalendarDay
+    let level: IntensityLevel
+    let summary: String
 
-/// "MERCURY RETROGRADE · DAY 12 / 21", the countdown, where the stage ends, and its bar: the
-/// Overview's tracker in the widget's words.
-private struct MercuryStatusCard: View {
+    @MainActor static func make(today: CalendarDay, intensity: IntensityCalculator? = SkyData.intensity()) -> OverviewToday? {
+        guard let intensity,
+              let content = DayDetailContent.make(day: today, today: today, isPremium: false, policy: .launch, intensity: intensity),
+              case let .unlocked(insight, _) = content.details
+        else { return nil }
+        return OverviewToday(day: today, level: content.level, summary: insight.summary)
+    }
+}
+
+// MARK: - Mercury cycle
+
+/// The countdown, where Mercury is in this stage (pink) and how much of the Survival Kit is done
+/// (yellow). One button: it opens the Survival Kit.
+private struct CycleSection: View {
     let status: CycleStatus
-    let content: WidgetContent
-
-    var body: some View {
-        let dayLabel = OverviewCopy.for(status.planet, status.stage)?.dayLabel(day: status.day, of: status.totalDays)
-        let endDay = CalendarDay(status.countdownTarget, in: .autoupdatingCurrent)
-        let ends = "\(content.trailing.capitalized) \(endDay.shortTitle)"
-        let countdown = HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text(content.countdown).retroText(.display).foregroundStyle(RetroColor.yellow)
-            Text(content.countdownText).retroText(.monoLarge).foregroundStyle(RetroColor.text)
-        }
-        let endLabel = Text(ends).retroText(.monoSmall).foregroundStyle(RetroColor.textMuted)
-        let phase = Text("\(content.planetName) \(content.phaseName)").retroText(.monoSmall).foregroundStyle(content.stage.accent)
-        let day = dayLabel.map { Text($0).retroText(.monoSmall).foregroundStyle(RetroColor.textMuted) }
-        // Figma's two rows where they fit; with large text each label drops onto its own line.
-        VStack(alignment: .leading, spacing: 12) {
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    phase
-                    Spacer(minLength: 8)
-                    day
-                }
-                .lineLimit(1)
-                VStack(alignment: .leading, spacing: 2) {
-                    phase
-                    day
-                }
-            }
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .firstTextBaseline) {
-                    countdown
-                    Spacer(minLength: 12)
-                    endLabel
-                }
-                .lineLimit(1)
-                VStack(alignment: .leading, spacing: 4) {
-                    countdown
-                    endLabel
-                }
-            }
-            CycleProgressBar(progress: content.progress, fill: content.stage.accent, marker: nil)
-        }
-        .retroCard()
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(content.accessibilityLabel) \(content.trailing.capitalized) on \(endDay.spokenDate).")
-    }
-}
-
-// MARK: - Survival Kit
-
-private struct KitCard: View {
-    let progress: KitProgressSummary
-    let isNewCycle: Bool
-    let onOpenTask: (KitTask) -> Void
-    let onOpenKit: () -> Void
-    let onUnlock: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text("\(progress.done)").retroText(.display).foregroundStyle(RetroColor.text)
-                    Text("of \(progress.total) done").retroText(.monoLarge).foregroundStyle(RetroColor.text)
-                    Spacer(minLength: 8)
-                    Text("\(progress.percent)%").retroText(.monoSmall).foregroundStyle(RetroColor.textMuted)
-                }
-                .lineLimit(1)
-                CycleProgressBar(progress: progress.fraction, marker: nil)
-            }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(progress.done) of \(progress.total) tasks done this cycle")
-            .accessibilityValue("\(progress.percent) percent")
-
-            switch progress.state {
-            case .inProgress:
-                if let task = progress.nextTask, let section = progress.nextSection {
-                    NextUpRow(task: task, section: section) { onOpenTask(task) }
-                }
-                PrimaryButton("Continue Survival Kit", systemImage: RetroSymbol.firstAid, layout: .leading, showsArrow: true) {
-                    if let task = progress.nextTask { onOpenTask(task) } else { onOpenKit() }
-                }
-                .accessibilityHint("Opens the next task")
-                if isNewCycle {
-                    Note(symbol: RetroSymbol.newCycle, text: "New cycle, fresh kit. Your past cycles stay saved.")
-                } else if progress.lockedCount > 0 {
-                    Button(action: onUnlock) {
-                        Note(symbol: RetroSymbol.lock, text: "\(progress.freeTasksLeft) free \(progress.freeTasksLeft == 1 ? "task" : "tasks") left · \(progress.lockedCount) more in Premium")
-                            .frame(minHeight: 44)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.vertical, -10) // the 44 pt tap area overhangs the card's spacing
-                    .accessibilityHint("Shows Premium")
-                }
-            case .freeTasksDone:
-                Text("Every free task is done. Nice work.").retroText(.body).foregroundStyle(RetroColor.text)
-                PrimaryButton("Unlock \(progress.lockedCount) more tasks", systemImage: RetroSymbol.star, layout: .leading, showsArrow: true, action: onUnlock)
-                    .accessibilityHint("Shows Premium")
-                TextLink("Open Survival Kit", action: onOpenKit)
-            case .allDone:
-                PrimaryButton("Done for this cycle", systemImage: RetroSymbol.checkCircle, style: .completed) {}
-                    .allowsHitTesting(false)
-                Note(symbol: RetroSymbol.moon, text: "The next kit arrives with Mercury’s next retrograde.")
-            }
-        }
-        .retroCard()
-    }
-}
-
-/// The next task the person can open, as a tappable row.
-private struct NextUpRow: View {
-    let task: KitTask
-    let section: KitSection
+    let copy: OverviewCopy
+    let kit: KitProgressSummary
     let action: () -> Void
 
     var body: some View {
+        let tasks = kit.done == 1 ? "1 task done" : "\(kit.done) tasks done"
         Button(action: action) {
-            HStack(spacing: 12) {
-                TaskCheckbox(.open)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("NEXT UP · \(section.category)").retroText(.monoSmall).foregroundStyle(RetroColor.textMuted)
-                    Text(task.title).retroText(.body).foregroundStyle(RetroColor.text)
+            VStack(alignment: .leading, spacing: 12) {
+                CountdownRow(status: status, copy: copy)
+                VStack(spacing: 7) {
+                    MarkerLabels(progress: status.progress, start: copy.barStart, current: "YOU ARE HERE", end: copy.barEnd, currentColor: RetroColor.pink)
+                    CycleProgressBar(progress: status.progress, marker: RetroColor.pink, markerSize: 9)
+                    CycleProgressBar(progress: kit.fraction, fill: RetroColor.yellow, marker: RetroColor.yellow, markerSize: 9)
+                    // Spread across the bar as in Figma; with large text the count goes on its own line.
+                    ViewThatFits(in: .horizontal) {
+                        HStack {
+                            Text("CONFUSED").foregroundStyle(RetroColor.textMuted)
+                            Spacer(minLength: 8)
+                            Text(tasks).foregroundStyle(RetroColor.yellow)
+                            Spacer(minLength: 8)
+                            Text("SURVIVED").foregroundStyle(RetroColor.textMuted)
+                        }
+                        VStack(spacing: 4) {
+                            Text(tasks).foregroundStyle(RetroColor.yellow)
+                            HStack {
+                                Text("CONFUSED")
+                                Spacer(minLength: 8)
+                                Text("SURVIVED")
+                            }
+                            .foregroundStyle(RetroColor.textMuted)
+                        }
+                    }
+                    .retroText(.monoSmall)
+                    .lineLimit(1)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(12)
-            .frame(minHeight: 44)
-            .background(RetroColor.background, in: RoundedRectangle(cornerRadius: 10))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Next up, \(section.category.capitalized): \(task.title)")
-        .accessibilityHint("Opens the task")
+        .accessibilityLabel(spokenStatus(tasks: tasks))
+        .accessibilityHint("Opens the Survival Kit")
+        .accessibilityAddTraits(.isButton)
+    }
+
+    private func spokenStatus(tasks: String) -> String {
+        let days = status.daysUntilTarget
+        let countdown = days == 0 ? "Today, \(copy.countdownToday)" : "\(days) \(copy.countdownUnit(for: days))"
+        let day = copy.dayLabel(day: status.day, of: status.totalDays).map { ", " + $0.capitalized.replacingOccurrences(of: " / ", with: " of ") } ?? ""
+        return "\(countdown)\(day). Survival Kit: \(tasks), \(kit.done) of \(kit.total)."
+    }
+}
+
+// MARK: - Intensity
+
+/// Today's level, the four-step scale and the day's explanation over Mercury, whose size, glow and
+/// orbit rings grow with the level. One button: it opens today in the Calendar.
+private struct IntensityCard: View {
+    let today: OverviewToday
+    let action: () -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: RetroMetrics.Radius.panel)
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(DailyInsightCopy.levelName(today.level))
+                        .retroText(.breathCount)
+                        .foregroundStyle(RetroColor.text)
+                    Spacer(minLength: 8)
+                    Chevron()
+                }
+                IntensityScale(level: today.level)
+                Text(today.summary)
+                    .retroText(.body)
+                    .foregroundStyle(RetroColor.text)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(17)
+            .frame(maxWidth: .infinity, minHeight: 219, alignment: .topLeading)
+            .background(alignment: .bottomTrailing) {
+                // Behind large text the planet steps back so the words stay readable.
+                IntensityArtworkView(artwork: .for(today.level))
+                    .opacity(typeSize.isAccessibilitySize ? 0.35 : 1)
+            }
+            .background(RetroColor.surfaceRaised)
+            .clipShape(shape)
+            .overlay(shape.strokeBorder(RetroColor.line, lineWidth: 1))
+            .contentShape(shape)
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Today’s intensity: \(DailyInsightCopy.levelName(today.level)), \(today.level.rawValue) of 4. \(today.summary)")
+        .accessibilityHint("Opens today in the Calendar")
         .accessibilityAddTraits(.isButton)
     }
 }
 
-// MARK: - Today
-
-/// Today's read from the Calendar: level, summary and good habit, in the Calendar's own views.
-private struct TodayCard: View {
+/// Four bars, filled up to the level in the Calendar's step colours.
+private struct IntensityScale: View {
     let level: IntensityLevel
-    let insight: DailyInsight
-    let onOpenCalendar: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            IntensityPanel(level: level, summary: insight.summary, framed: false)
-            HabitCard(habit: insight.habit)
-            TextLink("Open today in Calendar", action: onOpenCalendar)
-                .accessibilityHint("Shows today’s full read")
+        HStack(spacing: 5) {
+            ForEach(IntensityLevel.allCases, id: \.self) { step in
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(step <= level ? IntensityPanel.stepColors[step.rawValue - 1] : RetroColor.dim)
+                    .frame(height: 8)
+            }
         }
-        .retroCard()
+        .accessibilityHidden(true)
+    }
+}
+
+/// How the intensity card's artwork looks at each level. The composition stays the same — Mercury
+/// rising from the card's lower right — and grows with the level: the planet (the approved Figma
+/// art, `IntensityCalm` … `IntensityIntense`, exported at the Figma card size), a soft glow behind it
+/// and faint orbit rings around it.
+struct IntensityArtwork: Equatable {
+    /// The planet as placed in the approved frame, 342 × 219 pt, transparent around it.
+    let image: String
+    /// The planet's centre and diameter in the 342 × 219 pt card (for the glow and rings).
+    let centre: CGPoint
+    let diameter: CGFloat
+    let glowOpacity: Double
+    let ringCount: Int
+    let ringOpacity: Double
+    let tint: Color
+
+    static let canvas = CGSize(width: 342, height: 219)
+
+    static func `for`(_ level: IntensityLevel) -> IntensityArtwork {
+        switch level {
+        case .calm:
+            IntensityArtwork(image: "IntensityCalm", centre: CGPoint(x: 322, y: 196), diameter: 69, glowOpacity: 0.16, ringCount: 1, ringOpacity: 0.16, tint: RetroColor.mauve)
+        case .mild:
+            IntensityArtwork(image: "IntensityMild", centre: CGPoint(x: 239, y: 204), diameter: 118, glowOpacity: 0.22, ringCount: 2, ringOpacity: 0.2, tint: RetroColor.mauve)
+        case .elevated:
+            IntensityArtwork(image: "IntensityElevated", centre: CGPoint(x: 279, y: 205), diameter: 156, glowOpacity: 0.3, ringCount: 3, ringOpacity: 0.26, tint: RetroColor.pinkSoft)
+        case .intense:
+            IntensityArtwork(image: "IntensityIntense", centre: CGPoint(x: 224, y: 270), diameter: 283, glowOpacity: 0.38, ringCount: 4, ringOpacity: 0.3, tint: RetroColor.pink)
+        }
+    }
+}
+
+/// Glow, rings and planet in the Figma card's coordinates, pinned to the card's lower right so a
+/// wider card keeps the same corner composition. Static: no animation.
+private struct IntensityArtworkView: View {
+    let artwork: IntensityArtwork
+
+    var body: some View {
+        let size = IntensityArtwork.canvas
+        ZStack(alignment: .topLeading) {
+            Circle()
+                .fill(RadialGradient(colors: [artwork.tint.opacity(artwork.glowOpacity), .clear], center: .center, startRadius: 0, endRadius: artwork.diameter))
+                .frame(width: artwork.diameter * 2, height: artwork.diameter * 2)
+                .offset(x: artwork.centre.x - artwork.diameter, y: artwork.centre.y - artwork.diameter)
+            ForEach(0..<artwork.ringCount, id: \.self) { ring in
+                let d = artwork.diameter * (1.25 + 0.25 * CGFloat(ring))
+                Circle()
+                    .strokeBorder(artwork.tint.opacity(artwork.ringOpacity * (1 - 0.18 * Double(ring))), lineWidth: 1)
+                    .frame(width: d, height: d)
+                    .offset(x: artwork.centre.x - d / 2, y: artwork.centre.y - d / 2)
+            }
+            Image(artwork.image)
+                .resizable()
+                .frame(width: size.width, height: size.height)
+        }
+        .frame(width: size.width, height: size.height, alignment: .topLeading)
+        .accessibilityHidden(true)
     }
 }
 
 // MARK: - Sharing
 
-/// The latest finished shares, newest first: a day's card opens that day; an app invitation is
-/// listed only. No recipients or destination apps: iOS doesn't tell Retrograde.
+/// "12 times you’ve shared Retrograde" over a small constellation. One button: it opens the Share screen.
 private struct SharingCard: View {
-    let records: [ShareRecord]
-    let today: CalendarDay
-    /// Nil outside the verified data.
-    let todayCard: InsightShareCard?
-    let onOpenDay: (CalendarDay) -> Void
-    let onShareCard: (InsightShareCard) -> Void
-    let onShareApp: () -> Void
-
-    var body: some View {
-        if records.isEmpty {
-            empty
-        } else {
-            VStack(alignment: .leading, spacing: 10) {
-                VStack(spacing: 0) {
-                    ForEach(Array(records.enumerated()), id: \.offset) { index, record in
-                        row(record)
-                            .overlay(alignment: .top) {
-                                if index > 0 { RetroColor.line.frame(height: 1) }
-                            }
-                    }
-                }
-                .padding(.horizontal, RetroMetrics.cardPadding)
-                .padding(.vertical, 4)
-                .frame(maxWidth: .infinity)
-                .background(RetroColor.surface, in: RoundedRectangle(cornerRadius: RetroMetrics.Radius.card))
-                .overlay(RoundedRectangle(cornerRadius: RetroMetrics.Radius.card).strokeBorder(RetroColor.line, lineWidth: 1))
-                Text("Only shares you finished are listed. iOS doesn’t tell Retrograde who received them.")
-                    .retroText(.finePrint)
-                    .foregroundStyle(RetroColor.textMuted)
-            }
-        }
-    }
-
-    @ViewBuilder private func row(_ record: ShareRecord) -> some View {
-        let when = Self.when(record.sharedAt, today: today)
-        if let day = record.item.insightDay {
-            Button { onOpenDay(day) } label: {
-                rowContent(symbol: RetroSymbol.planning, title: "Daily insight · \(day.mediumTitle)", detail: "Shared \(when)", opens: true)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Daily insight for \(day.spokenDate), shared \(when)")
-            .accessibilityHint("Opens that day in the Calendar")
-        } else {
-            rowContent(symbol: RetroSymbol.share, title: "Shared Retrograde", detail: "App invitation · \(when)", opens: false)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Shared Retrograde, app invitation, \(when)")
-        }
-    }
-
-    private func rowContent(symbol: String, title: String, detail: String, opens: Bool) -> some View {
-        HStack(spacing: 12) {
-            IconChip(systemImage: symbol)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).retroText(.bodyStrong).foregroundStyle(RetroColor.text)
-                Text(detail).retroText(.body).foregroundStyle(RetroColor.textMuted)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            if opens {
-                Image(systemName: RetroSymbol.chevronRight)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(RetroColor.textMuted)
-                    .accessibilityHidden(true)
-            }
-        }
-        .padding(.vertical, 12)
-        .frame(minHeight: 44)
-        .contentShape(Rectangle())
-    }
-
-    private var empty: some View {
-        VStack(spacing: 12) {
-            Image(systemName: RetroSymbol.share)
-                .font(.system(size: 22, weight: .medium))
-                .foregroundStyle(RetroColor.pink)
-                .accessibilityHidden(true)
-            VStack(spacing: 6) {
-                Text("Nothing shared yet.").retroText(.cardTitle).foregroundStyle(RetroColor.text)
-                Text("Send a friend today’s card, or invite someone who needs this. What you share shows up here.")
-                    .retroText(.body).foregroundStyle(RetroColor.textMuted)
-            }
-            .accessibilityElement(children: .combine)
-            if let todayCard {
-                SecondaryButton("Share today’s card", systemImage: RetroSymbol.share) { onShareCard(todayCard) }
-                    .accessibilityHint("Previews today’s card to share")
-                    .padding(.top, 4)
-            }
-            TextLink("Share Retrograde", action: onShareApp)
-                .accessibilityHint("Opens the share sheet")
-        }
-        .multilineTextAlignment(.center)
-        .frame(maxWidth: .infinity)
-        .retroCard()
-    }
-
-    /// "today", "yesterday", "Nov 1" (with the year when it isn't this one).
-    private static func when(_ date: Date, today: CalendarDay) -> String {
-        let day = CalendarDay(date, in: .autoupdatingCurrent)
-        if day == today { return "today" }
-        if day.adding(days: 1) == today { return "yesterday" }
-        return day.year == today.year ? day.shortTitle : "\(day.shortTitle), \(String(day.year))"
-    }
-}
-
-// MARK: - Widget
-
-/// "Mercury on your Home Screen": opens the how-to; ✕ hides it for good. iOS doesn't tell apps
-/// whether their widget is installed, so it never says it is.
-private struct WidgetTip: View {
-    let onOpen: () -> Void
-    let onHide: () -> Void
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Button(action: onOpen) {
-                HStack(spacing: 12) {
-                    IconChip(systemImage: RetroSymbol.widget)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Mercury on your Home Screen").retroText(.bodyStrong).foregroundStyle(RetroColor.text)
-                        Text("See how to add the widget").retroText(.body).foregroundStyle(RetroColor.pink)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .frame(minHeight: 44)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityElement(children: .combine)
-            .accessibilityHint("Shows how to add the widget")
-            Button(action: onHide) {
-                Image(systemName: RetroSymbol.close)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(RetroColor.textMuted)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Hide widget tip")
-            .accessibilityHint("The how-to stays in Settings")
-        }
-        .padding(.vertical, 10)
-        .padding(.leading, 14)
-        .padding(.trailing, 4)
-        .overlay(
-            RoundedRectangle(cornerRadius: RetroMetrics.Radius.card)
-                .strokeBorder(RetroColor.line, style: StrokeStyle(lineWidth: 1, dash: [5, 4]))
-        )
-    }
-}
-
-// MARK: - Small pieces
-
-/// A muted note with a small icon ("New cycle, fresh kit.").
-private struct Note: View {
-    let symbol: String
-    let text: String
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
-            Image(systemName: symbol).font(.system(size: 11, weight: .medium)).accessibilityHidden(true)
-            Text(text).retroText(.body)
-        }
-        .foregroundStyle(RetroColor.textMuted)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-/// Pink text with an arrow ("Open today in Calendar →"), 44 pt tall to tap.
-private struct TextLink: View {
-    let title: String
+    let summary: SharingSummary
     let action: () -> Void
-
-    init(_ title: String, action: @escaping () -> Void) {
-        self.title = title
-        self.action = action
-    }
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
+        let shape = RoundedRectangle(cornerRadius: RetroMetrics.Radius.panel)
         Button(action: action) {
-            HStack(spacing: 6) {
-                Text(title).retroText(.bodyStrong)
-                Image(systemName: RetroSymbol.forward).font(.system(size: 13, weight: .semibold)).accessibilityHidden(true)
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                if let count = summary.count {
+                    Text(count).retroText(.display).foregroundStyle(RetroColor.yellow)
+                }
+                // One line, as in Figma (shrinking slightly on narrow phones); wraps only at the
+                // largest text sizes.
+                Text(summary.message)
+                    .retroText(.bodyStrong)
+                    .foregroundStyle(RetroColor.text)
+                    .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+                    .minimumScaleFactor(0.85)
+                    .fixedSize(horizontal: false, vertical: typeSize.isAccessibilitySize)
+                Spacer(minLength: 4)
+                Chevron()
             }
-            .foregroundStyle(RetroColor.pink)
-            .frame(minHeight: 44)
-            .contentShape(Rectangle())
+            .padding(.horizontal, 17)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
+            .background(alignment: .bottomTrailing) { Constellation().opacity(typeSize.isAccessibilitySize ? 0.35 : 1) }
+            .background(RetroColor.surfaceRaised)
+            .clipShape(shape)
+            .overlay(shape.strokeBorder(RetroColor.line, lineWidth: 1))
+            .contentShape(shape)
         }
         .buttonStyle(.plain)
-        .padding(.vertical, -6)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(summary.spoken)
+        .accessibilityHint("Opens Share Retrograde")
+        .accessibilityAddTraits(.isButton)
+    }
+}
+
+/// The Figma constellation: five stars, one highlighted, joined by fine lines (points in the
+/// 342 × 92 pt card, pinned to its lower right).
+private struct Constellation: View {
+    private static let stars: [CGPoint] = [CGPoint(x: 188, y: 78), CGPoint(x: 220, y: 64), CGPoint(x: 252, y: 74), CGPoint(x: 284, y: 56), CGPoint(x: 318, y: 76)]
+
+    var body: some View {
+        let s = Self.stars
+        ZStack(alignment: .topLeading) {
+            Path { p in
+                p.move(to: s[0]); p.addLine(to: s[1]); p.addLine(to: s[2]); p.addLine(to: s[3]); p.addLine(to: s[4])
+                p.move(to: s[2]); p.addLine(to: s[4])
+            }
+            .stroke(RetroColor.mauve.opacity(0.5), lineWidth: 0.75)
+            ForEach(Array(s.enumerated()), id: \.offset) { index, point in
+                let highlighted = index == 3
+                let d: CGFloat = highlighted ? 6 : 4
+                Circle()
+                    .fill(highlighted ? RetroColor.yellow : RetroColor.text.opacity(0.75))
+                    .frame(width: d, height: d)
+                    .offset(x: point.x - d / 2, y: point.y - d / 2)
+            }
+        }
+        .frame(width: 342, height: 92, alignment: .topLeading)
+        .accessibilityHidden(true)
+    }
+}
+
+/// The subtle "opens something" arrow on the dashboard's cards.
+private struct Chevron: View {
+    var body: some View {
+        Image(systemName: RetroSymbol.chevronRight)
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(RetroColor.textMuted)
+            .accessibilityHidden(true)
     }
 }

@@ -600,7 +600,8 @@ struct IntensityPanel: View {
     let summary: String?
     var framed = true
 
-    private static let stepColors = [RetroColor.calm, RetroColor.mauve, RetroColor.pinkSoft, RetroColor.pink]
+    /// Calm, Mild, Elevated, Intense (also the Overview's intensity card).
+    static let stepColors = [RetroColor.calm, RetroColor.mauve, RetroColor.pinkSoft, RetroColor.pink]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

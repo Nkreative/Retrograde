@@ -2,6 +2,15 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-05 (M13.1 Overview State B redesign)
+
+- **Supersedes the M13.1 dashboard below** (compact Mercury card, Survival Kit card, Today card with habit, sharing list, widget tip). Source of truth: the approved Figma frames Calm (374:896), Mild (374:988), Elevated (384:1596) and Intense (384:1492) — one layout, four intensity levels. State A and the switch between them (`SurvivalKitActivation`, now read through `OverviewMode`) are unchanged.
+- **Layout:** "Today"; the countdown and day label; the stage bar (pink, "YOU ARE HERE" between the stage's ends) and the Survival Kit bar (yellow, "CONFUSED · n tasks done · SURVIVED", this cycle's ticks out of 27); the "+ ADD WIDGET" pill under the bars while iOS reports no Retrograde widget (`WidgetPrompt.offersWidget`; the cards move up when it's hidden); today's intensity card; the sharing card. M12.1 type sizes (slightly larger than Figma's).
+- **Taps:** countdown and bars → Survival Kit; intensity card → Calendar with today selected; sharing card → Share Retrograde (the invite screen); pill → widget how-to. Each is one VoiceOver button with a spoken summary and hint; the cards carry a small chevron.
+- **Intensity card:** today's level, the four-step scale and the day's summary from the same `DayDetailContent` as the Calendar (today is always free). The artwork keeps one composition — Mercury rising from the card's lower right — and grows with the level, exactly as in the four frames (`IntensityCalm` … `IntensityIntense`, exported from Figma at 3×; Intense uses its own sharper close-up). Following the brief's A + C direction, a soft glow (mauve → pink) and one to four faint orbit rings around the planet also strengthen with the level, drawn natively; no animation. At accessibility text sizes the artwork fades to 35 % behind the text.
+- **Sharing card:** "12 times you’ve shared Retrograde" (singular "1 time …"), counting finished shares on this iPhone (`SharingActivity`: only shares iOS reports completed; app invitations and day cards both count). Before the first one: "Invite someone who needs this." Never mentions recipients (the mockups' "People you helped" / "People you messaged" aren't used). The Figma constellation sits in the lower right.
+- **Removed from State B:** the dashboard widget tip and its ✕ (the pill replaces it; `WidgetPrompt` keeps the saved dismissal, unused), the habit, the next task and the sharing history list.
+
 ## 2026-11-05 (M14.5 widget redesign)
 
 - **Two sizes, Small and Medium** (Figma review page "6 · M14.5 Widget redesign"), free for everyone, no account. Small: MERCURY, the phase, the countdown and its words, the bar and the day label, with Mercury top right. Medium: Mercury on the left; the phase, countdown, bar and both bar labels on the right. Same words, numbers and phase logic as the Overview (`WidgetContent`), from the bundled sky data, in the person's time zone, offline; the timeline (midnights and exact phase changes) is unchanged. Tap opens the Overview. Supersedes M12's medium-only widget. Lock Screen, StandBy and Large aren't offered.

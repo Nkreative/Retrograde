@@ -23,7 +23,7 @@ struct OverviewScreen: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     Group {
-                        if activation.isStarted {
+                        if OverviewMode(kitStarted: activation.isStarted) == .dashboard {
                             OverviewDashboard(now: date, status: status)
                         } else if let status, let copy = OverviewCopy.for(.mercury, status.stage) {
                             introduction(status, copy)
@@ -35,7 +35,7 @@ struct OverviewScreen: View {
                 }
                 #if DEBUG
                 .onAppear {
-                    // `-scrollOverview kit|today|sharing|bottom` opens it scrolled there, for review screenshots.
+                    // `-scrollOverview bottom` opens it scrolled to the end, for review screenshots.
                     if let target = UserDefaults.standard.string(forKey: "scrollOverview") {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                             if target == Self.bottomID { proxy.scrollTo(target, anchor: .bottom) } else { proxy.scrollTo(target, anchor: .top) }
@@ -152,7 +152,7 @@ private struct TopicChips: View {
 }
 
 /// "10 days to exhale ······ DAY 12 / 22", or "TODAY Mercury turns direct" on the day itself.
-private struct CountdownRow: View {
+struct CountdownRow: View {
     let status: CycleStatus
     let copy: OverviewCopy
 
