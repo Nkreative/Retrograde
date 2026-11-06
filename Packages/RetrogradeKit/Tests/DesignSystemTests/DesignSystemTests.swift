@@ -70,3 +70,23 @@ import Testing
         #expect(path.boundingRect == CGRect(x: 0, y: 0, width: 42, height: 42))
     }
 }
+
+/// Labels under the progress bars: ends at the edges, the count centred on the full width.
+@Suite struct SpreadLabelsTests {
+    @Test func oneLineWhenTheCentreLabelClearsBothEnds() {
+        let sizes = [CGSize(width: 70, height: 13), CGSize(width: 90, height: 13), CGSize(width: 40, height: 13)]
+        #expect(SpreadLabels.fitsOnOneLine(sizes, width: 342, gap: 8))
+    }
+
+    @Test func centreIsTheFullWidthsCentreNotTheGroupsCentre() {
+        // A long left label and a short right one: centring the group would fit, centring on the
+        // width doesn't, so the count moves to its own line rather than drifting off-centre.
+        let sizes = [CGSize(width: 140, height: 13), CGSize(width: 90, height: 13), CGSize(width: 20, height: 13)]
+        #expect(!SpreadLabels.fitsOnOneLine(sizes, width: 342, gap: 8))
+    }
+
+    @Test func largeTextStacks() {
+        let sizes = [CGSize(width: 150, height: 30), CGSize(width: 200, height: 30), CGSize(width: 100, height: 30)]
+        #expect(!SpreadLabels.fitsOnOneLine(sizes, width: 342, gap: 8))
+    }
+}

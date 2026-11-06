@@ -143,23 +143,10 @@ private struct CycleSection: View {
                     CycleProgressBar(progress: status.progress, marker: RetroColor.pink, markerSize: 9)
                     CycleProgressBar(progress: kit.fraction, fill: RetroColor.yellow, marker: RetroColor.yellow, markerSize: 9)
                     // Spread across the bar as in Figma; with large text the count goes on its own line.
-                    ViewThatFits(in: .horizontal) {
-                        HStack {
-                            Text("CONFUSED").foregroundStyle(RetroColor.textMuted)
-                            Spacer(minLength: 8)
-                            Text(tasks).foregroundStyle(RetroColor.yellow)
-                            Spacer(minLength: 8)
-                            Text("SURVIVED").foregroundStyle(RetroColor.textMuted)
-                        }
-                        VStack(spacing: 4) {
-                            Text(tasks).foregroundStyle(RetroColor.yellow)
-                            HStack {
-                                Text("CONFUSED")
-                                Spacer(minLength: 8)
-                                Text("SURVIVED")
-                            }
-                            .foregroundStyle(RetroColor.textMuted)
-                        }
+                    SpreadLabels {
+                        Text("CONFUSED").foregroundStyle(RetroColor.textMuted)
+                        Text(tasks).foregroundStyle(RetroColor.yellow)
+                        Text("SURVIVED").foregroundStyle(RetroColor.textMuted)
                     }
                     .retroText(.monoSmall)
                     .lineLimit(1)
@@ -290,19 +277,15 @@ private struct SharingCard: View {
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: RetroMetrics.Radius.panel)
         Button(action: action) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                if let count = summary.count {
-                    Text(count).retroText(.display).foregroundStyle(RetroColor.yellow)
-                }
-                // One line, as in Figma (shrinking slightly on narrow phones); wraps only at the
-                // largest text sizes.
-                Text(summary.message)
-                    .retroText(.bodyStrong)
-                    .foregroundStyle(RetroColor.text)
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                // Number and sentence are one text, so they share a single baseline whatever the
+                // count's length. One line (shrinking slightly on narrow phones if it must); wraps
+                // only at the largest text sizes.
+                SharingLine(summary: summary)
                     .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
                     .minimumScaleFactor(0.85)
                     .fixedSize(horizontal: false, vertical: typeSize.isAccessibilitySize)
-                Spacer(minLength: 4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 Chevron()
             }
             .padding(.horizontal, 17)
@@ -319,6 +302,20 @@ private struct SharingCard: View {
         .accessibilityLabel(summary.spoken)
         .accessibilityHint("Opens Share Retrograde")
         .accessibilityAddTraits(.isButton)
+    }
+}
+
+/// "12  times you’ve shared Retrograde": the big yellow count and the sentence in one text.
+private struct SharingLine: View {
+    let summary: SharingSummary
+
+    var body: some View {
+        let sentence = Text(summary.message).font(RetroTextStyle.bodyStrong.font).foregroundColor(RetroColor.text)
+        if let count = summary.count {
+            Text(count).font(RetroTextStyle.display.font).foregroundColor(RetroColor.yellow) + Text("  ").font(RetroTextStyle.bodyStrong.font) + sentence
+        } else {
+            sentence
+        }
     }
 }
 

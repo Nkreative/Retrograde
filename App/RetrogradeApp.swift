@@ -103,10 +103,16 @@ struct RetrogradeApp: App {
     }
 
     /// Finished shares. Debug builds launched with `-sampleShares YES` use an in-memory history with
-    /// sample entries (`empty`: none), for screenshots only.
+    /// sample entries (`empty`: none; a number: that many app shares), for screenshots only.
     private static func makeSharingActivity() -> SharingActivity {
         if isHostingTests { return SharingActivity(defaults: nil) }
         #if DEBUG
+        // A number (`-sampleShares 12`) gives that many sample app shares, for checking the count's layout.
+        if let sample = UserDefaults.standard.string(forKey: "sampleShares"), let n = Int(sample), n > 0 {
+            let activity = SharingActivity(defaults: nil)
+            for i in 0..<n { activity.shareSheetFinished(.app, completed: true, at: .now.addingTimeInterval(-Double(n - i) * 3600)) }
+            return activity
+        }
         if let sample = UserDefaults.standard.string(forKey: "sampleShares"), ["YES", "empty"].contains(sample) {
             let activity = SharingActivity(defaults: nil)
             if sample == "YES" {

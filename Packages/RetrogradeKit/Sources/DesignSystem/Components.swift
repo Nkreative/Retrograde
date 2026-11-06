@@ -413,26 +413,10 @@ public struct MarkerLabels: View {
         if followsMarker {
             following
         } else {
-            // One row where it fits; with large text, the count on its own line above the ends.
-            ViewThatFits(in: .horizontal) {
-                HStack {
-                    Text(start).foregroundStyle(RetroColor.textMuted)
-                    Spacer(minLength: 8)
-                    Text(current).foregroundStyle(currentColor)
-                    Spacer(minLength: 8)
-                    Text(end).foregroundStyle(RetroColor.textMuted)
-                }
-                .fixedSize(horizontal: true, vertical: false)
-                VStack(spacing: 4) {
-                    Text(current).foregroundStyle(currentColor)
-                    HStack {
-                        Text(start)
-                        Spacer(minLength: 8)
-                        Text(end)
-                    }
-                    .foregroundStyle(RetroColor.textMuted)
-                    .minimumScaleFactor(0.7)
-                }
+            SpreadLabels {
+                Text(start).foregroundStyle(RetroColor.textMuted)
+                Text(current).foregroundStyle(currentColor)
+                Text(end).foregroundStyle(RetroColor.textMuted)
             }
             .retroText(.monoSmall)
             .lineLimit(1)
@@ -469,6 +453,49 @@ public struct MarkerLabels: View {
             .foregroundStyle(color)
             .fixedSize()
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { widths[index] = $0 }
+    }
+}
+
+/// Three labels under a bar, each on its own anchor: the first at the leading edge, the second
+/// centred on the full width, the third at the trailing edge. When they'd come closer than `gap`
+/// (narrow screens, large text) the centre label moves to its own line above the two ends.
+public struct SpreadLabels: Layout {
+    let gap: CGFloat
+    let lineSpacing: CGFloat
+
+    public init(gap: CGFloat = 8, lineSpacing: CGFloat = 4) {
+        self.gap = gap
+        self.lineSpacing = lineSpacing
+    }
+
+    public func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
+        guard sizes.count == 3 else { return .zero }
+        let width = proposal.width ?? sizes.reduce(0) { $0 + $1.width } + 2 * gap
+        let lineHeight = sizes.map(\.height).max() ?? 0
+        return CGSize(width: width, height: Self.fitsOnOneLine(sizes, width: width, gap: gap) ? lineHeight : sizes[1].height + lineSpacing + max(sizes[0].height, sizes[2].height))
+    }
+
+    public func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
+        guard sizes.count == 3 else { return }
+        if Self.fitsOnOneLine(sizes, width: bounds.width, gap: gap) {
+            subviews[0].place(at: CGPoint(x: bounds.minX, y: bounds.minY), proposal: .unspecified)
+            subviews[1].place(at: CGPoint(x: bounds.midX, y: bounds.minY), anchor: .top, proposal: .unspecified)
+            subviews[2].place(at: CGPoint(x: bounds.maxX, y: bounds.minY), anchor: .topTrailing, proposal: .unspecified)
+        } else {
+            subviews[1].place(at: CGPoint(x: bounds.midX, y: bounds.minY), anchor: .top, proposal: ProposedViewSize(width: bounds.width, height: nil))
+            let y = bounds.minY + sizes[1].height + lineSpacing
+            let half = ProposedViewSize(width: (bounds.width - gap) / 2, height: nil)
+            subviews[0].place(at: CGPoint(x: bounds.minX, y: y), proposal: half)
+            subviews[2].place(at: CGPoint(x: bounds.maxX, y: y), anchor: .topTrailing, proposal: half)
+        }
+    }
+
+    /// The centre label, centred on the full width, stays `gap` clear of both ends.
+    static func fitsOnOneLine(_ sizes: [CGSize], width: CGFloat, gap: CGFloat) -> Bool {
+        let centreLeft = (width - sizes[1].width) / 2
+        return centreLeft >= sizes[0].width + gap && centreLeft + sizes[1].width <= width - sizes[2].width - gap
     }
 }
 
