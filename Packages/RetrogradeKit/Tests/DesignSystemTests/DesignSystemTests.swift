@@ -90,3 +90,15 @@ import Testing
         #expect(!SpreadLabels.fitsOnOneLine(sizes, width: 342, gap: 8))
     }
 }
+
+@Suite struct ExpandCollapseTitleTests {
+    @Test func sectionsSayViewMoreAndShowLess() {
+        #expect(ExpandCollapseButton.title(isExpanded: false, hiddenCount: 6) == "View 6 more")
+        #expect(ExpandCollapseButton.title(isExpanded: true, hiddenCount: 6) == "Show less")
+    }
+
+    @Test func calendarKeepsExpandAndCollapse() {
+        #expect(ExpandCollapseButton.title(isExpanded: false, hiddenCount: nil) == "Expand")
+        #expect(ExpandCollapseButton.title(isExpanded: true, hiddenCount: nil) == "Collapse")
+    }
+}

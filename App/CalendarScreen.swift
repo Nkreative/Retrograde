@@ -21,6 +21,8 @@ struct CalendarScreen: View {
     @State private var expanded = false
     /// The day whose card is being previewed for sharing.
     @State private var sharing: InsightShareCard?
+    /// "What's shaping the day" is closed until the person opens it.
+    @State private var showsSkyDetails = Self.initiallyShowsSkyDetails
 
     private let policy = CalendarAccessPolicy.launch
 
@@ -40,13 +42,13 @@ struct CalendarScreen: View {
         ScrollViewReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("Same orbit. Different days. Tap a date to explore what adds to the noise—and what helps soften it.")
+                Text("Tap a day to see what’s shaping it.")
                     .retroText(.body).foregroundStyle(RetroColor.textMuted)
                 if let coverage, !coverage.contains(today) {
                     OutOfRangeNote(coverage: coverage)
                 }
                 CalendarCard(
-                    model: model, selected: selectedDay, retrogradeCount: content?.retrogradeCount, isPremium: premium.isPremium, policy: policy,
+                    model: model, selected: selectedDay, isPremium: premium.isPremium, policy: policy,
                     canGoBack: model.canStepBack && (coverage.map { model.step(-1).lastShownDay >= $0.lowerBound } ?? false),
                     canGoForward: coverage.map { model.step(1).firstShownDay <= $0.upperBound } ?? false,
                     onSelect: { day in
@@ -62,7 +64,7 @@ struct CalendarScreen: View {
                         }
                     }
                 )
-                DayDetail(day: selectedDay, today: today, content: content, onUnlock: paywall.present, onShare: { sharing = $0 })
+                DayDetail(day: selectedDay, today: today, content: content, onUnlock: paywall.present, onShare: { sharing = $0 }, showsSkyDetails: $showsSkyDetails)
                 .id(Self.detailID)
                 Text("Intensity is an astrology-inspired reflection score built from verified sky events, not a prediction.")
                     .retroText(.finePrint)
@@ -115,6 +117,15 @@ struct CalendarScreen: View {
 
     private static let detailID = "day-detail"
 
+    private static var initiallyShowsSkyDetails: Bool {
+        #if DEBUG
+        // `-skyDetails open` opens "What's shaping the day", for review screenshots.
+        return UserDefaults.standard.string(forKey: "skyDetails") == "open"
+        #else
+        return false
+        #endif
+    }
+
     private func clamp(_ day: CalendarDay, to coverage: ClosedRange<CalendarDay>?) -> CalendarDay {
         guard let coverage else { return day }
         return min(max(day, coverage.lowerBound), coverage.upperBound)
@@ -165,8 +176,6 @@ private struct CalendarModel {
 private struct CalendarCard: View {
     let model: CalendarModel
     let selected: CalendarDay
-    /// Planets retrograde on the selected day (nil outside the data).
-    let retrogradeCount: Int?
     let isPremium: Bool
     let policy: CalendarAccessPolicy
     let canGoBack: Bool
@@ -196,39 +205,28 @@ private struct CalendarCard: View {
         .overlay(RoundedRectangle(cornerRadius: RetroMetrics.Radius.panel).strokeBorder(RetroColor.line, lineWidth: 1))
     }
 
+    /// Month and Mercury's context, then the arrows and Expand / Collapse on a row of their own.
     private var header: some View {
         let titleDay = model.titleDay(selected: selected)
-        let monthTitle = VStack(alignment: .leading, spacing: 5) {
-            let title = (Text(titleDay.monthName + " ").font(RetroTextStyle.section.font).foregroundColor(RetroColor.text)
-                + Text(String(titleDay.year)).font(RetroTextStyle.monoLarge.font).foregroundColor(RetroColor.textMuted))
-                .lineLimit(1)
-                .fixedSize()
-                .accessibilityAddTraits(.isHeader)
-            // Badge beside the month where it fits; otherwise on its own line, at full size.
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .center, spacing: 8) {
-                    title
-                    if let retrogradeCount { RetrogradeCountBadge(count: retrogradeCount, day: selected) }
-                }
-                VStack(alignment: .leading, spacing: 6) {
-                    title
-                    if let retrogradeCount { RetrogradeCountBadge(count: retrogradeCount, day: selected) }
-                }
+        return VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 5) {
+                (Text(titleDay.monthName + " ").font(RetroTextStyle.section.font).foregroundColor(RetroColor.text)
+                    + Text(String(titleDay.year)).font(RetroTextStyle.monoLarge.font).foregroundColor(RetroColor.textMuted))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .accessibilityAddTraits(.isHeader)
+                Text(MercuryContext.label(for: MonthGrid.ID(titleDay)))
+                    .retroText(.monoSmall)
+                    .foregroundStyle(RetroColor.pink)
             }
-            Text(MercuryContext.label(for: MonthGrid.ID(titleDay)))
-                .retroText(.monoSmall)
-                .foregroundStyle(RetroColor.pink)
-        }
-        let arrows = HStack(spacing: 0) {
-            arrow(RetroSymbol.back, label: model.expanded ? "Previous month" : "Previous week", enabled: canGoBack) { onStep(-1) }
-            arrow(RetroSymbol.forward, label: model.expanded ? "Next month" : "Next week", enabled: canGoForward) { onStep(1) }
-        }
-        let toggle = ExpandCollapseButton(isExpanded: model.expanded, action: onToggleExpanded)
-        return ViewThatFits(in: .horizontal) {
-            HStack(spacing: 8) { monthTitle; Spacer(minLength: 4); arrows; toggle }
-            VStack(alignment: .leading, spacing: 4) {
-                monthTitle
-                HStack { arrows; Spacer(); toggle }
+            HStack {
+                HStack(spacing: 0) {
+                    arrow(RetroSymbol.back, label: model.expanded ? "Previous month" : "Previous week", enabled: canGoBack) { onStep(-1) }
+                    arrow(RetroSymbol.forward, label: model.expanded ? "Next month" : "Next week", enabled: canGoForward) { onStep(1) }
+                }
+                .padding(.leading, -6) // the 44 pt tap area overhangs the 32 pt circle
+                Spacer(minLength: 8)
+                ExpandCollapseButton(isExpanded: model.expanded, action: onToggleExpanded)
             }
         }
     }
@@ -279,13 +277,13 @@ private struct CalendarCard: View {
                 }
             }
             if let first = freeIndices.first, let last = freeIndices.last {
-                FreeWindowMarker(first: first, last: last, showsLabel: week.contains(window.lowerBound) || first == 0)
+                FreeWindowMarker(first: first, last: last, showsLabel: week.contains(window.lowerBound))
             }
         }
     }
 }
 
-/// Yellow line under the free days in a row, labelled where the window starts.
+/// Yellow line under the free days in a row, labelled only on the row where the window starts.
 private struct FreeWindowMarker: View {
     let first: Int
     let last: Int
@@ -438,36 +436,25 @@ private struct CalendarKey: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 14) {
-                HStack(spacing: 5) {
-                    Circle().fill(RetroColor.yellow).frame(width: 6, height: 6)
-                    Text("Today · \(model.today.day)")
-                }
-                HStack(spacing: 5) {
-                    RoundedRectangle(cornerRadius: 2).strokeBorder(RetroColor.pink, lineWidth: 1.5).frame(width: 11, height: 11)
-                    Text("Selected · \(selected.day)")
-                }
-                Spacer(minLength: 0)
-                if !isPremium {
-                    HStack(spacing: 4) {
-                        Image(systemName: RetroSymbol.lock).font(.system(size: 10))
-                        Text("Premium")
-                    }
-                } else {
-                    Text("Tap any day").foregroundStyle(RetroColor.text)
-                }
-            }
-            .retroText(.monoSmall)
-            .foregroundStyle(RetroColor.textMuted)
-            .lineLimit(1)
-            .minimumScaleFactor(0.8)
-
-            RetroColor.line.frame(height: 1)
-            HStack(spacing: 16) {
+            // One line: the cell markers, and what the lock means (free users only). Today and the
+            // selected day are already marked on their cells.
+            HStack(spacing: 10) {
                 Text("Rx Retrograde").foregroundStyle(RetroColor.pinkSoft)
                 Text("Sh Shadow").foregroundStyle(RetroColor.mauve)
                 Text("D Direct").foregroundStyle(RetroColor.textMuted)
+                Spacer(minLength: 0)
+                if !isPremium {
+                    HStack(spacing: 4) {
+                        Image(systemName: RetroSymbol.lock).font(.system(size: 10)).accessibilityHidden(true)
+                        Text("Premium")
+                    }
+                    .foregroundStyle(RetroColor.textMuted)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Lock: details in Premium")
+                }
             }
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
             .retroText(.monoSmall)
             if model.expanded {
                 HStack(spacing: 12) {
@@ -496,6 +483,8 @@ private struct DayDetail: View {
     let content: DayDetailContent?
     let onUnlock: () -> Void
     let onShare: (InsightShareCard) -> Void
+    /// "What's shaping the day" open or closed; closed by default, kept while moving between days.
+    @Binding var showsSkyDetails: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -520,16 +509,17 @@ private struct DayDetail: View {
             if let content {
                 switch content.details {
                 case let .unlocked(insight, others):
-                    IntensityPanel(level: content.level, summary: insight.summary)
-                    SkyContext(rows: insight.rows)
+                    // Date, level and summary, then the habit; the sky's details open on request.
+                    IntensityPanel(level: content.level, summary: insight.summary, stepNames: false)
                     HabitCard(habit: insight.habit)
-                    OtherPlanets(retrogrades: others, when: day == today ? "today" : "on \(day.shortTitle)")
+                    SkyDetails(rows: insight.rows, retrogrades: SkyData.intensity()?.retrogrades(on: day) ?? [], others: others,
+                               when: day == today ? "today" : "on \(day.shortTitle)", isOpen: $showsSkyDetails)
                     if let card = InsightShareCard(content) {
                         SecondaryButton("Share this day", systemImage: RetroSymbol.share) { onShare(card) }
                             .accessibilityHint("Previews a card of \(day.spokenDate) to share")
                     }
                 case let .locked(freeFrom, preview):
-                    IntensityPanel(level: content.level, summary: nil)
+                    IntensityPanel(level: content.level, summary: nil, stepNames: false)
                     LockedInsight(day: day, freeFrom: freeFrom, preview: preview, onUnlock: onUnlock)
                 }
             } else {
@@ -546,59 +536,14 @@ private struct DayDetail: View {
     }
 }
 
-/// "5 Retrogrades" beside the month: planets retrograde on the selected day, Mercury included.
-private struct RetrogradeCountBadge: View {
-    let count: Int
-    let day: CalendarDay
-
-    var body: some View {
-        Text(DayDetailContent.retrogradeLabel(count))
-            .retroText(.monoSmall)
-            .foregroundStyle(count > 0 ? RetroColor.pinkSoft : RetroColor.textMuted)
-            .padding(.vertical, 3)
-            .padding(.horizontal, 7)
-            .background(RetroColor.wine.opacity(count > 0 ? 1 : 0), in: Capsule())
-            .overlay(Capsule().strokeBorder(RetroColor.line, lineWidth: 1))
-            .fixedSize()
-            .accessibilityLabel("\(count) \(count == 1 ? "planet" : "planets") retrograde on \(day.shortTitle)")
-    }
-}
-
-/// Planets other than Mercury retrograde on the selected day, with their retrograde dates.
-/// Only shown on unlocked days (the day's single access rule decides).
-private struct OtherPlanets: View {
-    let retrogrades: [IntensityCalculator.RetrogradeOnDay]
-    let when: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("OTHER PLANETS IN RETROGRADE").retroText(.mono).foregroundStyle(RetroColor.text).padding(.bottom, 6)
-            if retrogrades.isEmpty {
-                Text("No other planets are retrograde \(when).")
-                    .retroText(.body).foregroundStyle(RetroColor.textMuted)
-                    .padding(.vertical, 10)
-            }
-            ForEach(retrogrades, id: \.planet) { r in
-                HStack(alignment: .firstTextBaseline) {
-                    Text("\(r.planet.name) Rx").retroText(.bodyStrong).foregroundStyle(RetroColor.text)
-                    Spacer(minLength: 8)
-                    Text("\(r.from.shortTitle) – \(r.to.shortTitle)\(r.to.year != r.from.year ? ", \(String(r.to.year))" : "")")
-                        .retroText(.monoSmall).foregroundStyle(RetroColor.textMuted)
-                }
-                .padding(.vertical, 11)
-                .overlay(alignment: .top) { RetroColor.line.frame(height: 1) }
-                .accessibilityElement(children: .combine)
-            }
-        }
-    }
-}
-
 /// "Elevated  03 / 04", the four-step scale, and (when unlocked) the day's summary. Also on the
 /// Overview's Today card, unframed and with the bars alone (`framed: false`).
 struct IntensityPanel: View {
     let level: IntensityLevel
     let summary: String?
     var framed = true
+    /// The four level names under the scale (off where the level is named just above it).
+    var stepNames = true
 
     /// Calm, Mild, Elevated, Intense (also the Overview's intensity card).
     static let stepColors = [RetroColor.calm, RetroColor.mauve, RetroColor.pinkSoft, RetroColor.pink]
@@ -624,12 +569,12 @@ struct IntensityPanel: View {
             .accessibilityLabel("Daily intensity: \(DailyInsightCopy.levelName(level)), \(level.rawValue) of 4")
             // The scale's names where they fit; with large text the bars alone (the level is named above).
             ViewThatFits(in: .horizontal) {
-                if framed { scale(labelled: true) }
+                if framed && stepNames { scale(labelled: true) }
                 scale(labelled: false)
             }
             .accessibilityHidden(true)
             if let summary {
-                Text(summary).retroText(.body).foregroundStyle(framed ? RetroColor.textMuted : RetroColor.text)
+                Text(summary).retroText(.body).foregroundStyle(framed && stepNames ? RetroColor.textMuted : RetroColor.text)
             }
         }
         .padding(framed ? 14 : 0)
@@ -657,23 +602,82 @@ struct IntensityPanel: View {
     }
 }
 
-private struct SkyContext: View {
+/// "What's shaping the day": closed, one line naming the planets retrograde; open, the day's
+/// events (retrograde ones with their dates), then any other planets retrograde, each planet once.
+private struct SkyDetails: View {
     let rows: [DailyInsight.Row]
+    /// Every planet retrograde on the day, Mercury included (for the dates on event rows).
+    let retrogrades: [IntensityCalculator.RetrogradeOnDay]
+    /// Planets other than Mercury retrograde on the day.
+    let others: [IntensityCalculator.RetrogradeOnDay]
+    let when: String
+    @Binding var isOpen: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 10)
         VStack(alignment: .leading, spacing: 0) {
-            Text("WHAT’S SHAPING THE DAY").retroText(.mono).foregroundStyle(RetroColor.text).padding(.bottom, 6)
-            if rows.isEmpty {
-                row(symbol: "moon.stars", title: "A quiet sky", tag: nil, text: DailyInsightCopy.quietDayText)
-            } else {
-                ForEach(rows, id: \.title) { r in
-                    row(symbol: r.symbol, title: r.title, tag: r.tag, text: r.text)
+            Button {
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) { isOpen.toggle() }
+            } label: {
+                HStack(spacing: 10) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("What’s shaping the day").retroText(.bodyStrong).foregroundStyle(RetroColor.text)
+                        Text(SkySummary.line(planets: retrogrades.map(\.planet), rows: rows)).retroText(.body).foregroundStyle(RetroColor.textMuted)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    Image(systemName: isOpen ? RetroSymbol.chevronUp : RetroSymbol.chevronDown)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(RetroColor.textMuted)
+                        .accessibilityHidden(true)
                 }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityValue(isOpen ? "Expanded" : "Collapsed")
+            .accessibilityHint(isOpen ? "Hides the day’s sky events" : "Shows the day’s sky events")
+            if isOpen {
+                VStack(alignment: .leading, spacing: 0) {
+                    if rows.isEmpty {
+                        row(symbol: "moon.stars", title: "A quiet sky", tag: nil, dates: nil, text: DailyInsightCopy.quietDayText)
+                    }
+                    ForEach(rows, id: \.title) { r in
+                        row(symbol: r.symbol, title: r.title, tag: r.tag, dates: dates(for: r), text: r.text)
+                    }
+                    let alsoRetrograde = SkySummary.alsoRetrograde(others, rows: rows)
+                    if !alsoRetrograde.isEmpty {
+                        Text(rows.isEmpty ? "OTHER PLANETS IN RETROGRADE" : "ALSO RETROGRADE \(when.uppercased())").retroText(.mono).foregroundStyle(RetroColor.text)
+                            .padding(.top, 14).padding(.bottom, 6)
+                        ForEach(alsoRetrograde, id: \.planet) { r in
+                            HStack(alignment: .firstTextBaseline) {
+                                Text("\(r.planet.name) Rx").retroText(.bodyStrong).foregroundStyle(RetroColor.text)
+                                Spacer(minLength: 8)
+                                Text(SkySummary.range(r)).retroText(.monoSmall).foregroundStyle(RetroColor.textMuted)
+                            }
+                            .padding(.vertical, 11)
+                            .overlay(alignment: .top) { RetroColor.line.frame(height: 1) }
+                            .accessibilityElement(children: .combine)
+                        }
+                    }
+                }
+                .padding(.top, 4)
+                .transition(.opacity)
             }
         }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 14)
+        .background(RetroColor.background, in: shape)
+        .overlay(shape.strokeBorder(RetroColor.line, lineWidth: 1))
     }
 
-    private func row(symbol: String, title: String, tag: String?, text: String) -> some View {
+    /// "OCT 24 – NOV 13" for a planet's retrograde row.
+    private func dates(for row: DailyInsight.Row) -> String? {
+        guard row.tag == "RETROGRADE", let r = retrogrades.first(where: { row.title == "\($0.planet.name) retrograde" }) else { return nil }
+        return SkySummary.range(r).uppercased()
+    }
+
+    private func row(symbol: String, title: String, tag: String?, dates: String?, text: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: symbol)
                 .font(.system(size: 14))
@@ -681,7 +685,7 @@ private struct SkyContext: View {
                 .frame(width: 34, height: 34)
                 .background(RetroColor.cell, in: RoundedRectangle(cornerRadius: 10))
                 .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 4) {
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .firstTextBaseline) {
                         Text(title).retroText(.bodyStrong).foregroundStyle(RetroColor.text)
@@ -693,12 +697,40 @@ private struct SkyContext: View {
                         if let tag { Text(tag).retroText(.monoSmall).foregroundStyle(RetroColor.pinkSoft) }
                     }
                 }
+                if let dates { Text(dates).retroText(.monoSmall).foregroundStyle(RetroColor.textMuted) }
                 Text(text).retroText(.body).foregroundStyle(RetroColor.textMuted)
             }
         }
         .padding(.vertical, 14)
         .overlay(alignment: .top) { RetroColor.line.frame(height: 1) }
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Wording for the sky details, kept apart so it can be tested.
+enum SkySummary {
+    /// "Mercury, Venus and 3 more planets" (retrograde on the day); the first event otherwise.
+    static func line(planets: [Planet], rows: [DailyInsight.Row]) -> String {
+        let names = planets.map(\.name)
+        switch names.count {
+        case 0: return rows.first?.title ?? "A quiet sky"
+        case 1: return "\(names[0]) retrograde"
+        case 2: return "\(names[0]) and \(names[1]) retrograde"
+        default:
+            let more = names.count - 2
+            return "\(names[0]), \(names[1]) and \(more) more \(more == 1 ? "planet" : "planets")"
+        }
+    }
+
+    /// Planets retrograde on the day that have no event row of their own (each planet once).
+    static func alsoRetrograde(_ others: [IntensityCalculator.RetrogradeOnDay], rows: [DailyInsight.Row]) -> [IntensityCalculator.RetrogradeOnDay] {
+        let covered = Set(rows.map(\.title))
+        return others.filter { !covered.contains("\($0.planet.name) retrograde") }
+    }
+
+    /// "Jul 26 – Dec 10", with the end year when it differs.
+    static func range(_ r: IntensityCalculator.RetrogradeOnDay) -> String {
+        "\(r.from.shortTitle) – \(r.to.shortTitle)\(r.to.year != r.from.year ? ", \(String(r.to.year))" : "")"
     }
 }
 

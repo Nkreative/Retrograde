@@ -113,3 +113,35 @@ import UIKit
         #expect(OverviewMode(kitStarted: activation.isStarted) == .dashboard)
     }
 }
+
+@MainActor
+@Suite struct CalendarSkyDetailsTests {
+    private func day(_ iso: String) -> CalendarDay { CalendarDay(iso: iso)! }
+
+    @Test func summaryNamesThePlanetsRetrograde() throws {
+        let intensity = try #require(SkyData.intensity())
+        let planets = intensity.retrogrades(on: day("2026-11-05")).map(\.planet)
+        #expect(planets.count == 5)
+        #expect(SkySummary.line(planets: planets, rows: []).hasSuffix("and 3 more planets"))
+        #expect(SkySummary.line(planets: [.mercury], rows: []) == "Mercury retrograde")
+        #expect(SkySummary.line(planets: [], rows: []) == "A quiet sky")
+    }
+
+    @Test func eachPlanetIsListedOnce() throws {
+        let intensity = try #require(SkyData.intensity())
+        let content = try #require(DayDetailContent.make(day: day("2026-11-05"), today: day("2026-11-05"), isPremium: true, policy: .launch, intensity: intensity))
+        guard case let .unlocked(insight, others) = content.details else { Issue.record("locked"); return }
+        let also = SkySummary.alsoRetrograde(others, rows: insight.rows)
+        let withRows = Set(insight.rows.map(\.title))
+        // Venus has its own event row, so it isn't repeated under "Also retrograde".
+        #expect(withRows.contains("Venus retrograde"))
+        #expect(!also.contains { $0.planet == .venus })
+        #expect(also.count == others.count - 1)
+    }
+
+    @Test func freeUsersStillGetTheLockedDay() throws {
+        let intensity = try #require(SkyData.intensity())
+        let locked = try #require(DayDetailContent.make(day: day("2026-11-12"), today: day("2026-11-05"), isPremium: false, policy: .launch, intensity: intensity))
+        guard case .locked = locked.details else { Issue.record("Nov 12 should be locked for free users"); return }
+    }
+}

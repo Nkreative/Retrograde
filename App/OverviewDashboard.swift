@@ -134,7 +134,8 @@ private struct CycleSection: View {
     let action: () -> Void
 
     var body: some View {
-        let tasks = kit.done == 1 ? "1 task done" : "\(kit.done) tasks done"
+        // The same words as the Survival Kit's bar.
+        let tasks = "\(kit.done) of \(kit.total) done"
         Button(action: action) {
             VStack(alignment: .leading, spacing: 12) {
                 CountdownRow(status: status, copy: copy)
@@ -165,7 +166,7 @@ private struct CycleSection: View {
         let days = status.daysUntilTarget
         let countdown = days == 0 ? "Today, \(copy.countdownToday)" : "\(days) \(copy.countdownUnit(for: days))"
         let day = copy.dayLabel(day: status.day, of: status.totalDays).map { ", " + $0.capitalized.replacingOccurrences(of: " / ", with: " of ") } ?? ""
-        return "\(countdown)\(day). Survival Kit: \(tasks), \(kit.done) of \(kit.total)."
+        return "\(countdown)\(day). Survival Kit: \(tasks)."
     }
 }
 

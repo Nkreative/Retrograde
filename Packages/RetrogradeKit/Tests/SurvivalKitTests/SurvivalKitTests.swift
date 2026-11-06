@@ -13,6 +13,11 @@ import Testing
         #expect(kit.tasks.count == 27)
     }
 
+    @Test func approvedM15Copy() {
+        #expect(kit.sections.map(\.title) == ["MESSAGE AT YOUR PACE.", "SAVE YOUR FUTURE SELF.", "PLAN FOR PLOT TWISTS.", "WRITE IT DOWN."])
+        #expect(kit.sections.map(\.guidance) == ["No rush. Breathe, then clarify.", "A backup beats a dramatic recovery arc.", "Keep the plan, loosen the grip.", "No perfect words required."])
+    }
+
     @Test func taskIDsAreUniqueAndStable() {
         #expect(Set(kit.tasks.map(\.id)).count == kit.tasks.count)
         #expect(kit.tasks.allSatisfy { $0.id.hasPrefix("mercury.") })

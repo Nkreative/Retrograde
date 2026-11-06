@@ -191,8 +191,8 @@ public struct SecondaryButtonLabel: View {
     }
 }
 
-/// The Figma calendar's Expand / Collapse capsule, also used by Survival Kit sections.
-/// `hiddenCount` adds "· 5 more" while collapsed.
+/// The Figma calendar's Expand / Collapse capsule, also used by Survival Kit sections. With a
+/// `hiddenCount` (sections) it reads "View 5 more" / "Show less" instead.
 public struct ExpandCollapseButton: View {
     let isExpanded: Bool
     let hiddenCount: Int?
@@ -207,7 +207,7 @@ public struct ExpandCollapseButton: View {
     public var body: some View {
         Button(action: action) {
             HStack(spacing: 6) {
-                Text(isExpanded ? "Collapse" : hiddenCount.map { "Expand · \($0) more" } ?? "Expand")
+                Text(Self.title(isExpanded: isExpanded, hiddenCount: hiddenCount))
                     .retroText(.monoSmall)
                 Image(systemName: isExpanded ? RetroSymbol.chevronUp : RetroSymbol.chevronDown)
                     .font(.system(size: 10, weight: .semibold))
@@ -220,7 +220,13 @@ public struct ExpandCollapseButton: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(PressFeedbackStyle())
-        .accessibilityLabel(isExpanded ? "Show fewer" : hiddenCount.map { "Show \($0) more" } ?? "Expand")
+        .accessibilityLabel(Self.title(isExpanded: isExpanded, hiddenCount: hiddenCount))
+    }
+
+    /// "View 5 more" / "Show less" for a section; "Expand" / "Collapse" for the calendar.
+    public static func title(isExpanded: Bool, hiddenCount: Int?) -> String {
+        guard hiddenCount != nil else { return isExpanded ? "Collapse" : "Expand" }
+        return isExpanded ? "Show less" : "View \(hiddenCount ?? 0) more"
     }
 }
 

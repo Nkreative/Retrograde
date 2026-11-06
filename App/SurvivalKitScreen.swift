@@ -164,7 +164,7 @@ private struct KitProgress: View {
             }
             VStack(spacing: 7) {
                 CycleProgressBar(progress: kitProgress, fill: RetroColor.green, marker: RetroColor.green, markerSize: 9)
-                MarkerLabels(progress: kitProgress, start: "CONFUSED", current: "\(done) of \(total) done", end: "SAFE", currentColor: RetroColor.green, followsMarker: false)
+                MarkerLabels(progress: kitProgress, start: "CONFUSED", current: "\(done) of \(total) done", end: "SURVIVED", currentColor: RetroColor.green, followsMarker: false)
             }
         }
         .accessibilityElement(children: .ignore)
@@ -172,9 +172,10 @@ private struct KitProgress: View {
     }
 }
 
-/// A section card. Collapsed, it shows the first three tasks; expanded, all of them.
+/// A section card. Collapsed, it shows the first two tasks (for free users, the free one and the
+/// first locked one); expanded, all of them, in order.
 private struct SectionCard: View {
-    static let collapsedCount = 3
+    static let collapsedCount = 2
 
     let section: KitSection
     let done: Set<String>
@@ -207,7 +208,8 @@ private struct SectionCard: View {
             }
             .padding(.vertical, -6)
             if section.tasks.count > Self.collapsedCount {
-                ExpandCollapseButton(isExpanded: isExpanded, hiddenCount: hiddenCount, action: onToggle)
+                // While expanded it reads "Show less"; the count is of the tasks it would hide.
+                ExpandCollapseButton(isExpanded: isExpanded, hiddenCount: isExpanded ? section.tasks.count - Self.collapsedCount : hiddenCount, action: onToggle)
                     .frame(maxWidth: .infinity)
                     .padding(.top, -4)
                     .padding(.bottom, -10)

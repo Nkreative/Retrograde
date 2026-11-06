@@ -37,8 +37,8 @@ public struct KitTask: Identifiable, Hashable, Sendable {
 extension SurvivalKit {
     static let mercury = SurvivalKit(planet: .mercury, sections: [
         KitSection(
-            id: "communication", number: 1, category: "COMMUNICATION", title: "TAKE YOUR TIME TO MESSAGE.",
-            guidance: "Your pace. No rush. Breathe and clarify if needed.", topic: .communication,
+            id: "communication", number: 1, category: "COMMUNICATION", title: "MESSAGE AT YOUR PACE.",
+            guidance: "No rush. Breathe, then clarify.", topic: .communication,
             tasks: [
                 KitTask(id: "mercury.communication.breathe-first", title: "Breathe first before answering."),
                 KitTask(id: "mercury.communication.ask-for-clarity", title: "Ask for clarity if you are not sure what they meant."),
@@ -63,8 +63,8 @@ extension SurvivalKit {
             ]
         ),
         KitSection(
-            id: "flexible-planning", number: 3, category: "FLEXIBLE PLANNING", title: "LEAVE ROOM FOR PLOT TWISTS.",
-            guidance: "Keep the plan. Lose the white-knuckle grip.", topic: .planning,
+            id: "flexible-planning", number: 3, category: "FLEXIBLE PLANNING", title: "PLAN FOR PLOT TWISTS.",
+            guidance: "Keep the plan, loosen the grip.", topic: .planning,
             tasks: [
                 KitTask(id: "mercury.planning.confirm-booking", title: "Confirm the time, place and booking."),
                 KitTask(id: "mercury.planning.add-buffer", title: "Add a 15-minute buffer and a plan B."),
@@ -76,7 +76,7 @@ extension SurvivalKit {
         ),
         KitSection(
             id: "journal", number: 4, category: "JOURNAL", title: "WRITE IT DOWN.",
-            guidance: "A little reflection. No perfect words required.", topic: .journal,
+            guidance: "No perfect words required.", topic: .journal,
             tasks: [
                 KitTask(id: "mercury.journal.name-the-feeling", title: "Name the feeling you’re carrying today."),
                 KitTask(id: "mercury.journal.in-your-control", title: "Write what is in your control right now."),

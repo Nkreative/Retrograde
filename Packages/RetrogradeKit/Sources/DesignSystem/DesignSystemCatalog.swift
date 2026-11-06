@@ -43,7 +43,7 @@ private struct ColoursAndType: View {
     let samples: [(RetroTextStyle, String, String)] = [
         (.display, "10", "Archivo Black 32"), (.hero, "A LITTLE CHAOS.", "Archivo Black 30"),
         (.title, "RETROGRADE", "Archivo Black 20"), (.section, "SO, WHAT DOES IT MEAN?", "Archivo Black 19"),
-        (.cardTitle, "TAKE YOUR TIME TO MESSAGE.", "Archivo Black 16"), (.button, "Go to my survival kit", "Inter Bold 14"),
+        (.cardTitle, "MESSAGE AT YOUR PACE.", "Archivo Black 16"), (.button, "Go to my survival kit", "Inter Bold 14"),
         (.bodyStrong, "Texts get lost in translation.", "Inter SemiBold 15"),
         (.bodyLarge, "The message can wait ten seconds.", "Inter Regular 16"),
         (.body, "Reread before you hit send. Yes, even that one.", "Inter Regular 15"),
@@ -112,7 +112,7 @@ private struct ComponentsPage: View {
                 IconChip(systemImage: RetroSymbol.communication)
                 VStack(alignment: .leading, spacing: 3) {
                     Text("01 / COMMUNICATION").retroText(.monoSmall).foregroundStyle(RetroColor.pink)
-                    Text("TAKE YOUR TIME TO MESSAGE.").retroText(.cardTitle).foregroundStyle(RetroColor.text)
+                    Text("MESSAGE AT YOUR PACE.").retroText(.cardTitle).foregroundStyle(RetroColor.text)
                 }
             }
             row(.done, "Breathe first before answering.")

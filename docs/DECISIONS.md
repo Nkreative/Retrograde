@@ -2,6 +2,15 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-05 (M15 Survival Kit, Calendar and Overview polish)
+
+Approved Figma page "M15 — Final UX/UI Refinement" (400:2).
+
+- **Survival Kit:** sections show their first two tasks (for free users, the free task and the first locked one), then "View N more" (N = the tasks still hidden); expanded, every task in order and "Show less". Headlines "MESSAGE AT YOUR PACE.", "SAVE YOUR FUTURE SELF.", "PLAN FOR PLOT TWISTS.", "WRITE IT DOWN." (one line on standard iPhones); descriptions "No rush. Breathe, then clarify.", "A backup beats a dramatic recovery arc.", "Keep the plan, loosen the grip.", "No perfect words required." The kit bar ends CONFUSED → SURVIVED (was SAFE). Task IDs, access rules, completion and per-cycle reset unchanged.
+- **Calendar:** intro "Tap a day to see what’s shaping it."; the month and Mercury's context, then arrows and Expand / Collapse on their own row; the "n Retrogrades" badge leaves the header (the count now lives in the sky details' summary). One legend line: Rx · Sh · D and, for free users, the lock = Premium; the "Today · n / Selected · n" row is gone. The free label appears once, where the free window starts.
+- **Selected day:** date → level and scale (no step names under the bars) → summary → good habit → Share this day. "What’s shaping the day" is closed by default ("Mercury, Venus and 3 more planets"); open, the day's events (retrograde ones with their dates), then "Also retrograde today" for planets without an event row, so no planet is listed twice. It stays open or closed while moving between days. Locked days unchanged (four-day free window, preview, Unlock every day).
+- **Overview:** the kit bar's count reads "X of 27 done", as on the Survival Kit.
+
 ## 2026-11-05 (M13.1 complete)
 
 - **M13.1 (personalized Overview) is complete:** State A introduction, State B dashboard (`efe5298`), physical-iPhone refinements (`a5a9ac4`) and the final corrections (`ae9a98b`), verified on the owner's iPhone. Progress labels sit on three anchors (start, true centre, end; `SpreadLabels`), and the share count and its sentence share one baseline.
