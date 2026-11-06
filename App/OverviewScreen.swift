@@ -15,6 +15,8 @@ struct OverviewScreen: View {
     @Environment(EntitlementStore.self) private var premium
     @Environment(AppRouter.self) private var router
     @Environment(WidgetPrompt.self) private var widgetPrompt
+    /// The scroll view's visible height (the dashboard spreads its sections across it).
+    @State private var viewportHeight: CGFloat = 0
 
     var body: some View {
         TimelineView(.everyMinute) { context in
@@ -24,7 +26,7 @@ struct OverviewScreen: View {
                 ScrollView {
                     Group {
                         if OverviewMode(kitStarted: activation.isStarted) == .dashboard {
-                            OverviewDashboard(now: date, status: status)
+                            OverviewDashboard(now: date, status: status, viewportHeight: viewportHeight)
                         } else if let status, let copy = OverviewCopy.for(.mercury, status.stage) {
                             introduction(status, copy)
                         } else {
@@ -33,6 +35,7 @@ struct OverviewScreen: View {
                     }
                     .id(Self.bottomID)
                 }
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { viewportHeight = $0 }
                 #if DEBUG
                 .onAppear {
                     // `-scrollOverview bottom` opens it scrolled to the end, for review screenshots.

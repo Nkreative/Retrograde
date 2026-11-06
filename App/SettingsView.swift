@@ -17,6 +17,7 @@ enum SettingsRoute: Hashable {
     #if DEBUG
     case premiumSimulator
     case widgetStatus
+    case sharingStatus
     #endif
 
     /// The page shown for a route, or nil if it isn't available (e.g. a URL not yet configured).
@@ -87,6 +88,7 @@ struct SettingsView: View {
                     NavigationLink { ScheduledAlertsView() } label: { Text("Scheduled alerts") }
                         .frame(minHeight: 44)
                     row(.widgetStatus, "Widget status")
+                    row(.sharingStatus, "Sharing history")
                     Button("Replay onboarding") {
                         onboarding.reset()
                         kitActivation.reset()
@@ -144,13 +146,14 @@ struct SettingsView: View {
         #if DEBUG
         case .premiumSimulator: PremiumSimulatorView()
         case .widgetStatus: WidgetStatusView()
+        case .sharingStatus: SharingStatusView()
         #endif
         }
     }
 
     private static var initialPath: [SettingsRoute] {
         #if DEBUG
-        // `-settingsPath notifications|terms|privacy|support|widgets|widgetStatus` opens a page directly, for review.
+        // `-settingsPath notifications|terms|privacy|support|widgets|widgetStatus|sharingStatus` opens a page directly, for review.
         switch UserDefaults.standard.string(forKey: "settingsPath") {
         case "notifications": return [.notifications]
         case "terms": return [.legal(.terms)]
@@ -158,6 +161,7 @@ struct SettingsView: View {
         case "support": return [.support]
         case "widgets": return [.widgets]
         case "widgetStatus": return [.widgetStatus]
+        case "sharingStatus": return [.sharingStatus]
         default: return []
         }
         #else

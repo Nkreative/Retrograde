@@ -2,6 +2,12 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-05 (M13.1 physical-iPhone refinements)
+
+- **Artwork:** follows the revised frames (Calm 384:2243, Mild 384:2345, Elevated 384:2448, Intense 384:2551). The planet's crop, turn, size and position are unchanged from the previous frames (re-exported and byte-identical), but the frames have no glow or rings, so those programmatic effects are removed. Figma enlarges the small Mercury source coarsely (blocky at Intense's 283 pt), so the four images are now rendered from the same artwork (`OnboardingMercury`, Figma's exact crop) at Figma's exact transforms with high-quality resampling, 3× (342 × 219 pt): 99.9–100 % the same planet area as the Figma export, without the blocks. The source has about 220 px across the planet, so the large levels are smooth rather than finely detailed; a higher-resolution original would sharpen them further.
+- **Spacing:** the dashboard fills the visible height between the header and the tab bar. Each gap grows from a minimum to Figma's spacing (header 16, title 14, bars to card 44, between cards 31), scaled up to 1.5× on taller screens; anything left over sits below the sharing card. With the pill shown, the bars-to-card gap is split around it. With large text the gaps stay at their minimums and the page scrolls.
+- **Sharing count:** unchanged logic; the count shows once a completed share is saved. A cancelled share sheet reports "not completed" and isn't counted (checked). Debug builds add Settings › Developer › Sharing history (saved shares, what the Overview shows, and iOS's completed / not completed answer for each share sheet this launch, in memory). Shares from before a reinstall can't be recovered: the history lives only in the app's own storage.
+
 ## 2026-11-05 (M13.1 Overview State B redesign)
 
 - **Supersedes the M13.1 dashboard below** (compact Mercury card, Survival Kit card, Today card with habit, sharing list, widget tip). Source of truth: the approved Figma frames Calm (374:896), Mild (374:988), Elevated (384:1596) and Intense (384:1492) — one layout, four intensity levels. State A and the switch between them (`SurvivalKitActivation`, now read through `OverviewMode`) are unchanged.

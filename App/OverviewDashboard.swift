@@ -23,40 +23,65 @@ struct OverviewDashboard: View {
 
     private let kit = SurvivalKit.for(.mercury)!
 
+    /// The visible height under the header, so spare room is shared between the sections rather than
+    /// left under the last card. Zero until measured.
+    var viewportHeight: CGFloat = 0
+
     var body: some View {
         let today = CalendarDay(now, in: .autoupdatingCurrent)
         let progress = KitProgressSummary(kit: kit, done: completions.completedTaskIDs(in: KitCycle.id(at: now)), isPremium: premium.isPremium)
         let showsPill = OverviewLayout.showsWidgetPill(widgetPrompt)
+        let stretch = OverviewLayout.gapStretch(viewportHeight: viewportHeight)
+        // Each gap grows from its minimum to the Figma spacing as room allows (header 16, title 14,
+        // bars to card 44, cards 31, scaled up on taller screens); anything left over stays at the bottom. With large text the gaps
+        // stay at their minimums and the page scrolls.
         VStack(alignment: .leading, spacing: 0) {
+            Gap(6...16, stretch: stretch)
             Text("Today")
                 .retroText(.cardTitle)
                 .foregroundStyle(RetroColor.text)
                 .accessibilityAddTraits(.isHeader)
+            Gap(12...16, stretch: stretch)
             if let status, let copy = OverviewCopy.for(status.planet, status.stage) {
                 CycleSection(status: status, copy: copy, kit: progress) { router.open(overview: .survivalKit) }
-                    .padding(.top, 12)
             } else {
-                MissingSkyData(padded: false).padding(.top, 12)
+                MissingSkyData(padded: false)
             }
             if showsPill {
+                Gap(2...8, stretch: stretch)
                 HStack {
                     Spacer()
                     PillButton("ADD WIDGET", systemImage: RetroSymbol.add) { router.open(overview: .widgetHowTo) }
                         .accessibilityHint("Shows how to add the widget")
                 }
-                .padding(.top, 2)
+                Gap(4...14, stretch: stretch)
+            } else {
+                Gap(24...44, stretch: stretch)
             }
-            VStack(spacing: 16) {
-                if let today = OverviewToday.make(today: today) {
-                    IntensityCard(today: today) { router.open(overview: .today(today.day)) }
-                }
-                SharingCard(summary: SharingSummary(finishedShares: sharing.records.count)) { router.open(overview: .shareInvite) }
+            if let today = OverviewToday.make(today: today) {
+                IntensityCard(today: today) { router.open(overview: .today(today.day)) }
+                Gap(16...31, stretch: stretch)
             }
-            .padding(.top, showsPill ? 6 : 24)
+            SharingCard(summary: SharingSummary(finishedShares: sharing.records.count)) { router.open(overview: .shareInvite) }
+            Spacer(minLength: 20)
         }
+        .frame(minHeight: viewportHeight, alignment: .top)
         .padding(.horizontal, RetroMetrics.screenPadding)
-        .padding(.top, 6)
-        .padding(.bottom, 20)
+    }
+}
+
+/// A vertical gap that takes as much of the spare height as it may, between `range`'s bounds.
+private struct Gap: View {
+    let range: ClosedRange<CGFloat>
+    let stretch: CGFloat
+
+    init(_ range: ClosedRange<CGFloat>, stretch: CGFloat) {
+        self.range = range
+        self.stretch = stretch
+    }
+
+    var body: some View {
+        Spacer(minLength: range.lowerBound).frame(maxHeight: range.upperBound * stretch)
     }
 }
 
@@ -64,6 +89,12 @@ struct OverviewDashboard: View {
 enum OverviewLayout {
     /// The Add Widget pill shows while iOS reports no Retrograde widget (best effort; see `WidgetPrompt`).
     @MainActor static func showsWidgetPill(_ prompt: WidgetPrompt) -> Bool { prompt.offersWidget }
+
+    /// How much the gaps may grow beyond Figma's spacing: 1 on the 17e-sized screen Figma was drawn
+    /// for (580 pt between header and tab bar), more on taller ones, never less.
+    static func gapStretch(viewportHeight: CGFloat) -> CGFloat {
+        min(max(viewportHeight / 580, 1), 1.5)
+    }
 }
 
 /// Which Overview the person sees: the kit introduction until they start the Survival Kit, then
@@ -213,62 +244,38 @@ private struct IntensityScale: View {
     }
 }
 
-/// How the intensity card's artwork looks at each level. The composition stays the same — Mercury
-/// rising from the card's lower right — and grows with the level: the planet (the approved Figma
-/// art, `IntensityCalm` … `IntensityIntense`, exported at the Figma card size), a soft glow behind it
-/// and faint orbit rings around it.
+/// The intensity card's artwork at each level, as in the approved Figma frames (Calm 384:2243, Mild
+/// 384:2345, Elevated 384:2448, Intense 384:2551): one composition, Mercury rising from the card's
+/// lower right, larger at each level. Each image is the planet rendered at its Figma crop, turn, size
+/// and position on the 342 × 219 pt card, at 3×, transparent around it. No other effects.
 struct IntensityArtwork: Equatable {
-    /// The planet as placed in the approved frame, 342 × 219 pt, transparent around it.
     let image: String
-    /// The planet's centre and diameter in the 342 × 219 pt card (for the glow and rings).
-    let centre: CGPoint
+    /// The planet's diameter on the card, in points (Figma).
     let diameter: CGFloat
-    let glowOpacity: Double
-    let ringCount: Int
-    let ringOpacity: Double
-    let tint: Color
 
     static let canvas = CGSize(width: 342, height: 219)
 
     static func `for`(_ level: IntensityLevel) -> IntensityArtwork {
         switch level {
-        case .calm:
-            IntensityArtwork(image: "IntensityCalm", centre: CGPoint(x: 322, y: 196), diameter: 69, glowOpacity: 0.16, ringCount: 1, ringOpacity: 0.16, tint: RetroColor.mauve)
-        case .mild:
-            IntensityArtwork(image: "IntensityMild", centre: CGPoint(x: 239, y: 204), diameter: 118, glowOpacity: 0.22, ringCount: 2, ringOpacity: 0.2, tint: RetroColor.mauve)
-        case .elevated:
-            IntensityArtwork(image: "IntensityElevated", centre: CGPoint(x: 279, y: 205), diameter: 156, glowOpacity: 0.3, ringCount: 3, ringOpacity: 0.26, tint: RetroColor.pinkSoft)
-        case .intense:
-            IntensityArtwork(image: "IntensityIntense", centre: CGPoint(x: 224, y: 270), diameter: 283, glowOpacity: 0.38, ringCount: 4, ringOpacity: 0.3, tint: RetroColor.pink)
+        case .calm: IntensityArtwork(image: "IntensityCalm", diameter: 69)
+        case .mild: IntensityArtwork(image: "IntensityMild", diameter: 118)
+        case .elevated: IntensityArtwork(image: "IntensityElevated", diameter: 156)
+        case .intense: IntensityArtwork(image: "IntensityIntense", diameter: 283)
         }
     }
 }
 
-/// Glow, rings and planet in the Figma card's coordinates, pinned to the card's lower right so a
-/// wider card keeps the same corner composition. Static: no animation.
+/// The planet at the Figma card's size, pinned to the card's lower right so a wider card keeps the
+/// same corner composition.
 private struct IntensityArtworkView: View {
     let artwork: IntensityArtwork
 
     var body: some View {
-        let size = IntensityArtwork.canvas
-        ZStack(alignment: .topLeading) {
-            Circle()
-                .fill(RadialGradient(colors: [artwork.tint.opacity(artwork.glowOpacity), .clear], center: .center, startRadius: 0, endRadius: artwork.diameter))
-                .frame(width: artwork.diameter * 2, height: artwork.diameter * 2)
-                .offset(x: artwork.centre.x - artwork.diameter, y: artwork.centre.y - artwork.diameter)
-            ForEach(0..<artwork.ringCount, id: \.self) { ring in
-                let d = artwork.diameter * (1.25 + 0.25 * CGFloat(ring))
-                Circle()
-                    .strokeBorder(artwork.tint.opacity(artwork.ringOpacity * (1 - 0.18 * Double(ring))), lineWidth: 1)
-                    .frame(width: d, height: d)
-                    .offset(x: artwork.centre.x - d / 2, y: artwork.centre.y - d / 2)
-            }
-            Image(artwork.image)
-                .resizable()
-                .frame(width: size.width, height: size.height)
-        }
-        .frame(width: size.width, height: size.height, alignment: .topLeading)
-        .accessibilityHidden(true)
+        Image(artwork.image)
+            .resizable()
+            .interpolation(.high)
+            .frame(width: IntensityArtwork.canvas.width, height: IntensityArtwork.canvas.height)
+            .accessibilityHidden(true)
     }
 }
 

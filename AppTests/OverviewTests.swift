@@ -35,20 +35,18 @@ import UIKit
 
 @MainActor
 @Suite struct OverviewDashboardTests {
-    @Test func everyLevelHasItsOwnArtworkThatGrowsWithTheLevel() {
+    @Test func everyLevelHasItsOwnFigmaArtwork() {
         let art = IntensityLevel.allCases.map(IntensityArtwork.for)
         #expect(art.map(\.image) == ["IntensityCalm", "IntensityMild", "IntensityElevated", "IntensityIntense"])
-        for (lower, higher) in zip(art, art.dropFirst()) {
-            #expect(higher.diameter > lower.diameter)
-            #expect(higher.glowOpacity > lower.glowOpacity)
-            #expect(higher.ringCount > lower.ringCount)
-            #expect(higher.ringOpacity > lower.ringOpacity)
-        }
+        #expect(art.map(\.diameter) == [69, 118, 156, 283]) // Mercury grows with the level, as in Figma
     }
 
-    @Test func artworkAssetsAreBundled() {
+    @Test func artworkIsSharpAtTheCardSize() throws {
         for level in IntensityLevel.allCases {
-            #expect(UIImage(named: IntensityArtwork.for(level).image) != nil, "\(level)")
+            let image = try #require(UIImage(named: IntensityArtwork.for(level).image), "\(level)")
+            // The Figma card's size, at 3× (Retina) resolution.
+            #expect(image.size == IntensityArtwork.canvas, "\(level)")
+            #expect(image.scale == 3, "\(level)")
         }
     }
 
@@ -98,6 +96,13 @@ import UIKit
         let router = AppRouter()
         router.open(overview: .widgetHowTo)
         #expect(router.showsWidgetHowTo)
+    }
+
+    @Test func spacingGrowsOnTallerScreensOnly() {
+        #expect(OverviewLayout.gapStretch(viewportHeight: 0) == 1) // not measured yet
+        #expect(OverviewLayout.gapStretch(viewportHeight: 580) == 1)
+        #expect(OverviewLayout.gapStretch(viewportHeight: 696) > 1.19 && OverviewLayout.gapStretch(viewportHeight: 696) < 1.21)
+        #expect(OverviewLayout.gapStretch(viewportHeight: 2000) == 1.5)
     }
 
     @Test func dashboardOnlyAfterTheKitIsStarted() {

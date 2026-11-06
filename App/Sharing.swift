@@ -1,5 +1,6 @@
 import DesignSystem
 import LinkPresentation
+import Observation
 import RetroCore
 import Sharing
 import SwiftUI
@@ -18,7 +19,12 @@ enum ShareSheet {
         while let next = top.presentedViewController, !next.isBeingDismissed { top = next }
         let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
         controller.completionWithItemsHandler = { _, completed, _, _ in
-            Task { @MainActor in completion(completed) }
+            Task { @MainActor in
+                #if DEBUG
+                ShareSheetResults.shared.record(completed: completed)
+                #endif
+                completion(completed)
+            }
         }
         controller.popoverPresentationController?.sourceView = top.view
         controller.popoverPresentationController?.sourceRect = CGRect(x: top.view.bounds.midX, y: top.view.bounds.maxY, width: 0, height: 0)
@@ -314,6 +320,17 @@ struct InsightSharePreview: View {
 }
 
 #if DEBUG
+/// Debug builds only: iOS's answer for each share sheet closed this launch (completed or not), for
+/// Settings › Developer › Sharing history. In memory; nothing about the destination is kept.
+@MainActor
+@Observable
+final class ShareSheetResults {
+    static let shared = ShareSheetResults()
+    private(set) var results: [(at: Date, completed: Bool)] = []
+
+    func record(completed: Bool) { results.append((.now, completed)) }
+}
+
 /// Review aids: `-presentShareSheet YES` opens the share sheet as soon as a share screen appears;
 /// `-cancelShareSheet YES` then closes it after 6 seconds, as a cancel (events go to `tmp/share-sheet.log`). `-exportShareCard YES`
 /// writes the rendered card to `tmp/share-card.png` in the app's container.
