@@ -96,6 +96,7 @@ struct PaywallView: View {
                         }
 
                         PlanList(flow: flow, compact: compactPlans)
+                            .padding(.top, 12) // breathing room between the benefits and the plans
                         PurchaseTerms(flow: flow)
 
                         Button("Continue free") { close() }

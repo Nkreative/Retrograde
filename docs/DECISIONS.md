@@ -2,6 +2,10 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-06 (M19 paywall spacing)
+
+- **Paywall:** 12 pt more space between the last benefit and the Lifetime card (none added between the cards). Nothing else moves; on short screens more of the Yearly card starts under the pinned footer and the page scrolls to it.
+
 ## 2026-11-06 (M19 paywall: pinned purchase button)
 
 - **Paywall (approved Figma 431:3):** the purchase button is pinned in a footer 8 pt above the bottom safe area (measured: 34 pt on iPhone 17e and 18 Pro Max), with a 12 pt fade above it where the page scrolls underneath; the page gets a matching bottom inset. Its label and product follow the selected plan ("Get lifetime access" / "Start Premium"); pending and error messages appear just above it. Purchase terms, Continue free and Restore · Terms · Privacy stay in the page under the plans. Same footer at every entry point (onboarding, locked content, Settings, the six debug scenarios).
