@@ -18,12 +18,12 @@ public enum PromotionMoment {
         public let signOff: String
     }
 
-    /// The copy, with the verified discount (never assumed).
-    public static func message(for planet: Planet, percentOff: Int) -> Message {
+    /// The copy (M15: short headline so the plans still fit; the price itself comes from StoreKit).
+    public static func message(for planet: Planet) -> Message {
         Message(
-            headline: "\(planet.name.uppercased())’S CLOCKING OUT. PRICES ARE DROPPING.",
-            body: "Celebrate the end of retrograde with \(percentOff)% off Lifetime Premium.",
-            signOff: "The chaos will return. Your backup stays."
+            headline: "\(planet.name.uppercased())’S CLOCKING OUT.",
+            body: "Prices are dropping.",
+            signOff: "The chaos will return. Your backup plan doesn’t have to disappear with it."
         )
     }
 }

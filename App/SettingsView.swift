@@ -16,6 +16,7 @@ enum SettingsRoute: Hashable {
     case widgets
     #if DEBUG
     case premiumSimulator
+    case paywallScenarios
     case widgetStatus
     case sharingStatus
     #endif
@@ -85,6 +86,7 @@ struct SettingsView: View {
                 #if DEBUG
                 Section {
                     row(.premiumSimulator, "Premium simulator")
+                    row(.paywallScenarios, "Paywall scenarios")
                     NavigationLink { ScheduledAlertsView() } label: { Text("Scheduled alerts") }
                         .frame(minHeight: 44)
                     row(.widgetStatus, "Widget status")
@@ -145,6 +147,7 @@ struct SettingsView: View {
         case .widgets: WidgetsSettingsView()
         #if DEBUG
         case .premiumSimulator: PremiumSimulatorView()
+        case .paywallScenarios: PaywallScenariosView()
         case .widgetStatus: WidgetStatusView()
         case .sharingStatus: SharingStatusView()
         #endif
@@ -153,7 +156,7 @@ struct SettingsView: View {
 
     private static var initialPath: [SettingsRoute] {
         #if DEBUG
-        // `-settingsPath notifications|terms|privacy|support|widgets|widgetStatus|sharingStatus` opens a page directly, for review.
+        // `-settingsPath notifications|terms|privacy|support|widgets|widgetStatus|sharingStatus|paywallScenarios` opens a page directly, for review.
         switch UserDefaults.standard.string(forKey: "settingsPath") {
         case "notifications": return [.notifications]
         case "terms": return [.legal(.terms)]
@@ -162,6 +165,7 @@ struct SettingsView: View {
         case "widgets": return [.widgets]
         case "widgetStatus": return [.widgetStatus]
         case "sharingStatus": return [.sharingStatus]
+        case "paywallScenarios": return [.paywallScenarios]
         default: return []
         }
         #else
@@ -399,7 +403,7 @@ private struct SectionHeader: View {
     }
 }
 
-private extension View {
+extension View {
     func retroSettingsStyle() -> some View {
         self
             .scrollContentBackground(.hidden)

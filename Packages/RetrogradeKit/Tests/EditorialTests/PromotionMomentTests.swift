@@ -36,11 +36,10 @@ import Testing
         #expect(!ending(at: period.stationRetrograde + 3_600)) // retrograde just began
     }
 
-    @Test func copyUsesTheVerifiedDiscount() {
-        let message = PromotionMoment.message(for: .mercury, percentOff: 50)
-        #expect(message.headline == "MERCURY’S CLOCKING OUT. PRICES ARE DROPPING.")
-        #expect(message.body == "Celebrate the end of retrograde with 50% off Lifetime Premium.")
-        #expect(message.signOff == "The chaos will return. Your backup stays.")
-        #expect(PromotionMoment.message(for: .mercury, percentOff: 40).body.contains("40% off"))
+    @Test func copy() {
+        let message = PromotionMoment.message(for: .mercury)
+        #expect(message.headline == "MERCURY’S CLOCKING OUT.")
+        #expect(message.body == "Prices are dropping.")
+        #expect(message.signOff == "The chaos will return. Your backup plan doesn’t have to disappear with it.")
     }
 }

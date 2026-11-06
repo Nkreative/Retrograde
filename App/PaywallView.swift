@@ -25,6 +25,10 @@ struct PaywallView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(EntitlementStore.self) private var entitlements
     @State private var flow: PurchaseFlow?
+    #if DEBUG
+    /// Settings › Developer › Paywall scenarios: the scenario's promotion instead of the real one.
+    var previewPromotion: LaunchPromotion?
+    #endif
 
     var body: some View {
         // Sized so the plans and the purchase button fit on the first screen: the artwork window
@@ -38,7 +42,11 @@ struct PaywallView: View {
                     benefitSpacing: roomy ? 11 : 7, compactPlans: !roomy)
         }
         .task {
-            let flow = self.flow ?? PurchaseFlow(store: entitlements, promotion: AppEntitlements.promotion)
+            var promotion = AppEntitlements.promotion
+            #if DEBUG
+            if let previewPromotion { promotion = previewPromotion }
+            #endif
+            let flow = self.flow ?? PurchaseFlow(store: entitlements, promotion: promotion)
             self.flow = flow
             #if DEBUG
             PaywallDebug.flow = flow
@@ -66,7 +74,7 @@ struct PaywallView: View {
                         // The Mercury offer's headline takes the evergreen headline's place (M10 copy).
                         VStack(alignment: .leading, spacing: 8) {
                             Text("RETROGRADE PREMIUM").retroText(.mono).foregroundStyle(RetroColor.pink)
-                            Text(mercuryMessage.map { $0.headline.replacingOccurrences(of: ". ", with: ".\n") } ?? "FULL BACKUP,\nEVERY CYCLE.").retroText(.hero).foregroundStyle(RetroColor.text).accessibilityAddTraits(.isHeader)
+                            Text(mercuryMessage?.headline ?? "FULL BACKUP,\nEVERY CYCLE.").retroText(.hero).foregroundStyle(RetroColor.text).accessibilityAddTraits(.isHeader)
                         }
                         Text(mercuryMessage.map { "\($0.body) \($0.signOff)" } ?? "The whole Survival Kit and every day of the calendar. Same cosmos, a lot more backup.")
                             .retroText(.bodyLarge).foregroundStyle(RetroColor.textMuted)
@@ -133,7 +141,7 @@ struct PaywallView: View {
     /// promotional price. Otherwise the evergreen headline.
     private var mercuryMessage: PromotionMoment.Message? {
         guard let promotion = flow?.promotion(for: .lifetime), promotion.kind == .mercury else { return nil }
-        return PromotionMoment.message(for: .mercury, percentOff: promotion.percentOff)
+        return PromotionMoment.message(for: .mercury)
     }
 
     private func buy() async {
