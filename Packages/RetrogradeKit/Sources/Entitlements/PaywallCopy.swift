@@ -93,7 +93,12 @@ public enum PaywallCopy {
     /// Badge for a verified launch price, shown instead of BEST VALUE while it runs. The discount
     /// itself is shown as the crossed-out regular price beside StoreKit's price.
     public static func promotionBadge(_ promotion: LaunchPromotion.Display) -> String {
-        "LAUNCH OFFER"
+        promotion.kind == .mercury ? "MERCURY OFFER" : "LAUNCH OFFER"
+    }
+
+    /// "Launch offer" / "Mercury offer", for the plan line and VoiceOver.
+    static func offerName(_ promotion: LaunchPromotion.Display) -> String {
+        promotion.kind == .mercury ? "Mercury offer" : "Launch offer"
     }
 
     /// Plan line during a promotion, e.g. "Launch offer ends Dec 14.": the last full day of the
@@ -102,7 +107,7 @@ public enum PaywallCopy {
     public static func promotionDetail(_ promotion: LaunchPromotion.Display, locale: Locale = .autoupdatingCurrent) -> String {
         var style = Date.FormatStyle.dateTime.month(.abbreviated).day().locale(locale)
         style.timeZone = LaunchPromotion.scheduleTimeZone
-        return "Launch offer ends \(promotion.lastDay.formatted(style))."
+        return "\(offerName(promotion)) ends \(promotion.lastDay.formatted(style))."
     }
 
     /// VoiceOver label for a plan card: name, Best value (Lifetime only) or a verified discount,
@@ -110,7 +115,7 @@ public enum PaywallCopy {
     public static func accessibilityLabel(_ offer: PlanOffer, bestValue: Bool, promotion: LaunchPromotion.Display? = nil) -> String {
         var parts = [planName(offer.plan)]
         if let promotion {
-            parts.append("Launch offer, \(promotion.percentOff)% off, regular price \(promotion.regularPrice)")
+            parts.append("\(offerName(promotion)), \(promotion.percentOff)% off, regular price \(promotion.regularPrice)")
         } else if let percent = offer.introPercentOff, let intro = offer.paidIntro {
             parts.append("\(percent)% off the first \(intro.duration.firstLength)")
         } else if bestValue {

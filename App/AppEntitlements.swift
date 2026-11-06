@@ -20,7 +20,7 @@ enum AppEntitlements {
         let defaults = UserDefaults.standard
         if let preset = defaults.string(forKey: "entitlement") ?? (defaults.bool(forKey: "premium") ? "lifetime" : nil) {
             let sim = SimulatedEntitlementSource(storage: InMemoryAccountStorage())
-            if promotionPreview { sim.lifetimePrice = Decimal(string: "9.99")! }
+            if promotionPreview != nil { sim.lifetimePrice = Decimal(string: "9.99")! }
             apply(preset: preset, to: sim)
             simulator = sim
             return EntitlementStore(source: sim)
@@ -35,24 +35,33 @@ enum AppEntitlements {
         return EntitlementStore(source: StoreKitEntitlementSource())
     }
 
-    /// The launch promotion the paywall checks. Debug `-promotionPreview YES` runs it from yesterday
-    /// (with the simulator charging the promotional price) so it can be reviewed before launch.
+    /// The Lifetime promotion the paywall checks: the launch window (from `LaunchPromotion.launch`)
+    /// and a Mercury window before every verified Mercury direct station in the bundled sky data.
+    /// Either shows only while StoreKit charges the promotional price.
+    /// Debug `-promotionPreview launch|mercury|both` (YES = launch) previews one with the simulator
+    /// charging the promotional price: launch from yesterday, or a Mercury station in 3 days.
     static var promotion: LaunchPromotion {
+        let stations = SkyData.ephemeris?.retrogrades(of: .mercury).map(\.stationDirect) ?? []
         #if DEBUG
-        if promotionPreview {
-            // Started at midnight Pacific yesterday, like an App Store Connect price change.
+        if let preview = promotionPreview {
             var pacific = Calendar(identifier: .gregorian)
             pacific.timeZone = LaunchPromotion.scheduleTimeZone
-            let start = pacific.date(byAdding: .day, value: -1, to: pacific.startOfDay(for: .now))
+            // Started at midnight Pacific yesterday, like an App Store Connect price change.
+            let launchStart = preview == "mercury" ? nil : pacific.date(byAdding: .day, value: -1, to: pacific.startOfDay(for: .now))
+            let mercury = preview == "launch" ? [] : [Date.now.addingTimeInterval(3 * 86_400)]
             let l = LaunchPromotion.launch
-            return LaunchPromotion(plan: l.plan, start: start, durationDays: l.durationDays, percentOff: l.percentOff, prices: l.prices)
+            return LaunchPromotion(plan: l.plan, start: launchStart, durationDays: l.durationDays, percentOff: l.percentOff, prices: l.prices, mercuryStations: mercury)
         }
         #endif
-        return .launch
+        return LaunchPromotion.launch.withMercuryStations(stations)
     }
 
     #if DEBUG
-    private static var promotionPreview: Bool { UserDefaults.standard.bool(forKey: "promotionPreview") }
+    /// nil when off; "launch", "mercury" or "both".
+    private static var promotionPreview: String? {
+        guard let value = UserDefaults.standard.string(forKey: "promotionPreview"), value != "NO" else { return nil }
+        return value == "YES" ? "launch" : value
+    }
 
     private static func apply(preset: String, to sim: SimulatedEntitlementSource) {
         let buyYearly = { Task { _ = try? await sim.purchase(.yearly) } }

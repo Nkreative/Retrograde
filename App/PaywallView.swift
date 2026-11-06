@@ -63,21 +63,18 @@ struct PaywallView: View {
                     PaywallHero(windowRatio: heroRatio)
                         .padding(.top, -heroTrim)
                     VStack(alignment: .leading, spacing: spacing) {
+                        // The Mercury offer's headline takes the evergreen headline's place (M10 copy).
                         VStack(alignment: .leading, spacing: 8) {
                             Text("RETROGRADE PREMIUM").retroText(.mono).foregroundStyle(RetroColor.pink)
-                            Text("FULL BACKUP,\nEVERY CYCLE.").retroText(.hero).foregroundStyle(RetroColor.text).accessibilityAddTraits(.isHeader)
+                            Text(mercuryMessage.map { $0.headline.replacingOccurrences(of: ". ", with: ".\n") } ?? "FULL BACKUP,\nEVERY CYCLE.").retroText(.hero).foregroundStyle(RetroColor.text).accessibilityAddTraits(.isHeader)
                         }
-                        Text("The whole Survival Kit and every day of the calendar. Same cosmos, a lot more backup.")
+                        Text(mercuryMessage.map { "\($0.body) \($0.signOff)" } ?? "The whole Survival Kit and every day of the calendar. Same cosmos, a lot more backup.")
                             .retroText(.bodyLarge).foregroundStyle(RetroColor.textMuted)
 
                         VStack(alignment: .leading, spacing: benefitSpacing) {
                             benefit(RetroSymbol.firstAid, "All 27 Survival Kit tasks", "Not just the first one in each section.")
                             benefit(RetroSymbol.planning, "Every calendar day, in detail", "Plan past the next four days, weeks ahead.")
                             benefit(RetroSymbol.moon, "The cosmic details behind each day", "Retrogrades, shadows and moon phases, explained.")
-                        }
-
-                        if let message = promotionMessage {
-                            PromotionMessage(message: message)
                         }
 
                         PlanList(flow: flow, compact: compactPlans)
@@ -132,22 +129,11 @@ struct PaywallView: View {
 
     private static let bottomID = "paywall-bottom"
 
-    /// "Mercury's clocking out" — only while StoreKit verifies the launch price *and* the sky data
-    /// says Mercury turns direct within the week. Otherwise the regular paywall copy alone.
-    private var promotionMessage: PromotionMoment.Message? {
-        guard let promotion = flow?.promotion(for: .lifetime),
-              let status = SkyData.calculator?.status(of: .mercury, at: Self.skyNow),
-              PromotionMoment.isRetrogradeEnding(status)
-        else { return nil }
-        return PromotionMoment.message(for: status.planet, percentOff: promotion.percentOff)
-    }
-
-    private static var skyNow: Date {
-        #if DEBUG
-        // `-now 2026-11-10T12:00:00Z`, as elsewhere, to review other points in the cycle.
-        if let now = UserDefaults.standard.string(forKey: "now").flatMap({ try? Date($0, strategy: .iso8601) }) { return now }
-        #endif
-        return .now
+    /// "Mercury's clocking out": only while a Mercury window is running *and* StoreKit charges the
+    /// promotional price. Otherwise the evergreen headline.
+    private var mercuryMessage: PromotionMoment.Message? {
+        guard let promotion = flow?.promotion(for: .lifetime), promotion.kind == .mercury else { return nil }
+        return PromotionMoment.message(for: .mercury, percentOff: promotion.percentOff)
     }
 
     private func buy() async {
@@ -182,21 +168,6 @@ enum PaywallDebug {
 #endif
 
 /// The launch promotion's end-of-retrograde message, compact, just above the plans.
-private struct PromotionMessage: View {
-    let message: PromotionMoment.Message
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(message.headline).retroText(.cardTitle).foregroundStyle(RetroColor.text)
-            Text(message.body).retroText(.body).foregroundStyle(RetroColor.textMuted)
-            Text(message.signOff).retroText(.bodyStrong).foregroundStyle(RetroColor.pinkSoft)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .retroCard(padding: 12)
-        .accessibilityElement(children: .combine)
-    }
-}
-
 /// Lifetime and Yearly cards with live prices; placeholders while loading; a retry when unavailable.
 private struct PlanList: View {
     let flow: PurchaseFlow?

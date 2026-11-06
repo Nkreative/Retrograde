@@ -83,8 +83,30 @@ The app shows an introductory offer only when StoreKit returns one for the perso
 2. Add a second price change: United States back to **$19.99**, starting exactly **14 calendar days later** (App Store Connect price changes start at 12:00 a.m. Pacific).
 3. Tell me the start date. I set `LaunchPromotion.launch.start` in `Packages/RetrogradeKit/Sources/Entitlements/LaunchPromotion.swift` to that date (midnight Pacific) and ship the update. Until it's set, the app shows no badge and no crossed-out price, even if StoreKit already charges $9.99.
 
-**How the app decides to show "LAUNCH OFFER" and the crossed-out $19.99** — all must be true, otherwise the plan shows StoreKit's price with no promotion:
-- the promotion has a configured start, and the current time is within its 14 days (it ends by itself; no update needed);
+**3. Mercury promotions (recurring).** The same $9.99 Lifetime price runs for the 7 calendar days before every Mercury direct station, for everyone. The app works the windows out from the bundled sky data (Pacific time, as App Store Connect schedules price changes): the 7 days before the station's Pacific date, midnight to midnight. For each one, add two Lifetime price changes in App Store Connect › Lifetime › Price Schedule (US): $9.99 on the first date and $19.99 on the second. Nothing needs to change in the app. If a Mercury window overlaps the launch window, schedule one continuous $9.99 period covering both; the app shows a single offer ending when the regular price returns, never a bigger discount.
+
+| Mercury turns direct | $9.99 from (12:00 am PT) | $19.99 again from (12:00 am PT) | Offer days |
+|---|---|---|---|
+| Nov 13, 2026 7:54 AM PT | Nov 6, 2026 | Nov 13, 2026 | Nov 6 – Nov 12 |
+| Mar 3, 2027 4:32 AM PT | Feb 24, 2027 | Mar 3, 2027 | Feb 24 – Mar 2 |
+| Jul 4, 2027 12:39 PM PT | Jun 27, 2027 | Jul 4, 2027 | Jun 27 – Jul 3 |
+| Oct 28, 2027 7:11 AM PT | Oct 21, 2027 | Oct 28, 2027 | Oct 21 – Oct 27 |
+| Feb 14, 2028 4:38 AM PT | Feb 7, 2028 | Feb 14, 2028 | Feb 7 – Feb 13 |
+| Jun 13, 2028 11:06 PM PT | Jun 6, 2028 | Jun 13, 2028 | Jun 6 – Jun 12 |
+| Oct 11, 2028 3:28 AM PT | Oct 4, 2028 | Oct 11, 2028 | Oct 4 – Oct 10 |
+| Jan 27, 2029 10:40 AM PT | Jan 20, 2029 | Jan 27, 2029 | Jan 20 – Jan 26 |
+| May 25, 2029 12:21 PM PT | May 18, 2029 | May 25, 2029 | May 18 – May 24 |
+| Sep 24, 2029 7:02 PM PT | Sep 17, 2029 | Sep 24, 2029 | Sep 17 – Sep 23 |
+| Jan 10, 2030 9:46 PM PT | Jan 3, 2030 | Jan 10, 2030 | Jan 3 – Jan 9 |
+| May 6, 2030 1:15 PM PT | Apr 29, 2030 | May 6, 2030 | Apr 29 – May 5 |
+| Sep 8, 2030 2:28 AM PT | Sep 1, 2030 | Sep 8, 2030 | Sep 1 – Sep 7 |
+| Dec 25, 2030 1:15 PM PT | Dec 18, 2030 | Dec 25, 2030 | Dec 18 – Dec 24 |
+| Apr 18, 2031 4:16 AM PT | Apr 11, 2031 | Apr 18, 2031 | Apr 11 – Apr 17 |
+
+If App Store Connect isn't charging $9.99, the app shows the regular price and no offer, even inside a Mercury window.
+
+**How the app decides to show "LAUNCH OFFER" / "MERCURY OFFER" and the crossed-out $19.99** — all must be true, otherwise the plan shows StoreKit's price with no promotion:
+- the current time is within the launch window (a configured start, 14 days) or a Mercury window (7 days before a verified direct station); it ends by itself, no update needed;
 - the person's storefront is one the promotion lists (US only), in the listed currency (USD);
 - StoreKit's actual Lifetime price for that storefront is exactly the configured promotional price ($9.99).
 

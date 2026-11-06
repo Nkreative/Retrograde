@@ -102,3 +102,53 @@ import Testing
         #expect(flow.promotion(for: .lifetime) == nil)
     }
 }
+
+@Suite struct MercuryPromotionTests {
+    let usd = Decimal.FormatStyle.Currency(code: "USD", locale: Locale(identifier: "en_US"))
+    var pacific: Calendar { var c = Calendar(identifier: .gregorian); c.timeZone = LaunchPromotion.scheduleTimeZone; return c }
+    func lifetime(_ price: String) -> PlanOffer {
+        PlanOffer(plan: .lifetime, displayPrice: "$" + price, price: Decimal(string: price)!, priceFormat: usd, storefront: "USA")
+    }
+    func pt(_ y: Int, _ m: Int, _ d: Int, _ h: Int = 0) -> Date { pacific.date(from: DateComponents(year: y, month: m, day: d, hour: h))! }
+    /// Mercury turns direct 2026-11-13 15:54 UTC (7:54 am Pacific), from the bundled data.
+    let station = ISO8601DateFormatter().date(from: "2026-11-13T15:54:00Z")!
+
+    @Test func mercuryWindowIsTheSevenPacificDaysBeforeTheStation() throws {
+        let w = try #require(LaunchPromotion.mercuryWindow(station: station))
+        #expect(w.start == pt(2026, 11, 6) && w.end == pt(2026, 11, 13) && w.kind == .mercury)
+    }
+
+    @Test func mercuryOfferNeedsApplesPrice() {
+        let p = LaunchPromotion.launch.withMercuryStations([station])
+        guard case let .active(d) = p.status(for: lifetime("9.99"), at: pt(2026, 11, 8, 12)) else { Issue.record("not active"); return }
+        #expect(d.kind == .mercury && d.endsAt == pt(2026, 11, 13))
+        #expect(PaywallCopy.promotionBadge(d) == "MERCURY OFFER")
+        #expect(PaywallCopy.promotionDetail(d, locale: Locale(identifier: "en_US")) == "Mercury offer ends Nov 12.")
+        // Mercury turning direct alone isn't enough: StoreKit still charging $19.99 shows nothing.
+        #expect(p.status(for: lifetime("19.99"), at: pt(2026, 11, 8, 12)) == .priceMismatch)
+        #expect(p.status(for: lifetime("9.99"), at: pt(2026, 11, 13, 1)) == .ended)
+        #expect(p.status(for: lifetime("9.99"), at: pt(2026, 11, 5, 23)) == .upcoming)
+    }
+
+    @Test func overlappingWindowsAreOnePricePeriodNeverStacked() {
+        // Launch Nov 1 (14 days, to Nov 15) overlaps the Mercury window Nov 6 – 13.
+        let p = LaunchPromotion(plan: .lifetime, start: pt(2026, 11, 1), durationDays: 14, percentOff: 50, prices: LaunchPromotion.launch.prices, mercuryStations: [station])
+        guard case let .active(a) = p.status(for: lifetime("9.99"), at: pt(2026, 11, 3)) else { Issue.record("launch"); return }
+        #expect(a.kind == .launch && a.endsAt == pt(2026, 11, 15) && a.percentOff == 50)
+        guard case let .active(b) = p.status(for: lifetime("9.99"), at: pt(2026, 11, 8)) else { Issue.record("overlap"); return }
+        #expect(b.kind == .mercury && b.endsAt == pt(2026, 11, 15) && b.percentOff == 50)
+        guard case let .active(c) = p.status(for: lifetime("9.99"), at: pt(2026, 11, 14)) else { Issue.record("launch tail"); return }
+        #expect(c.kind == .launch && c.endsAt == pt(2026, 11, 15))
+    }
+
+    @Test func backToBackWindowsShowTheLaterEnd() {
+        // Launch Oct 23 – Nov 6, then Mercury Nov 6 – 13: one continuous $9.99 period.
+        let p = LaunchPromotion(plan: .lifetime, start: pt(2026, 10, 23), durationDays: 14, percentOff: 50, prices: LaunchPromotion.launch.prices, mercuryStations: [station])
+        guard case let .active(d) = p.status(for: lifetime("9.99"), at: pt(2026, 11, 1)) else { Issue.record("not active"); return }
+        #expect(d.kind == .launch && d.endsAt == pt(2026, 11, 13))
+    }
+
+    @Test func nothingConfiguredMeansNoOffer() {
+        #expect(LaunchPromotion.launch.status(for: lifetime("9.99"), at: pt(2026, 11, 8)) == .notConfigured)
+    }
+}
