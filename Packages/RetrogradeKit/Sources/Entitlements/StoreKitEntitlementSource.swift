@@ -144,6 +144,9 @@ public actor StoreKitEntitlementSource: EntitlementSource {
                await subscription.isEligibleForIntroOffer {
                 intro = IntroOffer(offer)
             }
+            #if DEBUG
+            await StoreKitLog.product(product, storefront: storefront, shownIntro: intro)
+            #endif
             result.append(PlanOffer(
                 plan: plan, displayPrice: product.displayPrice,
                 billingPeriod: product.subscription.map { BillingPeriod($0.subscriptionPeriod) }, introOffer: intro,
@@ -235,6 +238,43 @@ enum StoreKitLog {
         case .pending: "pending"
         case .userCancelled: "cancelled"
         @unknown default: "unknown result"
+        }
+    }
+
+    /// A product's regular price and, for a subscription, the introductory offer StoreKit returns
+    /// and whether this account is eligible for it.
+    static func product(_ product: Product, storefront: String?, shownIntro: IntroOffer?) async {
+        var line = "Product \(product.id) [storefront \(storefront ?? "unknown")]: regular \(product.displayPrice) (\(product.price))"
+        if let subscription = product.subscription {
+            line += ", period \(describe(subscription.subscriptionPeriod))"
+            if let offer = subscription.introductoryOffer {
+                line += ", intro offer \(describe(offer.paymentMode)) \(offer.displayPrice) (\(offer.price)) for \(offer.periodCount) × \(describe(offer.period))"
+            } else {
+                line += ", intro offer NONE returned by StoreKit"
+            }
+            line += ", eligible \(await subscription.isEligibleForIntroOffer)"
+            line += ", paywall shows \(shownIntro.map { "intro \($0.displayPrice)" } ?? "regular price")"
+        }
+        note(line)
+    }
+
+    private static func describe(_ period: Product.SubscriptionPeriod) -> String {
+        let unit = switch period.unit {
+        case .day: "day"
+        case .week: "week"
+        case .month: "month"
+        case .year: "year"
+        @unknown default: "unknown unit"
+        }
+        return "\(period.value) \(unit)"
+    }
+
+    private static func describe(_ mode: Product.SubscriptionOffer.PaymentMode) -> String {
+        switch mode {
+        case .freeTrial: "free trial"
+        case .payUpFront: "pay up front"
+        case .payAsYouGo: "pay as you go"
+        default: "unknown mode (\(mode.rawValue))"
         }
     }
 
