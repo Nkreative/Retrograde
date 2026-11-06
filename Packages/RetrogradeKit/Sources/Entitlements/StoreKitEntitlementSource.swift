@@ -43,13 +43,24 @@ public actor StoreKitEntitlementSource: EntitlementSource {
 
     /// The Yearly subscription's state from its latest verified transaction and renewal info.
     private func yearlySubscription() async -> YearlySubscription? {
-        guard let latest = await Transaction.latest(for: PremiumPlan.yearly.productID),
-              case let .verified(transaction) = latest
-        else { return nil }
+        guard let latest = await Transaction.latest(for: PremiumPlan.yearly.productID) else {
+            #if DEBUG
+            StoreKitLog.note("Yearly: no transaction for this Apple Account")
+            #endif
+            return nil
+        }
+        #if DEBUG
+        StoreKitLog.note("Yearly latest transaction: \(StoreKitLog.describe(latest))")
+        #endif
+        guard case let .verified(transaction) = latest else { return nil }
         if transaction.revocationDate != nil {
             return YearlySubscription(state: .revoked, expiresAt: transaction.expirationDate, willAutoRenew: false)
         }
-        if let status = await transaction.subscriptionStatus, case let .verified(renewal) = status.renewalInfo {
+        let status = await transaction.subscriptionStatus
+        #if DEBUG
+        StoreKitLog.yearlyStatus(status)
+        #endif
+        if let status, case let .verified(renewal) = status.renewalInfo {
             return YearlySubscription(
                 state: Self.state(status.state), expiresAt: transaction.expirationDate,
                 willAutoRenew: renewal.willAutoRenew, gracePeriodEndsAt: renewal.gracePeriodExpirationDate
@@ -198,7 +209,8 @@ extension BillingPeriod {
 #if DEBUG
 /// Temporary purchase diagnostics, debug builds only (Xcode console / Console app, category
 /// "StoreKit"). Logs which StoreKit environment answered (Xcode, Sandbox, Production), product IDs,
-/// purchase dates and verification results; never account details or transaction identifiers.
+/// transaction and original transaction IDs, purchase, expiry and revocation dates, the Yearly
+/// subscription's status and verification results; never account details.
 enum StoreKitLog {
     private static let logger = Logger(subsystem: "com.nkreative.retrograde", category: "StoreKit")
 
@@ -278,8 +290,55 @@ enum StoreKitLog {
         }
     }
 
+    /// The Yearly subscription's current status from Apple, or why it isn't available.
+    static func yearlyStatus(_ status: Product.SubscriptionInfo.Status?) {
+        guard let status else {
+            note("Yearly status: unavailable (e.g. offline), so the app uses the transaction's own expiry date")
+            return
+        }
+        var line = "Yearly status: \(describe(status.state))"
+        switch status.renewalInfo {
+        case let .verified(renewal):
+            line += ", auto-renew \(renewal.willAutoRenew ? "on" : "off")"
+            line += ", in billing retry \(renewal.isInBillingRetry)"
+            if let grace = renewal.gracePeriodExpirationDate { line += ", grace period ends \(grace.formatted(.iso8601))" }
+            if let reason = renewal.expirationReason { line += ", expiration reason \(describe(reason))" }
+        case let .unverified(_, error):
+            line += ", renewal info UNVERIFIED (\(error))"
+        }
+        note(line)
+    }
+
+    private static func describe(_ state: Product.SubscriptionInfo.RenewalState) -> String {
+        switch state {
+        case .subscribed: "subscribed"
+        case .expired: "expired"
+        case .inBillingRetryPeriod: "billing retry"
+        case .inGracePeriod: "grace period"
+        case .revoked: "revoked"
+        default: "unknown (\(state.rawValue))"
+        }
+    }
+
+    private static func describe(_ reason: Product.SubscriptionInfo.RenewalInfo.ExpirationReason) -> String {
+        switch reason {
+        case .autoRenewDisabled: "auto-renew turned off"
+        case .billingError: "billing error"
+        case .didNotConsentToPriceIncrease: "price increase not accepted"
+        case .productUnavailable: "product unavailable"
+        default: "unknown (\(reason.rawValue))"
+        }
+    }
+
     private static func describe(_ t: Transaction) -> String {
-        "\(t.productID) [\(t.environment.rawValue)] purchased \(t.purchaseDate.formatted(.iso8601))\(t.revocationDate == nil ? "" : " REVOKED")"
+        var line = "\(t.productID) [\(t.environment.rawValue)] id \(t.id), original id \(t.originalID), purchased \(t.purchaseDate.formatted(.iso8601))"
+        if let expires = t.expirationDate { line += ", expires \(expires.formatted(.iso8601))" }
+        if let revoked = t.revocationDate {
+            line += ", REVOKED \(revoked.formatted(.iso8601))\(t.revocationReason.map { " (\($0 == .developerIssue ? "developer issue" : "other"))" } ?? "")"
+        } else {
+            line += ", not revoked"
+        }
+        return line
     }
 }
 #endif
