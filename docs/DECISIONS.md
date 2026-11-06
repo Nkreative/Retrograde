@@ -2,6 +2,10 @@
 
 Resolves the open items in PRODUCT_BRIEF.md §11. Newest first.
 
+## 2026-11-05 (M13.1 complete)
+
+- **M13.1 (personalized Overview) is complete:** State A introduction, State B dashboard (`efe5298`), physical-iPhone refinements (`a5a9ac4`) and the final corrections (`ae9a98b`), verified on the owner's iPhone. Progress labels sit on three anchors (start, true centre, end; `SpreadLabels`), and the share count and its sentence share one baseline.
+
 ## 2026-11-05 (M13.1 physical-iPhone refinements)
 
 - **Artwork:** follows the revised frames (Calm 384:2243, Mild 384:2345, Elevated 384:2448, Intense 384:2551). The planet's crop, turn, size and position are unchanged from the previous frames (re-exported and byte-identical), but the frames have no glow or rings, so those programmatic effects are removed. Figma enlarges the small Mercury source coarsely (blocky at Intense's 283 pt), so the four images are now rendered from the same artwork (`OnboardingMercury`, Figma's exact crop) at Figma's exact transforms with high-quality resampling, 3× (342 × 219 pt): 99.9–100 % the same planet area as the Figma export, without the blocks. The source has about 220 px across the planet, so the large levels are smooth rather than finely detailed; a higher-resolution original would sharpen them further.
