@@ -221,7 +221,7 @@ private struct CycleSection: View {
                 VStack(spacing: 7) {
                     MarkerLabels(progress: status.progress, start: copy.barStart, current: "YOU ARE HERE", end: copy.barEnd, currentColor: RetroColor.pink)
                     CycleProgressBar(progress: status.progress, marker: RetroColor.pink, markerSize: 9)
-                    CycleProgressBar(progress: kit.fraction, fill: RetroColor.yellow, marker: RetroColor.yellow, markerSize: 9)
+                    CycleProgressBar(progress: kit.fraction, fill: RetroColor.green, marker: RetroColor.yellow, markerSize: 9)
                     // Spread across the bar as in Figma; with large text the count goes on its own line.
                     SpreadLabels {
                         Text("CONFUSED").foregroundStyle(RetroColor.textMuted)
