@@ -1,8 +1,5 @@
 import Foundation
 import StoreKit
-#if DEBUG
-import os
-#endif
 
 /// Production purchases via StoreKit 2. Only cryptographically verified transactions count;
 /// StoreKit keeps those signed records on the device, so entitlements also work offline.
@@ -13,54 +10,27 @@ public actor StoreKitEntitlementSource: EntitlementSource {
     }
 
     private var products: [PremiumPlan: Product] = [:]
-    #if DEBUG
-    private var loggedEnvironment = false
-    #endif
 
     public init() {}
 
     public func currentSnapshot() async throws -> EntitlementSnapshot {
-        #if DEBUG
-        if !loggedEnvironment {
-            loggedEnvironment = true
-            await StoreKitLog.appEnvironment()
-        }
-        #endif
         var ownsLifetime = false
         for await result in Transaction.currentEntitlements {
-            #if DEBUG
-            StoreKitLog.note("Entitlement: \(StoreKitLog.describe(result))")
-            #endif
             guard case let .verified(transaction) = result, transaction.revocationDate == nil else { continue }
             if transaction.productID == PremiumPlan.lifetime.productID { ownsLifetime = true }
         }
-        let snapshot = EntitlementSnapshot(ownsLifetime: ownsLifetime, yearly: await yearlySubscription())
-        #if DEBUG
-        StoreKitLog.note("Snapshot: lifetime \(snapshot.ownsLifetime), yearly \(snapshot.yearly.map { "\($0.state)" } ?? "none")")
-        #endif
-        return snapshot
+        return EntitlementSnapshot(ownsLifetime: ownsLifetime, yearly: await yearlySubscription())
     }
 
     /// The Yearly subscription's state from its latest verified transaction and renewal info.
     private func yearlySubscription() async -> YearlySubscription? {
-        guard let latest = await Transaction.latest(for: PremiumPlan.yearly.productID) else {
-            #if DEBUG
-            StoreKitLog.note("Yearly: no transaction for this Apple Account")
-            #endif
-            return nil
-        }
-        #if DEBUG
-        StoreKitLog.note("Yearly latest transaction: \(StoreKitLog.describe(latest))")
-        #endif
-        guard case let .verified(transaction) = latest else { return nil }
+        guard let latest = await Transaction.latest(for: PremiumPlan.yearly.productID),
+              case let .verified(transaction) = latest
+        else { return nil }
         if transaction.revocationDate != nil {
             return YearlySubscription(state: .revoked, expiresAt: transaction.expirationDate, willAutoRenew: false)
         }
-        let status = await transaction.subscriptionStatus
-        #if DEBUG
-        StoreKitLog.yearlyStatus(status)
-        #endif
-        if let status, case let .verified(renewal) = status.renewalInfo {
+        if let status = await transaction.subscriptionStatus, case let .verified(renewal) = status.renewalInfo {
             return YearlySubscription(
                 state: Self.state(status.state), expiresAt: transaction.expirationDate,
                 willAutoRenew: renewal.willAutoRenew, gracePeriodEndsAt: renewal.gracePeriodExpirationDate
@@ -86,17 +56,11 @@ public actor StoreKitEntitlementSource: EntitlementSource {
             let task = Task {
                 // Anything left unfinished last time (e.g. the app closed mid-purchase).
                 for await result in Transaction.unfinished {
-                    #if DEBUG
-                    StoreKitLog.note("Unfinished transaction: \(StoreKitLog.describe(result))")
-                    #endif
                     continuation.yield()
                     if case let .verified(transaction) = result { await transaction.finish() }
                 }
                 // Renewals, refunds, Ask to Buy approvals, purchases on other devices.
                 for await result in Transaction.updates {
-                    #if DEBUG
-                    StoreKitLog.note("Transaction update: \(StoreKitLog.describe(result))")
-                    #endif
                     continuation.yield()
                     if case let .verified(transaction) = result { await transaction.finish() }
                 }
@@ -107,11 +71,7 @@ public actor StoreKitEntitlementSource: EntitlementSource {
 
     public func purchase(_ plan: PremiumPlan) async throws -> PurchaseOutcome {
         let product = try await product(for: plan)
-        let result = try await product.purchase()
-        #if DEBUG
-        StoreKitLog.note("Purchase \(plan): \(StoreKitLog.describe(result))")
-        #endif
-        switch result {
+        switch try await product.purchase() {
         case let .success(verification):
             guard case let .verified(transaction) = verification else { throw StoreError.unverifiedTransaction }
             await transaction.finish()
@@ -126,21 +86,7 @@ public actor StoreKitEntitlementSource: EntitlementSource {
     }
 
     public func restore() async throws {
-        #if DEBUG
-        await StoreKitLog.entitlements("Restore: entitlements before sync")
-        #endif
-        do {
-            try await AppStore.sync()
-        } catch {
-            #if DEBUG
-            StoreKitLog.note("Restore: AppStore.sync failed: \(error)")
-            #endif
-            throw error
-        }
-        #if DEBUG
-        StoreKitLog.note("Restore: AppStore.sync finished")
-        await StoreKitLog.entitlements("Restore: entitlements after sync")
-        #endif
+        try await AppStore.sync()
     }
 
     public func offers() async throws -> [PlanOffer] {
@@ -155,9 +101,6 @@ public actor StoreKitEntitlementSource: EntitlementSource {
                await subscription.isEligibleForIntroOffer {
                 intro = IntroOffer(offer)
             }
-            #if DEBUG
-            await StoreKitLog.product(product, storefront: storefront, shownIntro: intro)
-            #endif
             result.append(PlanOffer(
                 plan: plan, displayPrice: product.displayPrice,
                 billingPeriod: product.subscription.map { BillingPeriod($0.subscriptionPeriod) }, introOffer: intro,
@@ -205,140 +148,3 @@ extension BillingPeriod {
         self.init(value: period.value, unit: unit)
     }
 }
-
-#if DEBUG
-/// Temporary purchase diagnostics, debug builds only (Xcode console / Console app, category
-/// "StoreKit"). Logs which StoreKit environment answered (Xcode, Sandbox, Production), product IDs,
-/// transaction and original transaction IDs, purchase, expiry and revocation dates, the Yearly
-/// subscription's status and verification results; never account details.
-enum StoreKitLog {
-    private static let logger = Logger(subsystem: "com.nkreative.retrograde", category: "StoreKit")
-
-    static func note(_ message: String) {
-        logger.notice("\(message, privacy: .public)")
-    }
-
-    /// The environment of the app's own signed record: Xcode (local StoreKit configuration file),
-    /// Sandbox or Production.
-    static func appEnvironment() async {
-        do {
-            switch try await AppTransaction.shared {
-            case let .verified(app): note("App transaction environment: \(app.environment.rawValue)")
-            case let .unverified(app, error): note("App transaction UNVERIFIED (\(error)), environment: \(app.environment.rawValue)")
-            }
-        } catch {
-            note("App transaction unavailable: \(error)")
-        }
-    }
-
-    static func entitlements(_ label: String) async {
-        var lines: [String] = []
-        for await result in Transaction.currentEntitlements { lines.append(describe(result)) }
-        note("\(label): \(lines.isEmpty ? "none" : lines.joined(separator: "; "))")
-    }
-
-    static func describe(_ result: VerificationResult<Transaction>) -> String {
-        switch result {
-        case let .verified(t): describe(t)
-        case let .unverified(t, error): "UNVERIFIED \(describe(t)) (\(error))"
-        }
-    }
-
-    static func describe(_ result: Product.PurchaseResult) -> String {
-        switch result {
-        case let .success(verification): "success, \(describe(verification))"
-        case .pending: "pending"
-        case .userCancelled: "cancelled"
-        @unknown default: "unknown result"
-        }
-    }
-
-    /// A product's regular price and, for a subscription, the introductory offer StoreKit returns
-    /// and whether this account is eligible for it.
-    static func product(_ product: Product, storefront: String?, shownIntro: IntroOffer?) async {
-        var line = "Product \(product.id) [storefront \(storefront ?? "unknown")]: regular \(product.displayPrice) (\(product.price))"
-        if let subscription = product.subscription {
-            line += ", period \(describe(subscription.subscriptionPeriod))"
-            if let offer = subscription.introductoryOffer {
-                line += ", intro offer \(describe(offer.paymentMode)) \(offer.displayPrice) (\(offer.price)) for \(offer.periodCount) × \(describe(offer.period))"
-            } else {
-                line += ", intro offer NONE returned by StoreKit"
-            }
-            line += ", eligible \(await subscription.isEligibleForIntroOffer)"
-            line += ", paywall shows \(shownIntro.map { "intro \($0.displayPrice)" } ?? "regular price")"
-        }
-        note(line)
-    }
-
-    private static func describe(_ period: Product.SubscriptionPeriod) -> String {
-        let unit = switch period.unit {
-        case .day: "day"
-        case .week: "week"
-        case .month: "month"
-        case .year: "year"
-        @unknown default: "unknown unit"
-        }
-        return "\(period.value) \(unit)"
-    }
-
-    private static func describe(_ mode: Product.SubscriptionOffer.PaymentMode) -> String {
-        switch mode {
-        case .freeTrial: "free trial"
-        case .payUpFront: "pay up front"
-        case .payAsYouGo: "pay as you go"
-        default: "unknown mode (\(mode.rawValue))"
-        }
-    }
-
-    /// The Yearly subscription's current status from Apple, or why it isn't available.
-    static func yearlyStatus(_ status: Product.SubscriptionInfo.Status?) {
-        guard let status else {
-            note("Yearly status: unavailable (e.g. offline), so the app uses the transaction's own expiry date")
-            return
-        }
-        var line = "Yearly status: \(describe(status.state))"
-        switch status.renewalInfo {
-        case let .verified(renewal):
-            line += ", auto-renew \(renewal.willAutoRenew ? "on" : "off")"
-            line += ", in billing retry \(renewal.isInBillingRetry)"
-            if let grace = renewal.gracePeriodExpirationDate { line += ", grace period ends \(grace.formatted(.iso8601))" }
-            if let reason = renewal.expirationReason { line += ", expiration reason \(describe(reason))" }
-        case let .unverified(_, error):
-            line += ", renewal info UNVERIFIED (\(error))"
-        }
-        note(line)
-    }
-
-    private static func describe(_ state: Product.SubscriptionInfo.RenewalState) -> String {
-        switch state {
-        case .subscribed: "subscribed"
-        case .expired: "expired"
-        case .inBillingRetryPeriod: "billing retry"
-        case .inGracePeriod: "grace period"
-        case .revoked: "revoked"
-        default: "unknown (\(state.rawValue))"
-        }
-    }
-
-    private static func describe(_ reason: Product.SubscriptionInfo.RenewalInfo.ExpirationReason) -> String {
-        switch reason {
-        case .autoRenewDisabled: "auto-renew turned off"
-        case .billingError: "billing error"
-        case .didNotConsentToPriceIncrease: "price increase not accepted"
-        case .productUnavailable: "product unavailable"
-        default: "unknown (\(reason.rawValue))"
-        }
-    }
-
-    private static func describe(_ t: Transaction) -> String {
-        var line = "\(t.productID) [\(t.environment.rawValue)] id \(t.id), original id \(t.originalID), purchased \(t.purchaseDate.formatted(.iso8601))"
-        if let expires = t.expirationDate { line += ", expires \(expires.formatted(.iso8601))" }
-        if let revoked = t.revocationDate {
-            line += ", REVOKED \(revoked.formatted(.iso8601))\(t.revocationReason.map { " (\($0 == .developerIssue ? "developer issue" : "other"))" } ?? "")"
-        } else {
-            line += ", not revoked"
-        }
-        return line
-    }
-}
-#endif

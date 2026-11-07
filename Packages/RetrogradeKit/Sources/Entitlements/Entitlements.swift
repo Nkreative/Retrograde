@@ -268,11 +268,6 @@ public final class EntitlementStore {
             snapshot = try await source.currentSnapshot()
             hasLoaded = true
             if isPremium { isPurchasePending = false }
-            #if DEBUG
-            if source is StoreKitEntitlementSource {
-                StoreKitLog.note("Premium unlocked: \(isPremium ? "YES" : "NO") (status \(status))")
-            }
-            #endif
         } catch {
             // Keep the last verified snapshot.
         }
