@@ -51,40 +51,23 @@ import Testing
         fatalError("unreachable")
     }
 
-    /// Expires the Yearly subscription the test bought, then waits for the app to see it.
+    /// Buys Yearly and lets it run out on its own, then waits for the app to see the expiry.
     ///
-    /// Measured in repeated runs (10 repetitions each): after an expiry, StoreKit can keep returning
-    /// the pre-expiry subscription (first period, renewing) to the app for several seconds although the
-    /// test session has recorded it — 12 of 20 runs failed when re-reading for 2 s; with 10 s,
-    /// 2 of 12 and 4 of 20. Reading before expiring made it far worse (19 of 20). Asking again
-    /// doesn't help (once applied, StoreKit only answers SKInternalErrorDomain 17), so the request
-    /// is repeated only while the session hasn't recorded the expiry. A run whose app view is still
-    /// stale after 10 s fails: it's left visible, not retried away.
-    private func expireYearly() async throws -> PremiumStatus {
-        for attempt in 1...3 where !yearlyExpiredInSession {
-            do {
-                try session.expireSubscription(productIdentifier: yearlyID)
-            } catch where attempt < 3 && Self.isTransientTestEnvironmentError(error) {
-                try await Task.sleep(for: .milliseconds(300))
-            }
+    /// Forcing an expiry (`expireSubscription`) proved unreliable: StoreKit kept returning the
+    /// pre-expiry transaction (renewing, a year ahead) to the app for 10 s or more (see
+    /// docs/STOREKIT.md), so the result depended on timing. Here the session runs one billing period
+    /// every 2 s and auto-renew is turned off, so the period simply ends: the verified transaction
+    /// StoreKit returns then carries an expiry in the past. The wait follows that expiry (a renewal
+    /// can slip in before auto-renew is off, adding one more 2 s period), never a longer timeout.
+    private func buyYearlyAndLetItExpire() async throws -> PremiumStatus {
+        session.timeRate = .oneRenewalEveryTwoSeconds
+        try await buy(yearlyID)
+        try session.disableAutoRenewForTransaction(identifier: transaction(yearlyID).identifier)
+        for _ in 0..<3 {
+            guard let expiry = try transaction(yearlyID).expirationDate, expiry > .now else { break }
+            try await Task.sleep(for: .seconds(expiry.timeIntervalSinceNow + 0.2))
         }
-        return await settle(seconds: 10) { if case .yearlyExpired = $0 { true } else { false } }
-    }
-
-    /// Whether the test session itself records the Yearly subscription as expired.
-    private var yearlyExpiredInSession: Bool {
-        guard let expiry = session.allTransactions().last(where: { $0.productIdentifier == yearlyID })?.expirationDate else { return false }
-        return expiry <= Date.now.addingTimeInterval(1)
-    }
-
-    /// The Xcode StoreKit test environment's intermittent internal failure: SKServiceErrorDomain 2
-    /// wrapping SKInternalErrorDomain 17. Anything else is a real error and still fails the test.
-    private static func isTransientTestEnvironmentError(_ error: Error) -> Bool {
-        let e = error as NSError
-        guard e.domain == "SKServiceErrorDomain", e.code == 2,
-              let underlying = e.userInfo[NSUnderlyingErrorKey] as? NSError
-        else { return false }
-        return underlying.domain == "SKInternalErrorDomain" && underlying.code == 17
+        return await settle { if case .yearlyExpired = $0 { true } else { false } }
     }
 
     private func transaction(_ productID: String) throws -> SKTestTransaction {
@@ -134,8 +117,7 @@ import Testing
     }
 
     @Test func expiryEndsPremium() async throws {
-        try await buy(yearlyID)
-        let status = try await expireYearly()
+        let status = try await buyYearlyAndLetItExpire()
         guard case .yearlyExpired = status else { Issue.record("\(status)"); return }
     }
 
@@ -178,8 +160,7 @@ import Testing
     }
 
     @Test func lifetimeTakesOverFromAnExpiredYearly() async throws {
-        try await buy(yearlyID)
-        let expired = try await expireYearly()
+        let expired = try await buyYearlyAndLetItExpire()
         guard case .yearlyExpired = expired else { Issue.record("\(expired)"); return }
         #expect(try await store.purchase(.lifetime) == .purchased)
         let status = await settle { $0 == .lifetime(yearlyStillRenewing: false) }
@@ -253,8 +234,7 @@ import Testing
     }
 
     @Test func noFirstYearOfferForSomeoneWhoAlreadySubscribed() async throws {
-        try await buy(yearlyID)
-        _ = try await expireYearly()
+        _ = try await buyYearlyAndLetItExpire()
         let yearly = try #require(try await store.offers().first { $0.plan == .yearly })
         #expect(yearly.introOffer == nil)
         #expect(PaywallCopy.priceLabel(yearly) == "$9.99 / yr" && PaywallCopy.introBadge(yearly) == nil)
